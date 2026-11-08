@@ -14,6 +14,8 @@ where we want to end up, and the steps to get there. We update it as we go.
   a root file, type folders and ids. Level 2 gives each type a JSON Schema.
 - A **profile** is a shared set of types that many corpora can use, such as a set of types for
   evidence. A corpus can use more than one profile, next to its own types.
+- A **dialect** is a named flavor of note syntax on top of a common baseline, such as Obsidian's
+  wikilinks and embeds.
 - **Conformance cases** are shared test inputs and expected results. Every implementation of the
   spec, in any language, runs the same cases.
 
@@ -120,6 +122,25 @@ whose types it uses. So a profile is not "level 3": a corpus at level 2 can use 
 the sdlc profile and its own types all at once.
 
 ![Levels 0 to 2 on one side, profiles on the other](diagrams/levels-profiles.svg)
+
+### Proposal: a baseline and dialects
+
+This is a proposal, not a decision.
+
+The spec would have a baseline that every tool supports. On top of it, a corpus could name a
+dialect for things that vary from tool to tool, with no promise that every tool handles them. For
+example, a corpus that says `dialect: obsidian` may use wikilinks that resolve anywhere in the vault,
+and embeds. A tool that knows the dialect checks it. A tool that doesn't checks only the baseline,
+and says that it did.
+
+We already use the word this way. markdown-tags has three dialects, and markdown-render renders the
+Obsidian dialect. It works like CommonMark as the baseline with GFM as an extension.
+
+So the spec would have three separate settings:
+
+- the **level**: how much a corpus declares, from 0 to 2;
+- the **dialect**: which link and syntax flavor it uses beyond the baseline;
+- the **profiles**: which shared sets of types it uses.
 
 We'd like to call these shared sets of types **profiles**, not packs. Profile is the usual word in
 data standards: FHIR profiles, Dublin Core application profiles, the W3C Profiles Vocabulary and the
