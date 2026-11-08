@@ -9,7 +9,8 @@ where we want to end up, and the steps to get there. We update it as we go.
 - A **corpus** is a folder of notes and the files they link to. An Obsidian vault is a corpus. So
   is a docs folder. Some of our packages say "vault" for the same thing.
 - **The spec** is the format we are writing for typed records kept as notes. It is called
-  **corpus-schema**. The open PR still calls it markdown-db until the rename lands.
+  **corpus-schema** (decided 2026-11-08). The open PR still calls it markdown-db until the rename
+  lands.
 - A **level** says how much a corpus declares about itself. Level 0 declares nothing. Level 1 adds
   a root file, type folders and ids. Level 2 gives each type a JSON Schema.
 - A **profile** is a shared set of types that many corpora can use, such as a set of types for
@@ -40,7 +41,7 @@ before the rest of the plan. It is tasks 1 to 5 in the graph.
    text gains the levels. This is in progress.
 2. **Folder records.** A folder that holds a note with the folder's own name is one record, and it
    owns the other files in it. This is how a test run keeps its script, its query and its CSV results
-   together. It goes into the first release, in a PR stacked on #725.
+   together. It goes into the first release, in a PR stacked on #725. This is in progress.
 3. **Publish 0.1.0-alpha.** The owner reviews and merges #725 and the release script publishes it.
 4. **Evidence types.** The project copies in plain JSON Schema files for its types: sources, findings
    (one observation of a source, with its date, quote and location) and claims (a statement that
@@ -51,8 +52,8 @@ before the rest of the plan. It is tasks 1 to 5 in the graph.
 5. **The project writes records.** It starts keeping its evidence as records, checked by the
    validator.
 
-A database built from the records (JSON or SQLite) is not in the fast path. It comes later, with the
-query layer (task 16).
+A database built from the records (JSON or SQLite) is not in the fast path. It is task 16, after
+the query layer (task 15).
 
 ## Where we are today
 
@@ -65,7 +66,7 @@ query layer (task 16).
 | Types | model-schema and its packs (dev); markdown-db (osdlc, not published) | none |
 | Corpus model | markdown-vault, vault-graph-core (dev) | markdown-corpus, markdown-relink (osdlc) |
 | Note parts | markdown-link, frontmatter-lossless, markdown-contract, gfm-table, yaml-splice (osdlc); markdown-tags (dev) | a twin of each |
-| Files | etag-write, path-guard (osdlc) | markdown-vault-fs, vfs-walk, vfs-seam, etag-write (osdlc) |
+| Files | etag-write, path-guard (osdlc) | markdown-vault-fs, vfs-walk, vfs-seam, etag-write, path-guard (osdlc) |
 
 Some of these are moving into osdlc already: markdown-tags in
 [osdlc/osdlc#714](https://github.com/osdlc/osdlc/pull/714), markdown-astro in
@@ -193,7 +194,7 @@ The numbers match the task graph at the top. "After" says what must come first.
 
 1. **Rename to corpus-schema**, with the levels in the spec text:
    [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). In progress.
-2. **Folder records** in corpus-schema, in a PR stacked on #725. After 1.
+2. **Folder records** in corpus-schema, in a PR stacked on #725. After 1. In progress.
 3. **Publish 0.1.0-alpha.** The owner reviews and merges #725. After 2.
 4. **Evidence types** for the evidence project. Needs the owner's answers on
    [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74).
@@ -231,6 +232,7 @@ The numbers match the task graph at the top. "After" says what must come first.
     owner.
 19. **Point other repos here**: osdlc/osdlc, sksizer/dev, osdlc/skillwright and sksizer/rust-ontogen
     get the note in [pointing-here.md](pointing-here.md). After 18.
-20. **The architecture doc**, in its own PR. In progress.
+20. **The architecture doc**: [osdlc/markdown#5](https://github.com/osdlc/markdown/pull/5). In
+    progress.
 
 We will track each task as an issue in this repo.
