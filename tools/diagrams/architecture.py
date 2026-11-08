@@ -1,68 +1,25 @@
 """Writes the architecture page's diagrams to docs/diagrams/architecture-*.svg.
 
 Run from the repo root: python3 tools/diagrams/architecture.py
-Same look as build.py (the plan's diagrams). Each SVG is standalone, with
-concrete colours and a dark-mode block that follows the viewer's OS setting.
+It uses build.py's shared style and helpers, so both pages look the same.
 """
-import html
-import pathlib
+from build import ARROW, CH, CW, DARK, LIGHT, OUT, W, X0, chip, esc, svg
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-OUT = ROOT / "docs" / "diagrams"
-
-W = 440                    # viewBox width; reads on a phone without zooming
-CW, CH, GX = 200, 46, 8
-X0 = 16
-
-LIGHT = dict(bg="#fbfaf7", fg="#1d1d1b", mut="#5d5d58", band="#f0eee8", line="#d8d5cc", chip="#ffffff",
-             osdlc="#2f855a", dev="#2b6cb0", ont="#6b46c1", sw="#c05621", ext="#8a8a84", acc="#b8741a", accbg="#fde7c8")
-DARK = dict(bg="#16161a", fg="#ececea", mut="#a3a39d", band="#222227", line="#3a3a40", chip="#2b2b31",
-            osdlc="#68d391", dev="#63b3ed", ont="#b794f4", sw="#f6ad55", ext="#a0a09a", acc="#f6ad55", accbg="#3d2f1c")
+GX = 8
 
 
-def rules(c):
+def extra(c):
+    """Styles only these diagrams use; the shared ones come from build.py."""
     return f"""
-.bg{{fill:{c['bg']}}} .band{{fill:{c['band']}}}
-.rl{{font-size:15px;font-weight:650;fill:{c['fg']}}} .rs{{font-size:12px;fill:{c['mut']}}}
-.num{{font-size:12px;font-weight:700;fill:{c['mut']}}}
-.lang{{font-size:10.5px;font-weight:700;letter-spacing:.06em;fill:{c['mut']}}}
-.chip rect{{fill:{c['chip']};stroke-width:1.5}} .chip.later rect{{fill:none;stroke-dasharray:5 4}}
-.cn{{font-size:13px;font-weight:650;fill:{c['fg']}}} .cs{{font-size:11px;fill:{c['mut']}}}
-.r-osdlc rect{{stroke:{c['osdlc']}}} .r-osdlc .dot{{fill:{c['osdlc']}}}
-.r-dev rect{{stroke:{c['dev']}}} .r-dev .dot{{fill:{c['dev']}}}
-.r-ont rect{{stroke:{c['ont']}}} .r-ont .dot{{fill:{c['ont']}}}
-.r-sw rect{{stroke:{c['sw']}}} .r-sw .dot{{fill:{c['sw']}}}
-.r-ext rect{{stroke:{c['ext']}}} .r-ext .dot{{fill:{c['ext']}}}
-.box rect{{fill:{c['chip']};stroke:{c['line']};stroke-width:1.4}} .box.opt rect{{stroke-dasharray:5 4}}
-.prof rect{{fill:{c['accbg']};stroke:{c['acc']};stroke-width:1.4}}
-.code rect{{fill:{c['chip']};stroke:{c['line']}}} .code text{{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;fill:{c['fg']}}}
-.edge{{fill:none;stroke:{c['mut']};stroke-width:1.4}} .ahp{{fill:{c['mut']}}}"""
+.lnum{{font-size:12px;font-weight:700;fill:{c['mut']}}}
+.lvl.opt rect{{stroke-dasharray:5 4}}
+.code rect{{fill:{c['chip']};stroke:{c['line']}}} .code text{{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;fill:{c['fg']}}}"""
 
 
-def svg(body, height, label):
-    style = rules(LIGHT) + "\n@media (prefers-color-scheme: dark) {" + rules(DARK) + "\n}"
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {height}" width="{W * 2}" '
-            f'font-family="system-ui, -apple-system, Segoe UI, sans-serif" role="img" aria-label="{esc(label)}">'
-            f'<style>{style}</style><rect class="bg" width="{W}" height="{height}"/>{body}</svg>\n')
+STYLE = f"<style>{extra(LIGHT)}\n@media (prefers-color-scheme: dark) {{{extra(DARK)}\n}}</style>"
 
 
-def esc(s):
-    return html.escape(s, quote=True)
-
-
-ARROW = ('<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" '
-         'orient="auto"><path d="M0,0L10,5L0,10z" class="ahp"/></marker></defs>')
-
-
-def chip(x, y, name, sub, repo, later=False, w=CW):
-    cls = f"chip r-{repo}" + (" later" if later else "")
-    return (f'<g class="{cls}"><rect x="{x}" y="{y}" width="{w}" height="{CH}" rx="7"/>'
-            f'<circle cx="{x + 12}" cy="{y + 16}" r="4.5" class="dot"/>'
-            f'<text x="{x + 22}" y="{y + 20}" class="cn">{esc(name)}</text>'
-            f'<text x="{x + 10}" y="{y + 37}" class="cs">{esc(sub)}</text></g>')
-
-
-def box(x, y, w, h, title, sub, cls="box"):
+def box(x, y, w, h, title, sub, cls="lvl"):
     return (f'<g class="{cls}"><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8"/></g>'
             f'<text class="cn" x="{x + 12}" y="{y + 21}">{esc(title)}</text>'
             f'<text class="cs" x="{x + 12}" y="{y + 38}">{esc(sub)}</text>')
@@ -115,13 +72,13 @@ def layers():
             yy += 16 + ((len(items) + 1) // 2) * (CH + 14)
         h = yy - top + 2
         out.append(f'<rect class="band" x="6" y="{top}" width="{W - 12}" height="{h}" rx="10"/>')
-        out.append(f'<text class="num" x="{W - 26}" y="{top + 24}" text-anchor="end">{num}</text>'
+        out.append(f'<text class="lnum" x="{W - 26}" y="{top + 24}" text-anchor="end">{num}</text>'
                    f'<text class="rl" x="{X0}" y="{top + 24}">{esc(name)}</text>'
                    f'<text class="rs" x="{X0}" y="{top + 39}">{esc(sub)}</text>')
         out.extend(body)
         y = top + h + 8
     out.append(f'<text class="cs" x="{X0}" y="{y + 10}">Each layer uses only the layers below it. Dashed: not built yet.</text>')
-    return svg("".join(out), y + 22, "The layers of the markdown ecosystem, top to bottom")
+    return svg(STYLE + "".join(out), y + 22, "The layers of the markdown ecosystem, top to bottom")
 
 
 def settings():
@@ -145,7 +102,7 @@ def settings():
     out.append(f'<text class="rl" x="{X0}" y="{y}">Dialect</text><text class="rs" x="{X0 + 64}" y="{y}">syntax beyond the baseline</text>')
     y += 12
     out.append(box(X0, y, 200, 48, "baseline", "every tool supports it"))
-    out.append(box(X0 + 208, y, 200, 48, "obsidian", "wikilinks, embeds; optional", "box opt"))
+    out.append(box(X0 + 208, y, 200, 48, "obsidian", "wikilinks, embeds; optional", "lvl opt"))
     y += 76
 
     out.append(f'<text class="rl" x="{X0}" y="{y}">Profiles</text><text class="rs" x="{X0 + 70}" y="{y}">whose types it uses</text>')
@@ -161,7 +118,7 @@ def settings():
     out.append(f'<text class="cs" x="{X0}" y="{y + 30}">So a record valid under acceptance</text>'
                f'<text class="cs" x="{X0}" y="{y + 46}">testing is also valid under evidence.</text>')
     y += 62
-    return svg("".join(out), y, "Level, dialect and profiles, with a root file example")
+    return svg(STYLE + "".join(out), y, "Level, dialect and profiles, with a root file example")
 
 
 def main():
