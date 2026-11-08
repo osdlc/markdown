@@ -12,8 +12,11 @@ one at a time.
 
 - [The plan](docs/ecosystem-plan.md): where things are today, what is wrong, where we want to end
   up, and how we get there.
+- [The architecture](docs/architecture.md): the layers we are building toward, and the rules
+  between them.
 - [Pointing here from another repo](docs/pointing-here.md): a short note to paste into another
   repo's `CLAUDE.md` or `AGENTS.md`.
-- The diagrams in the plan are made by `tools/diagrams/build.py`. Run
-  `python3 tools/diagrams/build.py` after you change it. The task graph's statuses and
-  dependencies live in `TASKS` and `task_graph()` in that script. Update them together with the plan.
+- The diagrams are made by `tools/diagrams/build.py` (the plan) and
+  `tools/diagrams/architecture.py` (the architecture). Run the one you change. The task graph's
+  statuses and dependencies live in `TASKS` and `task_graph()` in `build.py`. Update them together
+  with the plan.
