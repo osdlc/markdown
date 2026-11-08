@@ -1,0 +1,24 @@
+name: diagrams
+
+on:
+  pull_request:
+    paths: ["tools/diagrams/**", "docs/diagrams/**"]
+  push:
+    branches: [main]
+    paths: ["tools/diagrams/**", "docs/diagrams/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The committed SVGs match the script
+        run: |
+          python3 tools/diagrams/build.py
+          git diff --exit-code docs/diagrams

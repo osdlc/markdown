@@ -1,8 +1,9 @@
 """Writes the plan's diagrams to docs/diagrams/*.svg.
 
 Run from the repo root: python3 tools/diagrams/build.py
-Each SVG is standalone: concrete colours, with a dark-mode block, so GitHub
-renders it inline in light and dark themes.
+Each SVG is standalone, with concrete colours and a dark-mode block. GitHub
+shows SVGs through <img>, so the colours follow the viewer's OS colour
+scheme, not the GitHub theme setting.
 """
 import html
 import pathlib
@@ -82,8 +83,20 @@ def grid(y, items):
     return "".join(out), ((len(items) + 1) // 2) * (CH + GY + 6)
 
 
+KEY = [("osdlc", "osdlc"), ("dev", "dev"), ("ont", "rust-ontogen"), ("sw", "skillwright")]
+
+
+def key(y):
+    out, x = [f'<text class="cs" x="{X0}" y="{y + 4}">Repo:</text>'], X0 + 40
+    for repo, name in KEY:
+        out.append(f'<g class="chip r-{repo}"><circle cx="{x}" cy="{y}" r="4.5" class="dot"/></g>'
+                   f'<text class="cs" x="{x + 8}" y="{y + 4}">{name}</text>')
+        x += 22 + len(name) * 6.6
+    return "".join(out)
+
+
 def layers(rows, label):
-    y, out = 8, []
+    y, out = 26, [key(12)]
     for name, sub, ts, rs in rows:
         top, body, yy = y, [], y + 52
         for lang, items in (("TYPESCRIPT", ts), ("RUST", rs)):
@@ -103,7 +116,7 @@ def layers(rows, label):
 
 
 def dag(steps, levels, first, label):
-    nw, nh, gx, gy = 128, 54, 14, 46
+    nw, nh, gx, gy = 136, 54, 6, 46
     pos, y = {}, 14
     for lvl in levels:
         x = (W - (len(lvl) * nw + (len(lvl) - 1) * gx)) / 2
@@ -140,7 +153,7 @@ FAST = {
     "E": ("Project writes", "research as records", ["B", "C"]),
     "F": ("Project queries", "the built database", ["D", "E"]),
 }
-FAST_LEVELS = [["A", "C", "D"], ["B", None, None], ["G", "E", None], [None, "F", None]]
+FAST_LEVELS = [["A", "C", "D"], ["B", None, None], ["G", "E", None], [None, None, "F"]]
 
 STEPS = {
     1: ("Decide the words", "D1 D2 D6 D7", []),
@@ -209,7 +222,7 @@ TARGET = [
     ("Note parts", "twins, one resolver rule",
      [("markdown-link", "+ LinkIndex, all links", "osdlc"), ("other parts", "unchanged twins", "osdlc")],
      [("markdown-link", "LinkIndex, twin", "osdlc"), ("other parts", "unchanged twins", "osdlc")]),
-    ("Files", "unchanged", [("etag-write, path-guard", "", "osdlc")], [("vault-fs, vfs-walk, seam", "", "osdlc")]),
+    ("Files", "unchanged", [("etag-write, path-guard", "", "osdlc")], [("vault-fs, walk, seam", "", "osdlc")]),
 ]
 
 

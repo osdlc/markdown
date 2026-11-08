@@ -151,7 +151,8 @@ switches its word is an open question for
 
 ## Decisions we need
 
-The first four block everything else.
+The first four block most of the plan. Step 4, and the fast path's evidence types and database
+build, do not wait on them.
 
 - **D1. One word for a folder of notes.** Corpus, which osdlc uses today, or vault.
 - **D2. The spec's name.** See the ideas below.
