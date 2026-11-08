@@ -41,7 +41,14 @@ def rules(c):
 .node rect{{fill:{c['chip']};stroke:{c['line']};stroke-width:1.4}} .node.first rect{{fill:{c['accbg']};stroke:{c['acc']}}}
 .num{{fill:{c['fg']}}} .numt{{font-size:11px;font-weight:700;fill:{c['bg']}}} .nn{{font-size:11.5px;font-weight:650;fill:{c['fg']}}}
 .lvl rect{{fill:{c['chip']};stroke:{c['line']}}} .prof rect{{fill:{c['accbg']};stroke:{c['acc']}}}
-.tie{{stroke:{c['acc']};stroke-width:1.6;fill:none}}"""
+.tie{{stroke:{c['acc']};stroke-width:1.6;fill:none}}
+.task rect{{stroke-width:1.6}} .tt{{font-size:12px;font-weight:650;fill:{c['fg']}}}
+.tn{{fill:{c['fg']}}} .tnt{{font-size:10.5px;font-weight:700;fill:{c['bg']}}}
+.t-done rect{{fill:{c['chip']};stroke:{c['osdlc']}}} .t-done .tn{{fill:{c['osdlc']}}}
+.t-doing rect{{fill:{c['chip']};stroke:{c['dev']}}} .t-doing .tn{{fill:{c['dev']}}}
+.t-owner rect{{fill:{c['accbg']};stroke:{c['acc']}}} .t-owner .tn{{fill:{c['acc']}}}
+.t-todo rect{{fill:{c['chip']};stroke:{c['line']}}} .t-todo .tn{{fill:{c['mut']}}}
+.group{{fill:none;stroke:{c['line']};stroke-width:1.4;stroke-dasharray:5 4}} .gt{{font-size:11.5px;font-weight:650;fill:{c['mut']}}}"""
 
 
 def svg(body, height, label):
@@ -115,58 +122,6 @@ def layers(rows, label):
     return svg("".join(out), y, label)
 
 
-def dag(steps, levels, first, label):
-    nw, nh, gx, gy = 140, 54, 6, 46
-    pos, y = {}, 14
-    for lvl in levels:
-        x = (W - (len(lvl) * nw + (len(lvl) - 1) * gx)) / 2
-        for s in lvl:
-            if s is not None:
-                pos[s] = (x, y)
-            x += nw + gx
-        y += nh + gy
-    out = [ARROW]
-    for s, (_, _, deps) in steps.items():
-        sx, sy = pos[s]
-        for d in deps:
-            dx, dy = pos[d]
-            x1, y1, x2, y2 = dx + nw / 2, dy + nh, sx + nw / 2, sy
-            my = (y1 + y2) / 2
-            out.append(f'<path class="edge" d="M{x1},{y1} C{x1},{my} {x2},{my} {x2},{y2 - 6}" marker-end="url(#ah)"/>')
-    for s, (t, sub, _) in steps.items():
-        x, y_ = pos[s]
-        cls = "node first" if s in first else "node"
-        out.append(f'<g class="{cls}"><rect x="{x}" y="{y_}" width="{nw}" height="{nh}" rx="9"/>'
-                   f'<circle cx="{x + 15}" cy="{y_ + 17}" r="10" class="num"/>'
-                   f'<text x="{x + 15}" y="{y_ + 21}" text-anchor="middle" class="numt">{s}</text>'
-                   f'<text x="{x + 30}" y="{y_ + 21}" class="nn">{esc(t)}</text>'
-                   f'<text x="{x + 9}" y="{y_ + 41}" class="cs">{esc(sub)}</text></g>')
-    return svg("".join(out), y - gy + 14, label)
-
-
-FAST = {
-    "A": ("Pick the name", "one answer: D2 + D7", []),
-    "G": ("Folder records", "records own their files", []),
-    "C": ("Evidence types", "findings and claims", []),
-    "B": ("Publish 0.1.0", "osdlc PR 725", ["A", "G"]),
-    "E": ("Project writes", "evidence as records", ["B", "C"]),
-}
-FAST_LEVELS = [["A", "G", "C"], [None, "B", None], [None, None, "E"]]
-
-STEPS = {
-    1: ("Decide the words", "D1 D2 D6 D7", []),
-    4: ("markdown-link resolves links", "a TS LinkIndex; osdlc PR 651", []),
-    2: ("Track every step", "one issue each, in this repo", [1]),
-    3: ("Ship the spec", "rename if needed, publish; osdlc PR 725", [1]),
-    11: ("Render, edit and site packages", "finish osdlc PRs 714, 719, 720", [1]),
-    5: ("One TypeScript corpus model", "markdown-vault and vault-graph-core merged", [1, 4]),
-    8: ("Profiles", "D4; model-schema moves to osdlc", [3]),
-    9: ("markdown-store on shared parts", "writes the spec layout", [3]),
-    6: ("Switch consumers", "vault-query, determined, graph views", [5]),
-    7: ("Validator reads the model", "drops its own walk", [3, 5]),
-    10: ("One query layer", "vault-query moves to osdlc; D5", [5]),
-}
-
 PRESENT = [
     ("Apps and tools", "who reads notes",
      [("sdlc", "planning corpus", "dev"), ("skillwright build", "skills → plugins", "sw"),
@@ -210,12 +165,12 @@ TARGET = [
     ("Query: the db layer (D5)", "one read layer over the model",
      [("query layer", "Bases + loader, one model", "osdlc")],
      [("markdown-store", "writes the spec layout", "ont")]),
-    ("Spec and profiles", "one spec, one type format",
-     [("spec (name: D2)", "levels 0–2, shared cases", "osdlc"), ("profiles (D4)", "evidence, sdlc, ...", "osdlc"),
-      ("spec validator", "levels 1–2, reads model", "osdlc")],
-     [("spec validator", "later, same cases", "osdlc", "later")]),
+    ("The spec and profiles", "one spec, one type format",
+     [("corpus-schema", "levels 0–2, shared cases", "osdlc"), ("profiles (D4)", "evidence, sdlc, ...", "osdlc"),
+      ("corpus-schema", "validator reads the model", "osdlc")],
+     [("corpus-schema", "later, same cases", "osdlc", "later")]),
     ("Corpus model", "one per language, one family",
-     [("corpus model (D3)", "vault + graph merged", "osdlc")],
+     [("markdown-corpus", "vault + graph merged", "osdlc")],
      [("markdown-corpus", "twin", "osdlc"), ("markdown-relink", "", "osdlc")]),
     ("Note parts", "twins, one resolver rule",
      [("markdown-link", "+ LinkIndex, all links", "osdlc"), ("other parts", "unchanged twins", "osdlc")],
@@ -224,20 +179,98 @@ TARGET = [
 ]
 
 
-def steps_list(steps, order, first, label):
-    out, y = [], 10
-    for s in order:
-        t, sub, deps = steps[s]
-        cls = "node first" if s in first else "node"
-        out.append(f'<g class="{cls}"><rect x="{X0}" y="{y}" width="{W - 2 * X0}" height="46" rx="9"/>'
-                   f'<circle cx="{X0 + 18}" cy="{y + 23}" r="11" class="num"/>'
-                   f'<text x="{X0 + 18}" y="{y + 27}" text-anchor="middle" class="numt">{s}</text>'
-                   f'<text x="{X0 + 38}" y="{y + 20}" class="nn">{esc(t)}</text>'
-                   f'<text x="{X0 + 38}" y="{y + 36}" class="cs">{esc(sub)}</text>')
-        need = "start now" if not deps else "after " + ", ".join(str(d) for d in deps)
-        out.append(f'<text x="{W - X0 - 12}" y="{y + 27}" text-anchor="end" class="cs">{need}</text></g>')
-        y += 54
-    return svg("".join(out), y + 4, label)
+
+# The task graph. Status: done, doing, owner (waiting on the owner), todo.
+TASKS = {
+    1: ("corpus-schema", "rename PR 725, levels", "doing"),
+    2: ("Folder records", "stacked on PR 725", "todo"),
+    3: ("Publish alpha", "review, merge 725", "owner"),
+    4: ("Evidence types", "answers on sw PR 74", "owner"),
+    5: ("Project writes", "evidence as records", "todo"),
+    6: ("x-warn", "soft schema rules", "todo"),
+    7: ("Obsidian dialect", "wikilinks, embeds", "todo"),
+    8: ("skillwright npm", "switch, rename root", "todo"),
+    9: ("Profiles", "from model-schema", "todo"),
+    10: ("markdown-store", "shared parts, layout", "todo"),
+    11: ("Link resolver", "TS LinkIndex, PR 651", "todo"),
+    12: ("One TS model", "vault + graph", "todo"),
+    13: ("Switch users", "query, determined", "todo"),
+    14: ("Validator", "reads model; needs 3", "todo"),
+    15: ("Query layer", "one, on the model", "todo"),
+    16: ("JSON / SQLite", "after query layer", "todo"),
+    17: ("Render and sites", "PRs 714 719 720", "doing"),
+    18: ("This plan", "markdown PR 4", "owner"),
+    19: ("Point repos here", "after the plan", "todo"),
+    20: ("Architecture doc", "its own PR", "doing"),
+}
+STATUS = [("done", "done"), ("doing", "in progress"), ("owner", "waiting on owner"), ("todo", "not started")]
+
+
+def task_graph():
+    tw, th, pitch = 132, 46, 78
+    cols = [14, 154, 294]
+    top = 74
+
+    def at(r, c):
+        return cols[c], top + r * pitch
+
+    def node(n, x, y):
+        t, sub, st = TASKS[n]
+        return (f'<g class="task t-{st}"><rect x="{x}" y="{y}" width="{tw}" height="{th}" rx="8"/>'
+                f'<circle cx="{x + 13}" cy="{y + 16}" r="9" class="tn"/>'
+                f'<text x="{x + 13}" y="{y + 19.5}" text-anchor="middle" class="tnt">{n}</text>'
+                f'<text x="{x + 27}" y="{y + 20}" class="tt">{esc(t)}</text>'
+                f'<text x="{x + 9}" y="{y + 37}" class="cs">{esc(sub)}</text></g>')
+
+    def edge(x1, y1, x2, y2):
+        my = (y1 + y2) / 2
+        return f'<path class="edge" d="M{x1},{y1} C{x1},{my} {x2},{my} {x2},{y2 - 5}" marker-end="url(#ah)"/>'
+
+    out = [ARROW]
+    # status key
+    x = X0
+    for st, name in STATUS:
+        out.append(f'<g class="task t-{st}"><rect x="{x}" y="10" width="12" height="12" rx="3"/></g>'
+                   f'<text class="cs" x="{x + 17}" y="20">{name}</text>')
+        x += 30 + len(name) * 6.1
+    for c, name in enumerate(["EVIDENCE PROJECT", "THE SPEC", "CORPUS MODEL"]):
+        out.append(f'<text class="lang" x="{cols[c] + 2}" y="54">{name}</text>')
+    cx = lambda c: cols[c] + tw / 2
+    place = {4: (0, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1), 5: (3, 0)}
+    edges = [(1, 2), (11, 12), (2, 3), (4, 5), (3, 5)]
+    # groups: (column, first row, title, members, fed by)
+    groups = [(1, 3, "After the alpha", [6, 7, 8, 9, 10], 3),
+              (2, 2, "After the TS model", [13, 15, 16, 14], 12)]
+    gpitch = 54
+    bodies = []
+    bottom = 0
+    for c, r, title, members, src in groups:
+        gx, gy = cols[c] - 3, top + r * pitch - 4
+        gh = 24 + len(members) * gpitch
+        out.append(f'<rect class="group" x="{gx}" y="{gy}" width="{tw + 6}" height="{gh}" rx="10"/>'
+                   f'<text class="gt" x="{gx + 10}" y="{gy + 16}">{esc(title)}</text>')
+        for i, n in enumerate(members):
+            bodies.append(node(n, cols[c], gy + 24 + i * gpitch))
+        sx, sy = at(*place[src])
+        out.append(edge(sx + tw / 2, sy + th, cx(c), gy))
+        bottom = max(bottom, gy + gh)
+    for a, b in edges:
+        (ax, ay), (bx, by) = at(*place[a]), at(*place[b])
+        out.append(edge(ax + tw / 2, ay + th, bx + tw / 2, by))
+    for n, (r, c) in place.items():
+        out.append(node(n, *at(r, c)))
+    out.extend(bodies)
+    # separate work
+    y = bottom + 22
+    out.append(f'<rect class="band" x="6" y="{y}" width="{W - 12}" height="{th + 2 * pitch - 18}" rx="10"/>'
+               f'<text class="lang" x="{X0}" y="{y + 20}">SEPARATE WORK</text>')
+    r0 = y + 32
+    out.append(node(18, cols[0], r0))
+    out.append(f'<line class="edge" x1="{cols[0] + tw}" y1="{r0 + th / 2}" x2="{cols[1] - 5}" y2="{r0 + th / 2}" marker-end="url(#ah)"/>')
+    out.append(node(19, cols[1], r0))
+    out.append(node(20, cols[2], r0))
+    out.append(node(17, cols[0], r0 + th + 12))
+    return svg("".join(out), r0 + 2 * th + 24, "The task graph, with status and what must come first")
 
 
 def resolvers():
@@ -287,12 +320,11 @@ def levels_profiles():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     files = {
-        "fast-path.svg": dag(FAST, FAST_LEVELS, ("A", "G", "C"), "Fast path to unlock the evidence project"),
+        "tasks.svg": task_graph(),
         "present.svg": layers(PRESENT, "Present state by layer"),
         "resolvers.svg": resolvers(),
         "levels-profiles.svg": levels_profiles(),
         "target.svg": layers(TARGET, "Target state by layer"),
-        "migration.svg": steps_list(STEPS, [1, 4, 2, 3, 11, 5, 8, 9, 6, 7, 10], (1, 4), "Migration steps and what each needs"),
     }
     for name, text in files.items():
         (OUT / name).write_text(text)
