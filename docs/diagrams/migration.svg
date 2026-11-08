@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 608" width="880" font-family="system-ui, -apple-system, Segoe UI, sans-serif" role="img" aria-label="Migration steps and what each needs"><style>
+.bg{fill:#fbfaf7} .band{fill:#f0eee8}
+.rl{font-size:15px;font-weight:650;fill:#1d1d1b} .rs{font-size:12px;fill:#5d5d58}
+.lang{font-size:10.5px;font-weight:700;letter-spacing:.06em;fill:#5d5d58}
+.chip rect{fill:#ffffff;stroke-width:1.5} .chip.later rect{fill:none;stroke-dasharray:5 4}
+.cn{font-size:13px;font-weight:650;fill:#1d1d1b} .cs{font-size:11px;fill:#5d5d58}
+.r-osdlc rect{stroke:#2f855a} .r-osdlc .dot{fill:#2f855a}
+.r-dev rect{stroke:#2b6cb0} .r-dev .dot{fill:#2b6cb0}
+.r-ont rect{stroke:#6b46c1} .r-ont .dot{fill:#6b46c1}
+.r-sw rect{stroke:#c05621} .r-sw .dot{fill:#c05621}
+.r-ext rect{stroke:#8a8a84} .r-ext .dot{fill:#8a8a84}
+.fb rect{fill:#fde8e8;stroke:#c53030} .fb text{font-size:10.5px;font-weight:700;fill:#c53030}
+.dup{stroke:#c53030;stroke-width:1.6;stroke-dasharray:4 3}
+.edge{fill:none;stroke:#5d5d58;stroke-width:1.4} .ahp{fill:#5d5d58}
+.node rect{fill:#ffffff;stroke:#d8d5cc;stroke-width:1.4} .node.first rect{fill:#fde7c8;stroke:#b8741a}
+.num{fill:#1d1d1b} .numt{font-size:11px;font-weight:700;fill:#fbfaf7} .nn{font-size:11.5px;font-weight:650;fill:#1d1d1b}
+.lvl rect{fill:#ffffff;stroke:#d8d5cc} .prof rect{fill:#fde7c8;stroke:#b8741a}
+.tie{stroke:#b8741a;stroke-width:1.6;fill:none}
+@media (prefers-color-scheme: dark) {
+.bg{fill:#16161a} .band{fill:#222227}
+.rl{font-size:15px;font-weight:650;fill:#ececea} .rs{font-size:12px;fill:#a3a39d}
+.lang{font-size:10.5px;font-weight:700;letter-spacing:.06em;fill:#a3a39d}
+.chip rect{fill:#2b2b31;stroke-width:1.5} .chip.later rect{fill:none;stroke-dasharray:5 4}
+.cn{font-size:13px;font-weight:650;fill:#ececea} .cs{font-size:11px;fill:#a3a39d}
+.r-osdlc rect{stroke:#68d391} .r-osdlc .dot{fill:#68d391}
+.r-dev rect{stroke:#63b3ed} .r-dev .dot{fill:#63b3ed}
+.r-ont rect{stroke:#b794f4} .r-ont .dot{fill:#b794f4}
+.r-sw rect{stroke:#f6ad55} .r-sw .dot{fill:#f6ad55}
+.r-ext rect{stroke:#a0a09a} .r-ext .dot{fill:#a0a09a}
+.fb rect{fill:#3b1d1d;stroke:#fc8181} .fb text{font-size:10.5px;font-weight:700;fill:#fc8181}
+.dup{stroke:#fc8181;stroke-width:1.6;stroke-dasharray:4 3}
+.edge{fill:none;stroke:#a3a39d;stroke-width:1.4} .ahp{fill:#a3a39d}
+.node rect{fill:#2b2b31;stroke:#3a3a40;stroke-width:1.4} .node.first rect{fill:#3d2f1c;stroke:#f6ad55}
+.num{fill:#ececea} .numt{font-size:11px;font-weight:700;fill:#16161a} .nn{font-size:11.5px;font-weight:650;fill:#ececea}
+.lvl rect{fill:#2b2b31;stroke:#3a3a40} .prof rect{fill:#3d2f1c;stroke:#f6ad55}
+.tie{stroke:#f6ad55;stroke-width:1.6;fill:none}
+}</style><rect class="bg" width="440" height="608"/><g class="node first"><rect x="16" y="10" width="408" height="46" rx="9"/><circle cx="34" cy="33" r="11" class="num"/><text x="34" y="37" text-anchor="middle" class="numt">1</text><text x="54" y="30" class="nn">Decide the words</text><text x="54" y="46" class="cs">D1 D2 D6 D7</text><text x="412" y="37" text-anchor="end" class="cs">start now</text></g><g class="node first"><rect x="16" y="64" width="408" height="46" rx="9"/><circle cx="34" cy="87" r="11" class="num"/><text x="34" y="91" text-anchor="middle" class="numt">4</text><text x="54" y="84" class="nn">markdown-link resolves links</text><text x="54" y="100" class="cs">a TS LinkIndex; osdlc PR 651</text><text x="412" y="91" text-anchor="end" class="cs">start now</text></g><g class="node"><rect x="16" y="118" width="408" height="46" rx="9"/><circle cx="34" cy="141" r="11" class="num"/><text x="34" y="145" text-anchor="middle" class="numt">2</text><text x="54" y="138" class="nn">Track every step</text><text x="54" y="154" class="cs">one issue each, in this repo</text><text x="412" y="145" text-anchor="end" class="cs">after 1</text></g><g class="node"><rect x="16" y="172" width="408" height="46" rx="9"/><circle cx="34" cy="195" r="11" class="num"/><text x="34" y="199" text-anchor="middle" class="numt">3</text><text x="54" y="192" class="nn">Ship the spec</text><text x="54" y="208" class="cs">rename if needed, publish; osdlc PR 725</text><text x="412" y="199" text-anchor="end" class="cs">after 1</text></g><g class="node"><rect x="16" y="226" width="408" height="46" rx="9"/><circle cx="34" cy="249" r="11" class="num"/><text x="34" y="253" text-anchor="middle" class="numt">11</text><text x="54" y="246" class="nn">Render, edit and site packages</text><text x="54" y="262" class="cs">finish osdlc PRs 714, 719, 720</text><text x="412" y="253" text-anchor="end" class="cs">after 1</text></g><g class="node"><rect x="16" y="280" width="408" height="46" rx="9"/><circle cx="34" cy="303" r="11" class="num"/><text x="34" y="307" text-anchor="middle" class="numt">5</text><text x="54" y="300" class="nn">One TypeScript corpus model</text><text x="54" y="316" class="cs">markdown-vault and vault-graph-core merged</text><text x="412" y="307" text-anchor="end" class="cs">after 1, 4</text></g><g class="node"><rect x="16" y="334" width="408" height="46" rx="9"/><circle cx="34" cy="357" r="11" class="num"/><text x="34" y="361" text-anchor="middle" class="numt">8</text><text x="54" y="354" class="nn">Profiles</text><text x="54" y="370" class="cs">D4; model-schema moves to osdlc</text><text x="412" y="361" text-anchor="end" class="cs">after 3</text></g><g class="node"><rect x="16" y="388" width="408" height="46" rx="9"/><circle cx="34" cy="411" r="11" class="num"/><text x="34" y="415" text-anchor="middle" class="numt">9</text><text x="54" y="408" class="nn">markdown-store on shared parts</text><text x="54" y="424" class="cs">writes the spec layout</text><text x="412" y="415" text-anchor="end" class="cs">after 3</text></g><g class="node"><rect x="16" y="442" width="408" height="46" rx="9"/><circle cx="34" cy="465" r="11" class="num"/><text x="34" y="469" text-anchor="middle" class="numt">6</text><text x="54" y="462" class="nn">Switch consumers</text><text x="54" y="478" class="cs">vault-query, determined, graph views</text><text x="412" y="469" text-anchor="end" class="cs">after 5</text></g><g class="node"><rect x="16" y="496" width="408" height="46" rx="9"/><circle cx="34" cy="519" r="11" class="num"/><text x="34" y="523" text-anchor="middle" class="numt">7</text><text x="54" y="516" class="nn">Validator reads the model</text><text x="54" y="532" class="cs">drops its own walk</text><text x="412" y="523" text-anchor="end" class="cs">after 3, 5</text></g><g class="node"><rect x="16" y="550" width="408" height="46" rx="9"/><circle cx="34" cy="573" r="11" class="num"/><text x="34" y="577" text-anchor="middle" class="numt">10</text><text x="54" y="570" class="nn">One query layer</text><text x="54" y="586" class="cs">vault-query moves to osdlc; D5</text><text x="412" y="577" text-anchor="end" class="cs">after 5</text></g></svg>
