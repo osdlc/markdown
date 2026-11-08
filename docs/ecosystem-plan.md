@@ -38,10 +38,12 @@ before the rest of the plan. It is tasks 1 to 5 in the graph.
 1. **Rename to corpus-schema.** The package and spec in
    [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) become `@osdlc/corpus-schema`, with
    the command `corpus-schema` and the root file `corpus-schema.md` (or `.yaml`, `.json`). The spec
-   text gains the levels. This is in progress.
+   text gains the levels. This is done and reviewed, and waits on the owner to merge.
 2. **Folder records.** A folder that holds a note with the folder's own name is one record, and it
    owns the other files in it. This is how a test run keeps its script, its query and its CSV results
-   together. It goes into the first release, in a PR stacked on #725. This is in progress.
+   together. It goes into the first release:
+   [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), stacked on #725. It is reviewed and
+   waits on the owner to merge.
 3. **Publish 0.1.0-alpha.** The owner reviews and merges #725 and the release script publishes it.
 4. **Evidence types.** The project copies in plain JSON Schema files for its types: sources, findings
    (one observation of a source, with its date, quote and location) and claims (a statement that
@@ -193,8 +195,10 @@ The numbers match the task graph at the top. "After" says what must come first.
 **The spec and the evidence project**
 
 1. **Rename to corpus-schema**, with the levels in the spec text:
-   [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). In progress.
-2. **Folder records** in corpus-schema, in a PR stacked on #725. After 1. In progress.
+   [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). Reviewed; waiting on the owner.
+2. **Folder records** in corpus-schema:
+   [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), stacked on #725. After 1. Reviewed;
+   waiting on the owner.
 3. **Publish 0.1.0-alpha.** The owner reviews and merges #725. After 2.
 4. **Evidence types** for the evidence project. Needs the owner's answers on
    [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74).

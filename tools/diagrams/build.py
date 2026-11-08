@@ -183,8 +183,8 @@ TARGET = [
 
 # The task graph. Status: done, doing, owner (waiting on the owner), todo.
 TASKS = {
-    1: ("corpus-schema", "rename, levels", "doing"),
-    2: ("Folder records", "stacked on PR 725", "doing"),
+    1: ("corpus-schema", "rename, levels", "owner"),
+    2: ("Folder records", "osdlc PR 729", "owner"),
     3: ("Publish alpha", "review, merge 725", "owner"),
     4: ("Evidence types", "answers on sw PR 74", "owner"),
     5: ("Project writes", "evidence as records", "todo"),
