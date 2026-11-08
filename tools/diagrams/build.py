@@ -116,7 +116,7 @@ def layers(rows, label):
 
 
 def dag(steps, levels, first, label):
-    nw, nh, gx, gy = 136, 54, 6, 46
+    nw, nh, gx, gy = 140, 54, 6, 46
     pos, y = {}, 14
     for lvl in levels:
         x = (W - (len(lvl) * nw + (len(lvl) - 1) * gx)) / 2
@@ -146,14 +146,12 @@ def dag(steps, levels, first, label):
 
 FAST = {
     "A": ("Pick the name", "one answer: D2 + D7", []),
+    "G": ("Folder records", "records own their files", []),
     "C": ("Evidence types", "findings and claims", []),
-    "D": ("Derived database", "JSON + SQLite build", []),
-    "B": ("Publish 0.1.0", "osdlc PR 725", ["A"]),
-    "G": ("Folder records", "research with files", ["B"]),
-    "E": ("Project writes", "research as records", ["B", "C"]),
-    "F": ("Project queries", "the built database", ["D", "E"]),
+    "B": ("Publish 0.1.0", "osdlc PR 725", ["A", "G"]),
+    "E": ("Project writes", "evidence as records", ["B", "C"]),
 }
-FAST_LEVELS = [["A", "C", "D"], ["B", None, None], ["G", "E", None], [None, None, "F"]]
+FAST_LEVELS = [["A", "G", "C"], [None, "B", None], [None, None, "E"]]
 
 STEPS = {
     1: ("Decide the words", "D1 D2 D6 D7", []),
@@ -289,7 +287,7 @@ def levels_profiles():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     files = {
-        "fast-path.svg": dag(FAST, FAST_LEVELS, ("A", "C", "D"), "Fast path to unlock the evidence project"),
+        "fast-path.svg": dag(FAST, FAST_LEVELS, ("A", "G", "C"), "Fast path to unlock the evidence project"),
         "present.svg": layers(PRESENT, "Present state by layer"),
         "resolvers.svg": resolvers(),
         "levels-profiles.svg": levels_profiles(),

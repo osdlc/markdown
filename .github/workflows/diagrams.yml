@@ -20,5 +20,7 @@ jobs:
           python-version: "3.12"
       - name: The committed SVGs match the script
         run: |
+          rm -f docs/diagrams/*.svg
           python3 tools/diagrams/build.py
           git diff --exit-code docs/diagrams
+          test -z "$(git status --porcelain docs/diagrams)"

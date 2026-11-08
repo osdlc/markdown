@@ -22,28 +22,31 @@ where we want to end up, and the steps to get there. We update it as we go.
 ## First: unlock the evidence project
 
 Another project is waiting on one thing. It needs a format for keeping evidence and research as
-structured records, and a database built from those records. Most of this exists already, so this
-comes before the rest of the plan.
+structured records. It will collect evidence, observations and test material, such as scripts,
+queries and CSV results, as records with their files. Most of this exists already, so this comes
+before the rest of the plan.
 
-![The fast path: seven steps, three of which can start now](diagrams/fast-path.svg)
+![The fast path: five steps, three of which can start now](diagrams/fast-path.svg)
 
-- **Pick the name.** This is the only thing that blocks publishing. We can publish as markdown-db
-  now and rename before 1.0, or choose the final name now and rename the open PR first, which is
-  about an hour of work.
-- **Publish 0.1.0.** The package and the spec are in
-  [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). It has been reviewed and fixed. The
-  owner merges it and the release script publishes it.
+- **Pick the name.** This is the only decision that blocks publishing. We can publish as
+  markdown-db now and rename before 1.0, or choose the final name now and rename the open PR first,
+  which is about an hour of work.
+- **Folder records.** A folder that holds a note with the folder's own name is one record, and it
+  owns the other files in it. This is how a test run keeps its script, its query and its CSV results
+  together. We have agreed to add it, and it goes into 0.1.0.
 - **Evidence types.** The project copies in plain JSON Schema files for its types: sources, findings
   (one observation of a source, with its date, quote and location) and claims (a statement that
   cites findings as support or as dispute). They come from the harness-reference corpus in
   [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74). Copying them means we don't
   need profiles to work yet. Later the same files become the evidence profile.
-- **A derived database.** A `build` command that checks the corpus, then writes every valid record
-  to one JSON file per type and to a SQLite file with one table per type. This is small, because
-  the validator already returns every valid record by type.
-- **Folder records.** Only needed if the research includes files, such as scripts, queries or CSV
-  results. A folder that holds a note with the folder's own name is one record, and it owns the
-  other files in it. We have agreed to add this but have not built it.
+- **Publish 0.1.0.** The package and the spec are in
+  [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). It has been reviewed and fixed. Once
+  folder records are in, the owner merges it and the release script publishes it.
+- **The project writes records.** It starts keeping its evidence as records, checked by the
+  validator.
+
+A database built from the records (JSON or SQLite) is not in the fast path. It comes later, with the
+query layer in step 10.
 
 skillwright uses a copy of the package today: harness-reference depends on it as
 `workspace:*`. Once the package is on npm, skillwright switches to it and deletes the copy.
@@ -68,7 +71,7 @@ Some of these are moving into osdlc already: markdown-tags in
 [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069) and the first packs in
 [sksizer/dev#4070](https://github.com/sksizer/dev/pull/4070).
 
-The note-part packages and the Rust corpus packages are published on npm and crates.io. Nothing
+The osdlc note-part packages and the Rust corpus packages are published on npm and crates.io. Nothing
 from dev or rust-ontogen is published, and neither is markdown-db.
 
 ## What is wrong
@@ -151,8 +154,8 @@ switches its word is an open question for
 
 ## Decisions we need
 
-The first four block most of the plan. Step 4, and the fast path's evidence types and database
-build, do not wait on them.
+The first four block most of the plan. Step 4, and the fast path's folder records and evidence
+types, do not wait on them.
 
 - **D1. One word for a folder of notes.** Corpus, which osdlc uses today, or vault.
 - **D2. The spec's name.** See the ideas below.
@@ -203,8 +206,9 @@ All of these are free on npm and crates.io except markdown-corpus, which is our 
 8. **Add profiles.** Decide D4, then let a corpus take its level-2 types from profiles. model-schema
    moves to osdlc. Needs step 3 and [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069).
 9. **Put markdown-store on the shared parts** and have it write the spec's layout. Needs step 3.
-10. **Make one query layer.** Move markdown-vault-query to osdlc on top of the corpus model; the
-    database build lives there too. Needs step 5 and D5.
+10. **Make one query layer.** Move markdown-vault-query to osdlc on top of the corpus model. The
+    database build lives there too: it writes every valid record to JSON files and a SQLite file.
+    Needs step 5 and D5.
 11. **Finish moving the render, edit and site packages**:
     [osdlc/osdlc#714](https://github.com/osdlc/osdlc/pull/714),
     [#719](https://github.com/osdlc/osdlc/pull/719),
