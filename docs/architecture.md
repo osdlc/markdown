@@ -22,9 +22,10 @@ the set of packages that lets programs do that safely, without breaking what peo
 
 ## The layers
 
-![The layers, bottom to top, with the packages in each](diagrams/architecture-layers.svg)
+![The layers, top to bottom, with the packages in each](diagrams/architecture-layers.svg)
 
-Each layer uses only the layers below it. Here they are from the bottom up.
+The diagram shows the top layer first. Each layer uses only the layers below it. Here they are
+from the bottom up.
 
 ### 1. Files
 
@@ -138,7 +139,7 @@ A corpus says three separate things about itself in its root file:
 # corpus-schema.md
 level: 2
 dialect: obsidian
-profiles: [evidence@0]
+profiles: [acceptance-testing@0]
 ```
 
 - The **level** says how much the corpus declares. Level 0 declares nothing: any folder of linked

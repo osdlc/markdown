@@ -97,7 +97,7 @@ LAYERS = [
    [("markdown-link", "LinkIndex", "osdlc"), ("frontmatter, yaml, tags", "twins", "osdlc")]),
   ("1", "Files", "walk, read, write safely",
    [("etag-write, path-guard", "safe writes and paths", "osdlc")],
-   [("vault-fs, vfs-walk, seam", "walk any file system", "osdlc")]),
+   [("vault-fs, vfs-walk, seam", "walk any file system", "osdlc"), ("etag-write, path-guard", "the twins", "osdlc")]),
 ]
 
 
