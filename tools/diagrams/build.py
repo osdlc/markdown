@@ -294,16 +294,17 @@ def task_graph():
         sx, sy = cols[1] + tw, ys[n] + th / 2
         out.append(f'<path class="edge" d="M{sx},{sy} C{sx + 40},{sy} {tx},{sy + 10} {tx},{gy - 5}" marker-end="url(#ah)"/>')
     bottom1 = gy + gh
-    # inheritance chain: below group 1 in the middle column, fed by 9
-    gx, gy = cols[1] - 3, max(bottom, y9 + th) + 20
-    gh = 24 + 4 * cpitch - 20
-    out.append(f'<rect class="group" x="{gx}" y="{gy}" width="{tw + 6}" height="{gh}" rx="10"/>'
+    # inheritance tasks: below everything in the evidence and middle columns, fed by 9
+    gx, gy = cols[0] - 3, max(bottom, ev_y[5] + th) + 20
+    rows = [gy + 24, gy + 104, gy + 184]
+    gh = rows[2] + th + 14 - gy
+    out.append(f'<rect class="group" x="{gx}" y="{gy}" width="{cols[1] + tw + 3 - gx}" height="{gh}" rx="10"/>'
                f'<text class="gt" x="{gx + 10}" y="{gy + 16}">After 9</text>')
-    ichain = [(27, gy + 24), (28, gy + 24 + cpitch), (29, gy + 24 + 2 * cpitch), (30, gy + 24 + 3 * cpitch)]
-    for n, ny in ichain:
-        bodies.append(node(n, cols[1], ny))
-    for (_, y1), (_, y2) in zip(ichain, ichain[1:]):
-        out.append(edge(cx(1), y1 + th, cx(1), y2))
+    for n, c, ny in ((27, 1, rows[0]), (28, 1, rows[1]), (29, 0, rows[1]), (30, 1, rows[2])):
+        bodies.append(node(n, cols[c], ny))
+    out.append(edge(cx(1), rows[0] + th, cx(1), rows[1]))
+    out.append(edge(cx(1), rows[1] + th, cx(1), rows[2]))
+    out.append(edge(cx(1), rows[0] + th, cx(0), rows[1]))
     out.append(edge(cx(1), y9 + th, cx(1), gy))
     bottom = max(bottom1, gy + gh)
     for a, b in edges:

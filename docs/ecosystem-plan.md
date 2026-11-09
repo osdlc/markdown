@@ -356,9 +356,10 @@ The numbers match the task graph at the top. "After" says what must come first.
   type and id as an inherited one is an error unless it says `refines`. After 27.
 - **29. `corpus-schema sync`.** It writes a read-only copy of inherited records into a generated
   folder, such as `_inherited/org/`, so Obsidian and GitHub links resolve. The validator checks that
-  the copy matches the pin. After 28.
+  the copy matches the pin. After 27.
 - **30. An org principles corpus.** The first real case: one shared principles corpus that project
-  corpora extend, refine and waive. After 29.
+  corpora extend, refine and waive. After 27 and 28. Sync (task 29) helps here but is not
+  required.
 - **10. markdown-store on the shared parts**, writing the spec's layout. After 3.
 
 **The corpus model**
