@@ -11,7 +11,7 @@ strength: strong
 hasEvidenceLines:
   - hasEvidenceItems:
       - "[README on config](../study-results/README%20on%20config.md)"
-      - "[Linux probe](../study-results/Linux%20probe/Linux%20probe.md)"
+      - "[Linux probe](../study-results/linux/Linux%20probe/Linux%20probe.md)"
     directionOfEvidenceProvided: supports
     strengthOfEvidenceProvided: strong
     description: >-

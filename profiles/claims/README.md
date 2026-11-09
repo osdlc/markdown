@@ -193,16 +193,37 @@ A contribution has `contributor` (an Agent with `name` and `agentType`), `activi
 
 [example/](example/) is a valid level-2 corpus. It checks a claim about a made-up command line
 tool, fernlog: that version 2.3 reads its config file from `~/.config/fernlog/config.toml`. It
-also checks a narrower form of the same claim, for Linux only.
+also checks a narrower form of the same claim, for Linux only, and a claim that lists the config
+paths for each platform.
 
 - A document: the tool's README.
 - A method: a probe that tries each config path in turn.
-- Three study results. One is what the README says. Two are runs of the probe: one on Linux, kept
-  as a record folder with its script and CSV, and one on macOS.
-- Two statements. The first has two evidence lines: the README and the Linux run support the
+- Three study results. One is what the README says. Two are runs of the probe, each in a
+  subfolder for its platform: `study-results/linux/` holds the Linux run as a record folder with
+  its script and CSV, and `study-results/macos/` holds the macOS run.
+- Three statements. The first has two evidence lines: the README and the Linux run support the
   claim, and the macOS run disputes it. The second makes the narrower claim for Linux only. It
   also has a field the claims types do not define and an object for its value. See
-  [Adding your own kinds](#adding-your-own-kinds).
+  [Adding your own kinds](#adding-your-own-kinds). The third lists the paths fernlog reads on each
+  platform, and all three study results support it.
+
+### Where the example shows nesting
+
+- Records in subfolders. corpus-schema finds records at any depth in a type folder. A record's id
+  is still its file name, or its folder name for a record folder, so the macOS run's id is
+  `macOS probe` and the subfolder `macos` is not part of it. Ids must be unique across the whole
+  type, whatever the subfolder.
+- A record folder inside a subfolder: `study-results/linux/Linux probe/`, with its script and CSV.
+- A sub-object in a study result: `qualityMeasures.environment` on both probe runs holds the
+  operating system and the shell.
+- A list of objects as a proposition's value:
+  [fernlog config paths by platform](example/statements/fernlog%20config%20paths%20by%20platform.md)
+  has one `{ platform, path, precedence }` entry per path.
+
+A nested field can hold a link, but the validator checks only that the link resolves, not what
+type of record it points at. Typed links from nested fields need `x-ref` inside nested objects,
+which is plan task 31. Until then, typed links go in top-level fields, and evidence items use the
+pattern described in departure 4.
 
 Check it with the validator, from the root of this repository:
 

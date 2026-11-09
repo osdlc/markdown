@@ -1,5 +1,5 @@
 ---
-specifiedBy: "[Config path probe](../../methods/Config%20path%20probe.md)"
+specifiedBy: "[Config path probe](../../../methods/Config%20path%20probe.md)"
 contributions:
   - contributor: { name: Sam Example, agentType: person }
     activityType: created
@@ -10,7 +10,9 @@ contributions:
 ancillaryResults:
   configRead: ~/.config/fernlog/config.toml
 qualityMeasures:
-  os: Ubuntu 24.04
+  environment:
+    os: Ubuntu 24.04
+    shell: dash 0.5.12
   fernlogVersion: 2.3.1
   places: 2
   runsPerPlace: 3

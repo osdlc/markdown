@@ -1,5 +1,5 @@
 ---
-specifiedBy: "[Config path probe](../methods/Config%20path%20probe.md)"
+specifiedBy: "[Config path probe](../../methods/Config%20path%20probe.md)"
 contributions:
   - contributor: { name: Sam Example, agentType: person }
     activityType: created
@@ -7,7 +7,9 @@ contributions:
 ancillaryResults:
   configRead: ~/Library/Application Support/fernlog/config.toml
 qualityMeasures:
-  os: macOS 15.4
+  environment:
+    os: macOS 15.4
+    shell: zsh 5.9
   fernlogVersion: 2.3.1
   places: 3
   runsPerPlace: 3

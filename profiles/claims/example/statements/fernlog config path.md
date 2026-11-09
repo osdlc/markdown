@@ -8,14 +8,14 @@ strength: moderate
 hasEvidenceLines:
   - hasEvidenceItems:
       - "[README on config](../study-results/README%20on%20config.md)"
-      - "[Linux probe](../study-results/Linux%20probe/Linux%20probe.md)"
+      - "[Linux probe](../study-results/linux/Linux%20probe/Linux%20probe.md)"
     directionOfEvidenceProvided: supports
     strengthOfEvidenceProvided: strong
     description: >-
       The README names this path, and a test run on Linux shows fernlog reading it and nothing
       else.
   - hasEvidenceItems:
-      - "[macOS probe](../study-results/macOS%20probe.md)"
+      - "[macOS probe](../study-results/macos/macOS%20probe.md)"
     directionOfEvidenceProvided: disputes
     strengthOfEvidenceProvided: moderate
     description: >-

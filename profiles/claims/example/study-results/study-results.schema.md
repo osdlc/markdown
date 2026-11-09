@@ -78,6 +78,9 @@ it, because one observation can count as evidence for statements about several t
 A result with files of its own, such as the script that ran and a CSV of its output, is a record
 folder: `study-results/<Name>/<Name>.md` with the files beside it. Link to the files from the body.
 
+Records can sit in subfolders, such as `study-results/linux/`, to group them. A subfolder is not
+part of a record's id, so ids must be unique across the whole type.
+
 The observation is not changed after it is written. A later look that finds something different is
 a new record. The one allowed edit is a new entry in `contributions`, such as someone checking the
 result again. The validator does not check this; reviewers do.
