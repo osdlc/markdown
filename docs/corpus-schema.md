@@ -816,14 +816,14 @@ The evidence work does not need it to start. It needs the format, record folders
 validator. A database built from the records belongs to the query layer, and the query layer builds
 on a shared corpus model that does not exist in TypeScript yet. So the build waits for both.
 
-### The version line, 0.1.0
+### The version line, 0.x
 
 Others considered: a 1.0 release.
 
 The version line is
 [D-02](https://github.com/osdlc/osdlc/blob/main/packages/ts/corpus-schema/docs/planning/decisions/D-02-version-line-and-stability.md),
 which is still proposed and waits for the owner's sign-off. The package and the spec are new, so a
-1.0 promise would come too early. The first release is `0.1.0`, and every export is stable within
+1.0 promise would come too early. The first version on npm is `0.2.0`, and every export is stable within
 0.x. A minor release may change any export, and the changelog marks the change as breaking. A patch
 release does not. The `<file>: <field>` part of a problem line is part of the contract, as the spec
 fixes it. The message text is not.
@@ -902,8 +902,9 @@ Where it lives. The spec, its conformance cases and the TypeScript package are i
 in `packages/conformance/corpus-schema/` and `packages/ts/corpus-schema/`. The rename from
 markdown-db and the levels came in [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725), and
 record folders in [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729). The release pull
-request, [osdlc/osdlc#726](https://github.com/osdlc/osdlc/pull/726), set the version to 0.1.0, and
-the owner publishes it to npm. Once this repo, osdlc/markdown, has its own release setup, the spec,
+request, [osdlc/osdlc#726](https://github.com/osdlc/osdlc/pull/726), cut 0.1.0, but it was never
+published. Record folders landed as a second minor bump, so the first version on npm is 0.2.0, from
+[osdlc/osdlc#733](https://github.com/osdlc/osdlc/pull/733). Once this repo, osdlc/markdown, has its own release setup, the spec,
 its cases and the package move here. The npm name stays the same.
 
 The evidence work comes first:
@@ -1054,10 +1055,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx --yes @osdlc/corpus-schema@0.1 validate corpora/
+      - run: npx --yes @osdlc/corpus-schema@0.2 validate corpora/
 ```
 
-This works once 0.1.0 is on npm. Until then, check the
+Version 0.2.0 is on npm. For the current usage, check the
 [package README](https://github.com/osdlc/osdlc/tree/main/packages/ts/corpus-schema#readme). A
 corpus's schemas run on its data, and a badly written `pattern` or `x-id-pattern` can take a very
 long time on some input. So validate a corpus you do not trust only with a time limit, such as the
