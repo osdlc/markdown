@@ -1,0 +1,26 @@
+name: diagrams
+
+on:
+  pull_request:
+    paths: ["tools/diagrams/**", "docs/diagrams/**", "docs/ecosystem-plan.md", ".github/workflows/diagrams.yml"]
+  push:
+    branches: [main]
+    paths: ["tools/diagrams/**", "docs/diagrams/**", "docs/ecosystem-plan.md", ".github/workflows/diagrams.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The committed SVGs match the script
+        run: |
+          rm -f docs/diagrams/*.svg
+          python3 tools/diagrams/build.py
+          git diff --exit-code docs/diagrams
+          test -z "$(git status --porcelain docs/diagrams)"
