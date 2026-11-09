@@ -25,11 +25,12 @@ pnpm run typecheck
 
 Build first: the tests and the typecheck read the built `dist/`.
 
-Two more checks run in CI, from the root devDependencies:
+CI also runs each package's `smoke`, `lint`, `format:check` and `check:extra` scripts, where
+defined, and these checks from the root devDependencies:
 
 ```sh
 pnpm exec package-checks ts    # pack each package and check the tarball
-pnpm exec conformance check    # check the conformance suites
+pnpm exec conformance check    # check the conformance suites, and regenerate them
 ```
 
 `package-checks` checks each package against osdlc's package shape. The root
@@ -38,10 +39,9 @@ package lints with the root `.oxlintrc.json` and keeps no lint config of its own
 
 ## CI
 
-`.github/workflows/packages-ci.yml` runs on every pull request. It calls the shared
-`ts-packages-ci.yml` workflow from osdlc/osdlc. A pull request checks the packages it changed and
-the packages that depend on them, on Ubuntu and macOS under Node 22 and 24. The checks report as
-`packages / verify (<os>, node <n>)`.
+`.github/workflows/packages-ci.yml` runs on every pull request and calls the shared
+`ts-packages-ci.yml` workflow from osdlc/osdlc. The checks are `packages / changes`
+and `packages / verify (<os>, node <n>)`, for Ubuntu and macOS under Node 22 and 24.
 
 ## Releases
 

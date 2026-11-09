@@ -3,8 +3,8 @@ packages:
 
 # Versions shared across the workspace. A package or the root names one as
 # `"catalog:"`, so a bump is one edit here. `pnpm pack` and `pnpm publish`
-# write the concrete range into the packed package.json. The versions match
-# osdlc/osdlc's catalog.
+# write the concrete range into the packed package.json. Keep them in step
+# with osdlc/osdlc's catalog.
 catalog:
   '@changesets/cli': 3.0.3
   '@types/node': ^26.1.0

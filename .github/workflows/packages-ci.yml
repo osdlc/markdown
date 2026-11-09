@@ -2,17 +2,8 @@
 # main, packages-publish.yml calls this workflow and releases only if it
 # passes.
 #
-# The `packages` job calls ts-packages-ci.yml from osdlc/osdlc, the shared CI
-# for repositories that publish packages the way osdlc/osdlc does; its header
-# says what it checks. Its jobs report as `packages / changes` and
-# `packages / verify (<os>, node <n>)`. A pull request checks only the
-# packages it changed and the packages that depend on them. The root
-# package-checks.json names this file as shared, so a pull request that only
-# moves the pin below checks every package. A run that is not a pull request
-# checks every package, including the call from packages-publish.yml.
-#
-# The shared workflow runs `package-checks` and `conformance` from this
-# repository's root devDependencies, so the lockfile pins their versions.
+# The root package-checks.json lists this file as shared, so a change here
+# checks every package.
 name: packages
 
 on:
@@ -32,5 +23,7 @@ concurrency:
 
 jobs:
   packages:
-    # TODO: pin to osdlc main after osdlc/osdlc#749 merges
-    uses: osdlc/osdlc/.github/workflows/ts-packages-ci.yml@52581f8e2438b4d54f5ccd32e023c171d90cb737 # shared-ci/workflows
+    uses: osdlc/osdlc/.github/workflows/ts-packages-ci.yml@52581f8e2438b4d54f5ccd32e023c171d90cb737 # TODO: pin to osdlc main after osdlc/osdlc#749 merges
+    with:
+      os: '["ubuntu-latest", "macos-latest"]'
+      node: '["22", "24"]'
