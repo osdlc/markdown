@@ -34,6 +34,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: osdlc/osdlc/.github/workflows/ts-packages-release.yml@7b04ba56fa0829120547ed5da436d2503f33e7d2 # TODO: pin to osdlc main after osdlc/osdlc#749 merges
+    uses: osdlc/osdlc/.github/workflows/ts-packages-release.yml@e33cc25c3358e9903fce96dba10f8646f470f2bf # TODO: pin to osdlc main after osdlc/osdlc#749 merges
     with:
       app-client-id: Iv23liYTGAl78fzN8YWm
