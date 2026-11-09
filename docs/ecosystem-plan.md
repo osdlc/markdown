@@ -128,7 +128,8 @@ We follow four rules:
 2. When a job has a TypeScript and a Rust package, they are twins. They share one set of
    conformance cases, so they behave the same.
 3. One word for each idea.
-4. Anything general lives in osdlc. Apps use it from there.
+4. Anything general lives in the osdlc org. The spec and its profiles live in this repo. The
+   other packages stay in osdlc/osdlc until they move here. Apps use them from there.
 
 ![The target, by layer](diagrams/target.svg)
 

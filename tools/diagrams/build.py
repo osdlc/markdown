@@ -16,10 +16,10 @@ CW, CH, GX, GY = 200, 46, 8, 8
 X0 = 16
 
 LIGHT = dict(bg="#fbfaf7", fg="#1d1d1b", mut="#5d5d58", band="#f0eee8", line="#d8d5cc", chip="#ffffff",
-             osdlc="#2f855a", dev="#2b6cb0", ont="#6b46c1", sw="#c05621", ext="#8a8a84",
+             osdlc="#2f855a", md="#b83280", dev="#2b6cb0", ont="#6b46c1", sw="#c05621", ext="#8a8a84",
              bad="#c53030", badbg="#fde8e8", acc="#b8741a", accbg="#fde7c8")
 DARK = dict(bg="#16161a", fg="#ececea", mut="#a3a39d", band="#222227", line="#3a3a40", chip="#2b2b31",
-            osdlc="#68d391", dev="#63b3ed", ont="#b794f4", sw="#f6ad55", ext="#a0a09a",
+            osdlc="#68d391", md="#f687b3", dev="#63b3ed", ont="#b794f4", sw="#f6ad55", ext="#a0a09a",
             bad="#fc8181", badbg="#3b1d1d", acc="#f6ad55", accbg="#3d2f1c")
 
 
@@ -31,6 +31,7 @@ def rules(c):
 .chip rect{{fill:{c['chip']};stroke-width:1.5}} .chip.later rect{{fill:none;stroke-dasharray:5 4}}
 .cn{{font-size:13px;font-weight:650;fill:{c['fg']}}} .cs{{font-size:11px;fill:{c['mut']}}}
 .r-osdlc rect{{stroke:{c['osdlc']}}} .r-osdlc .dot{{fill:{c['osdlc']}}}
+.r-md rect{{stroke:{c['md']}}} .r-md .dot{{fill:{c['md']}}}
 .r-dev rect{{stroke:{c['dev']}}} .r-dev .dot{{fill:{c['dev']}}}
 .r-ont rect{{stroke:{c['ont']}}} .r-ont .dot{{fill:{c['ont']}}}
 .r-sw rect{{stroke:{c['sw']}}} .r-sw .dot{{fill:{c['sw']}}}
@@ -91,19 +92,20 @@ def grid(y, items):
 
 
 KEY = [("osdlc", "osdlc"), ("dev", "dev"), ("ont", "rust-ontogen"), ("sw", "skillwright")]
+TARGET_KEY = [("md", "markdown")] + KEY
 
 
-def key(y):
+def key(y, repos):
     out, x = [f'<text class="cs" x="{X0}" y="{y + 4}">Repo:</text>'], X0 + 40
-    for repo, name in KEY:
+    for repo, name in repos:
         out.append(f'<g class="chip r-{repo}"><circle cx="{x}" cy="{y}" r="4.5" class="dot"/></g>'
                    f'<text class="cs" x="{x + 8}" y="{y + 4}">{name}</text>')
         x += 22 + len(name) * 6.6
     return "".join(out)
 
 
-def layers(rows, label):
-    y, out = 26, [key(12)]
+def layers(rows, label, repos=KEY):
+    y, out = 26, [key(12, repos)]
     for name, sub, ts, rs in rows:
         top, body, yy = y, [], y + 52
         for lang, items in (("TYPESCRIPT", ts), ("RUST", rs)):
@@ -161,16 +163,15 @@ TARGET = [
     ("Apps and tools", "read only through osdlc packages",
      [("sdlc", "types from profiles", "dev"), ("skillwright, harness-ref", "spec corpora", "sw")],
      [("determined", "corpus model", "dev"), ("skillwright CLI", "corpus model", "sw")]),
-    ("Render, edit, sites", "all in osdlc",
+    ("Render, edit, sites", "in osdlc/osdlc for now",
      [("markdown-render", "", "osdlc"), ("markdown-editor", "", "osdlc"),
       ("markdown-astro", "", "osdlc"), ("markdown-ui", "", "osdlc")], []),
     ("Query: the db layer (D5)", "one read layer over the model",
      [("query layer", "Bases + loader, one model", "osdlc")],
      [("markdown-store", "writes the spec layout", "ont")]),
-    ("The spec and profiles", "one spec, one type format",
-     [("corpus-schema", "levels 0–2, shared cases", "osdlc"), ("profiles (D4)", "evidence, sdlc, ...", "osdlc"),
-      ("corpus-schema", "validator reads the model", "osdlc")],
-     [("corpus-schema", "later, same cases", "osdlc", "later")]),
+    ("The spec and profiles", "in this repo, one type format",
+     [("corpus-schema", "levels 0–2, reads the model", "md"), ("profiles (D4)", "evidence, sdlc, ...", "md")],
+     []),
     ("Corpus model", "one per language, one family",
      [("markdown-corpus", "vault + graph merged", "osdlc")],
      [("markdown-corpus", "twin", "osdlc"), ("markdown-relink", "", "osdlc")]),
@@ -329,10 +330,10 @@ def main():
         "present.svg": layers(PRESENT, "Present state by layer"),
         "resolvers.svg": resolvers(),
         "levels-profiles.svg": levels_profiles(),
-        "target.svg": layers(TARGET, "Target state by layer"),
+        "target.svg": layers(TARGET, "Target state by layer", TARGET_KEY),
     }
     for name, text in files.items():
-        (OUT / name).write_text(text)
+        (OUT / name).write_text(text, encoding="utf-8")
         print(OUT / name)
 
 
