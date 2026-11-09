@@ -203,6 +203,7 @@ TASKS = {
     18: ("This plan", "markdown PR 4", "owner"),
     19: ("Point repos", "here, after 18", "todo"),
     20: ("Arch doc", "markdown PR 5", "doing"),
+    21: ("Release here", "then move the spec", "todo"),
 }
 STATUS = [("done", "done"), ("doing", "in progress"), ("owner", "waiting on owner"), ("todo", "not started")]
 
@@ -240,7 +241,7 @@ def task_graph():
     place = {4: (0, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1), 5: (3, 0)}
     edges = [(1, 2), (11, 12), (2, 3), (4, 5), (3, 5)]
     # groups: (column, first row, title, members, fed by)
-    groups = [(1, 3, "After the alpha", [6, 7, 8, 9, 10], 3),
+    groups = [(1, 3, "After the alpha", [6, 7, 8, 9, 10, 21], 3),
               (2, 2, "After the TS model", [13, 15, 16, 14], 12)]
     gpitch = 54
     bodies = []

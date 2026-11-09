@@ -239,4 +239,12 @@ The numbers match the task graph at the top. "After" says what must come first.
 20. **The architecture doc**: [osdlc/markdown#5](https://github.com/osdlc/markdown/pull/5). In
     progress.
 
+**Moving packages here**
+
+21. **Release setup here, then move corpus-schema.** Give this repo its own release setup:
+    Changesets, a publish workflow with npm trusted publishing, package checks, the conformance
+    check, a CI matrix and shared configs. Then move `@osdlc/corpus-schema` and its spec family from
+    osdlc/osdlc into this repo as its first package. The npm name stays the same. After 3. Other
+    markdown packages follow the same path later.
+
 We will track each task as an issue in this repo.
