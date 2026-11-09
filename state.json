@@ -1,12 +1,57 @@
 {
   "schema": 1,
   "pr": 10,
-  "head": null,
-  "base": null,
-  "round": 0,
+  "head": "2b2e616e88e16da2c7e8150b4856a2b905699b5f",
+  "base": "1ad5a95398227b5586650803cf09d023d9a47a37",
+  "round": 1,
   "claim": {
     "owner": "KellyMBP.local:claude-dap284",
     "at": "2026-11-09T20:55:30.193Z"
   },
-  "findings": []
+  "findings": [
+    {
+      "id": "r1-1",
+      "round": 1,
+      "path": ".github/workflows/packages-ci.yml",
+      "line": 36,
+      "title": "Pass os and node explicitly; the ruleset depends on the check names",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-2",
+      "round": 1,
+      "path": "packages/README.md",
+      "line": 28,
+      "title": "\"Two more checks\" undercounts what CI runs beyond the local block",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-3",
+      "round": 1,
+      "path": ".github/workflows/packages-ci.yml",
+      "line": 8,
+      "title": "Header restates the shared workflow's header",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-4",
+      "round": 1,
+      "path": "pnpm-workspace.yaml",
+      "line": 7,
+      "title": "\"The versions match osdlc/osdlc's catalog\" is a claim nothing keeps true",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    }
+  ]
 }
