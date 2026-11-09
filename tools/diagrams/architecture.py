@@ -76,8 +76,9 @@ def layers():
                    f'<text class="rs" x="{X0}" y="{top + 39}">{esc(sub)}</text>')
         out.extend(body)
         y = top + h + 8
-    out.append(f'<text class="cs" x="{X0}" y="{y + 10}">Each layer uses only the layers below it. Dashed: not built yet.</text>')
-    return svg(STYLE + "".join(out), y + 22, "The layers of the markdown ecosystem, top to bottom")
+    out.append(f'<text class="cs" x="{X0}" y="{y + 10}">Each layer uses only the layers below it. Dashed: not built yet.</text>'
+               f'<text class="cs" x="{X0}" y="{y + 26}">Colour: where each package lives once the moves are done.</text>')
+    return svg(STYLE + "".join(out), y + 38, "The layers of the markdown ecosystem, top to bottom")
 
 
 def settings():
