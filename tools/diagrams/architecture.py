@@ -3,7 +3,7 @@
 Run from the repo root: python3 tools/diagrams/architecture.py
 It uses build.py's shared style and helpers, so both pages look the same.
 """
-from build import ARROW, DARK, KEY, LIGHT, OUT, W, X0, esc, grid, svg
+from build import ARROW, DARK, LIGHT, OUT, TARGET_KEY, W, X0, esc, grid, key, svg
 
 
 def extra(c):
@@ -39,11 +39,11 @@ LAYERS = [
   ("6", "Query (later)", "read a corpus as a database",
    [("query layer", "Bases queries, loader, builds", "osdlc", "later")], []),
   ("5", "Profiles (proposal)", "shared sets of types",
-   [("evidence profile", "sources, findings, claims", "osdlc", "later"),
-    ("acceptance testing", "builds on evidence", "osdlc", "later")], []),
+   [("evidence profile", "sources, findings, claims", "md", "later"),
+    ("acceptance testing", "builds on evidence", "md", "later")], []),
   ("4", "corpus-schema", "the spec and its validator",
-   [("@osdlc/corpus-schema", "levels 0–2, validate --fix", "osdlc")],
-   [("Rust validator", "later, same tests", "osdlc", "later")]),
+   [("@osdlc/corpus-schema", "levels 0–2, validate --fix", "md")],
+   [("Rust validator", "later, same tests", "md", "later")]),
   ("3", "Corpus model", "every note and link, kept fresh",
    [("markdown-corpus", "from vault + graph", "osdlc", "later")],
    [("markdown-corpus", "the twin", "osdlc"), ("markdown-relink", "move notes, fix links", "osdlc")]),
@@ -56,18 +56,10 @@ LAYERS = [
 ]
 
 
-def key(y):
-    """build.py's repo key, plus "other" for the evidence project."""
-    out, x = [f'<text class="cs" x="{X0}" y="{y + 4}">Repo:</text>'], X0 + 40
-    for repo, name in KEY + [("ext", "other")]:
-        out.append(f'<g class="chip r-{repo}"><circle cx="{x}" cy="{y}" r="4.5" class="dot"/></g>'
-                   f'<text class="cs" x="{x + 8}" y="{y + 4}">{name}</text>')
-        x += 22 + len(name) * 6.6
-    return "".join(out)
-
-
 def layers():
-    out, y = [key(12)], 26
+    # The key needs two rows to fit; the second drops its own "Repo:" label.
+    repos = TARGET_KEY + [("ext", "other")]
+    out, y = [key(12, repos[:3]), key(28, repos[3:]).replace(">Repo:<", "><")], 42
     for num, name, sub, ts, rs in LAYERS:
         top, body, yy = y, [], y + 52
         for lang, items in (("TYPESCRIPT", ts), ("RUST", rs)):
@@ -131,7 +123,7 @@ def settings():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for name, text in {"architecture-layers.svg": layers(), "architecture-settings.svg": settings()}.items():
-        (OUT / name).write_text(text)
+        (OUT / name).write_text(text, encoding="utf-8")
         print(OUT / name)
 
 

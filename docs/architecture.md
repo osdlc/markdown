@@ -86,7 +86,8 @@ The spec, and the validator that checks a corpus against it.
   decided. The work is in [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), still open.
 - Packages: `@osdlc/corpus-schema` (TypeScript). It is on osdlc's main branch
   ([osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged) but not published yet. Its
-  first release is 0.1.0. skillwright still has an older copy named `@osdlc/markdown-db`. A Rust
+  first release is 0.1.0. skillwright still has an older copy named `@osdlc/markdown-db`. Once this
+  repo has its own release setup, the package and its spec move here, with the same npm name. A Rust
   validator comes later and runs the same tests.
 
 ### 5. Profiles (proposal)
@@ -201,7 +202,9 @@ A twin can have extras the other doesn't need. It just has to pass the shared ca
   name).
 - Writes never lose what a person wrote. Frontmatter is rewritten with frontmatter-lossless or
   yaml-splice, and files are saved with etag-write.
-- General code lives in osdlc. Apps use it from there and keep only their own rules.
+- General code lives in the osdlc org. The spec and its profiles live in this repo
+  (osdlc/markdown). The other packages stay in osdlc/osdlc until they move here. Apps use them from
+  there and keep only their own rules.
 
 ## Where things live
 
@@ -210,8 +213,8 @@ A twin can have extras the other doesn't need. It just has to pass the shared ca
 | Note parts | osdlc; dev also has a private copy of markdown-link | osdlc, used from npm and crates.io |
 | Corpus model, TypeScript | markdown-vault and vault-graph-core in dev | markdown-corpus in osdlc |
 | Corpus model, Rust | markdown-corpus in osdlc | the same |
-| corpus-schema | osdlc main, not published; an older copy in skillwright | osdlc, on npm |
-| Profiles | model-schema and packs in dev (open PRs) | osdlc |
+| corpus-schema | osdlc/osdlc main, not published; an older copy in skillwright | this repo, on npm |
+| Profiles | model-schema and packs in dev (open PRs) | this repo |
 | Query | markdown-vault-query in dev | osdlc |
 | Render, edit, sites | dev | osdlc |
 | Typed records from Rust | markdown-store in rust-ontogen | on the shared parts; where it lives is an open question |
