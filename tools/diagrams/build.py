@@ -184,7 +184,7 @@ TARGET = [
 TASKS = {
     1: ("corpus-schema", "rename, levels", "done"),
     2: ("Record folders", "osdlc PR 729", "done"),
-    3: ("Publish 0.1.0", "publish run", "owner"),
+    3: ("Publish 0.2.0", "on npm", "done"),
     4: ("Claims example", "profiles/claims", "doing"),
     5: ("Project writes", "evidence as records", "todo"),
     6: ("x-warn", "soft schema rules", "todo"),
@@ -209,7 +209,9 @@ TASKS = {
     28: ("Refine, waive", "local vs inherited", "todo"),
     29: ("Sync", "_inherited copy", "todo"),
     30: ("Org principles", "first real case", "todo"),
-    23: ("Claims profile", "after 9 and 21", "todo"),
+    23: ("Claims profile", "after 9, 21, 31", "todo"),
+    31: ("Nested x-ref", "any depth; after 3, 4", "todo"),
+    32: ("Rust validator", "after 12 and 14", "todo"),
     24: ("Name overrides", "own folder names", "todo"),
     25: ("Testing profile", "extends claims", "todo"),
 }
@@ -248,8 +250,8 @@ def task_graph():
     place = {4: (3, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1)}
     edges = [(1, 2), (11, 12), (2, 3), (3, 4)]
     # groups: (column, first row, title, members, fed by)
-    groups = [(1, 3, "After 0.1.0", [6, 7, 8, 10, 21, 9], 3),
-              (2, 2, "After the TS model", [13, 15, 16, 14], 12)]
+    groups = [(1, 3, "After 0.2.0", [6, 7, 8, 10, 21, 31, 9], 3),
+              (2, 2, "After the TS model", [13, 15, 16, 14, 32], 12)]
     gpitch = 54
     bodies = []
     node_pos = []
@@ -279,7 +281,7 @@ def task_graph():
     # 8 feeds 26 from the side of its box
     sx, sy = cols[1] - 3, ys[8] + th / 2
     out.append(f'<path class="edge" d="M{sx},{sy} C{sx - 40},{sy} {cols[0] + 100},{sy} {cols[0] + 100},{y9 - 5}" marker-end="url(#ah)"/>')
-    # profile chain: below the TS-model group in the last column, fed by 9 and 21
+    # profile chain: below the TS-model group in the last column, fed by 9, 21 and 31
     gx, gy = cols[2] - 3, bottom + 20
     cpitch = 66
     gh = 24 + 3 * cpitch - 20
@@ -290,7 +292,7 @@ def task_graph():
         bodies.append(node(n, cols[2], ny))
     for (_, y1), (_, y2) in zip(chain, chain[1:]):
         out.append(edge(cols[2] + tw / 2, y1 + th, cols[2] + tw / 2, y2))
-    for n, tx in ((21, cols[2] + 100), (9, cols[2] + 40)):
+    for n, tx in ((21, cols[2] + 100), (31, cols[2] + 70), (9, cols[2] + 40)):
         sx, sy = cols[1] + tw, ys[n] + th / 2
         out.append(f'<path class="edge" d="M{sx},{sy} C{sx + 40},{sy} {tx},{sy + 10} {tx},{gy - 5}" marker-end="url(#ah)"/>')
     bottom1 = gy + gh
