@@ -1,0 +1,47 @@
+# Checks the example corpora under profiles/ with the corpus-schema validator.
+# The example must pass with no errors and no warnings.
+#
+# Every action is pinned to a commit SHA; the comment names its release.
+name: examples
+
+on:
+  pull_request:
+    paths:
+      - "profiles/**"
+      - ".github/workflows/examples.yml"
+  push:
+    branches: [main]
+    paths:
+      - "profiles/**"
+      - ".github/workflows/examples.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      # The validator prints warnings on stderr and still exits 0, so the
+      # step keeps stderr and fails on any warning line.
+      - name: Validate the claims example
+        run: |
+          set +e
+          npx --yes @osdlc/corpus-schema@^0.1.0 validate profiles/claims/example 2> "$RUNNER_TEMP/stderr.txt"
+          status=$?
+          set -e
+          cat "$RUNNER_TEMP/stderr.txt" >&2
+          if [ "$status" -ne 0 ]; then exit "$status"; fi
+          if grep -q '^warning:' "$RUNNER_TEMP/stderr.txt"; then
+            echo "::error::the example must validate with no warnings"
+            exit 1
+          fi

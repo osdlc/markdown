@@ -17,3 +17,5 @@ one at a time.
 - The diagrams in the plan are made by `tools/diagrams/build.py`. Run
   `python3 tools/diagrams/build.py` after you change it. The task graph's statuses and
   dependencies live in `TASKS` and `task_graph()` in that script. Update them together with the plan.
+- [The claims profile](profiles/claims/): the first draft of the claims profile, record types for
+  claims and their evidence, with an example corpus to copy.

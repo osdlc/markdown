@@ -1,0 +1,20 @@
+---
+corpus-schema: 0
+level: 2
+---
+
+# Claims example
+
+A small corpus that shows the claims types at work. It checks one claim about a made-up command
+line tool, fernlog: that version 2.3 reads its config file from `~/.config/fernlog/config.toml`.
+
+The claim is a [statement](statements/statements.schema.md). It is backed by three
+[study results](study-results/study-results.schema.md): what the tool's README says, and two test
+runs, one on Linux and one on macOS. The runs follow one [method](methods/methods.schema.md), and
+the README is a [document](documents/documents.schema.md).
+
+Start with the statement, [fernlog config path](statements/fernlog%20config%20path.md).
+
+The types follow GA4GH's Variant Annotation Specification (VA-Spec). The
+[mapping note](https://github.com/osdlc/markdown/blob/main/profiles/claims/README.md) says which of
+its classes and fields each type takes.
