@@ -170,7 +170,7 @@ TARGET = [
      [("query layer", "Bases + loader, one model", "osdlc")],
      [("markdown-store", "writes the spec layout", "ont")]),
     ("The spec and profiles", "in this repo, one type format",
-     [("corpus-schema", "levels 0–2, reads the model", "md"), ("profiles (D4)", "evidence, sdlc, ...", "md")],
+     [("corpus-schema", "levels 0–2, reads the model", "md"), ("profiles (D4)", "claims, sdlc, ...", "md")],
      []),
     ("Corpus model", "one per language, one family",
      [("markdown-corpus", "vault + graph merged", "osdlc")],
@@ -186,9 +186,9 @@ TARGET = [
 # The task graph. Status: done, doing, owner (waiting on the owner), todo.
 TASKS = {
     1: ("corpus-schema", "rename, levels", "done"),
-    2: ("Record folders", "osdlc PR 729", "owner"),
-    3: ("Publish 0.1.0", "after PR 729", "owner"),
-    4: ("Evidence types", "answers on sw PR 74", "owner"),
+    2: ("Record folders", "osdlc PR 729", "done"),
+    3: ("Publish 0.1.0", "release PR 726", "owner"),
+    4: ("Evidence types", "on VA-Spec", "todo"),
     5: ("Project writes", "evidence as records", "todo"),
     6: ("x-warn", "soft schema rules", "todo"),
     7: ("Obsidian", "dialect: wikilinks", "todo"),
@@ -206,6 +206,10 @@ TASKS = {
     19: ("Point repos", "here, after 18", "todo"),
     20: ("Arch doc", "markdown PR 5", "doing"),
     21: ("Release here", "then move the spec", "todo"),
+    22: ("Capture", "writes study results", "todo"),
+    23: ("Claims profile", "types move here", "todo"),
+    24: ("Name overrides", "own folder names", "todo"),
+    25: ("Testing profile", "extends claims", "todo"),
 }
 STATUS = [("done", "done"), ("doing", "in progress"), ("owner", "waiting on owner"), ("todo", "not started")]
 
@@ -240,13 +244,14 @@ def task_graph():
     for c, name in enumerate(["EVIDENCE PROJECT", "THE SPEC", "CORPUS MODEL"]):
         out.append(f'<text class="lang" x="{cols[c] + 2}" y="40">{name}</text>')
     cx = lambda c: cols[c] + tw / 2
-    place = {4: (0, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1), 5: (3, 0)}
-    edges = [(1, 2), (11, 12), (2, 3), (4, 5), (3, 5)]
+    place = {4: (0, 0), 22: (1, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1), 5: (3, 0)}
+    edges = [(1, 2), (11, 12), (2, 3), (4, 22), (22, 5), (3, 5)]
     # groups: (column, first row, title, members, fed by)
     groups = [(1, 3, "After 0.1.0", [6, 7, 8, 9, 10, 21], 3),
               (2, 2, "After the TS model", [13, 15, 16, 14], 12)]
     gpitch = 54
     bodies = []
+    node_pos = []
     bottom = 0
     for c, r, title, members, src in groups:
         gx, gy = cols[c] - 3, top + r * pitch - 4
@@ -255,9 +260,26 @@ def task_graph():
                    f'<text class="gt" x="{gx + 10}" y="{gy + 16}">{esc(title)}</text>')
         for i, n in enumerate(members):
             bodies.append(node(n, cols[c], gy + 24 + i * gpitch))
+            node_pos.append((gy + 24 + i * gpitch, n))
         sx, sy = at(*place[src])
         out.append(edge(sx + tw / 2, sy + th, cx(c), gy))
         bottom = max(bottom, gy + gh)
+    # profile chain: below task 5 in the evidence column, fed by task 9
+    y9 = next(g_y for g_y, n in node_pos if n == 9)
+    gx, gy = cols[0] - 3, y9 + th + 14
+    cpitch = 66
+    gh = 24 + 3 * cpitch - 20
+    out.append(f'<rect class="group" x="{gx}" y="{gy}" width="{tw + 6}" height="{gh}" rx="10"/>'
+               f'<text class="gt" x="{gx + 10}" y="{gy + 16}">After profiles</text>')
+    chain = [(23, gy + 24), (24, gy + 24 + cpitch), (25, gy + 24 + 2 * cpitch)]
+    for n, ny in chain:
+        bodies.append(node(n, cols[0], ny))
+    for (_, y1), (_, y2) in zip(chain, chain[1:]):
+        out.append(edge(cols[0] + tw / 2, y1 + th, cols[0] + tw / 2, y2))
+    sx, sy = cols[1], y9 + th / 2
+    tx = cols[0] + tw / 2
+    out.append(f'<path class="edge" d="M{sx},{sy} C{sx - 50},{sy} {tx},{sy} {tx},{gy - 5}" marker-end="url(#ah)"/>')
+    bottom = max(bottom, gy + gh)
     for a, b in edges:
         (ax, ay), (bx, by) = at(*place[a]), at(*place[b])
         out.append(edge(ax + tw / 2, ay + th, bx + tw / 2, by))
@@ -312,7 +334,7 @@ def levels_profiles():
                    f'<text class="cs" x="{X0 + 12}" y="{y + 38}">{esc(s)}</text>')
         y += 60
     py = 62
-    for t, s in [("evidence profile", "sources, findings, claims"), ("sdlc profile", "today's sdlc kinds"),
+    for t, s in [("claims profile", "statements, study results"), ("sdlc profile", "today's sdlc kinds"),
                  ("your profile", "any shared set of types")]:
         out.append(f'<g class="prof"><rect x="276" y="{py}" width="150" height="50" rx="8"/></g>'
                    f'<text class="cn" x="288" y="{py + 21}">{esc(t)}</text>'

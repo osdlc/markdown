@@ -36,26 +36,32 @@ in it waits on the task whose arrow points at the box.
 Another project is waiting on one thing. It needs a format for keeping evidence and research as
 structured records. It will collect evidence, observations and test material, such as scripts,
 queries and CSV results, as records with their files. Most of this exists already, so this comes
-before the rest of the plan. It is tasks 1 to 5, in the first two columns of the graph.
+before the rest of the plan. It is tasks 1 to 5 and task 22, in the first two columns of the graph.
 
-1. **Rename to corpus-schema.** Done. The package and spec are now `@osdlc/corpus-schema` on osdlc
-   main, with the command `corpus-schema` and the root file `corpus-schema.md` (or `.yaml`,
-   `.json`). The spec text has the levels.
-   [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged on 2026-11-09. It is not
-   published yet.
-2. **Record folders.** A record folder keeps a record together with its files. This is how a test
-   run keeps its script, its query and its CSV results together. It goes into the first release:
-   [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729). It is reviewed and waits on the owner
-   to merge.
-3. **Publish 0.1.0.** The owner merges #729, and then the release script publishes 0.1.0.
-4. **Evidence types.** The project copies in plain JSON Schema files for its types. Two exist in the
-   harness-reference corpus in [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74):
-   `references` (a source) and `evidence` (one observation of a source, with its date, quote and
-   location). Claims, statements that cite evidence as support or as dispute, are not built yet.
-   #74 needs the owner's answers on its naming questions. Copying the files means we don't need
-   profiles to work yet. Later the same files become the evidence profile.
-5. **The project writes records.** It starts keeping its evidence as records, checked by the
-   validator.
+- **1. Rename to corpus-schema.** Done. The package and spec are now `@osdlc/corpus-schema` on osdlc
+  main, with the command `corpus-schema` and the root file `corpus-schema.md` (or `.yaml`,
+  `.json`). The spec text has the levels.
+  [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged on 2026-11-09. It is not
+  published yet.
+- **2. Record folders.** A record folder keeps a record together with its files. This is how a test
+  run keeps its script, its query and its CSV results together. It is in the first release:
+  [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729). Done: it merged on 2026-11-09.
+- **3. Publish 0.1.0.** The release pull request
+  [osdlc/osdlc#726](https://github.com/osdlc/osdlc/pull/726) ("Version Packages") now lists
+  `@osdlc/corpus-schema@0.1.0`. The owner merges it, and then publishes.
+- **4. Evidence types on VA-Spec.** The project copies in plain JSON Schema files for its types.
+  They follow VA-Spec (decision D8) and are built in the harness-reference corpus, in
+  [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74). #74 has two types today:
+  `references` (a source) and `evidence` (one observation of a source). They become `documents`
+  and `study-results`, and we add `methods` and `statements`. A statement is a claim together with
+  the evidence lines that support or dispute it. The task starts with a short mapping note,
+  `docs/profiles/claims.md`, that says which VA-Spec classes and fields we take and which we leave
+  out. Copying the files means we don't need profiles to work yet. Later the same files become the
+  claims profile (tasks 9 and 23). The owner's naming question is answered, so this can start now.
+- **22. Capture writes study results.** harness-reference has a capture command. It now writes
+  VA-Spec study results, each with a contribution (who, when and in what role).
+- **5. The project writes records.** It starts keeping its evidence as records, checked by the
+  validator.
 
 A database built from the records (JSON or SQLite) is not in the fast path. It is task 16, after
 the query layer (task 15).
@@ -146,7 +152,7 @@ In practice:
 - There is one query layer, built on the corpus model.
 
 Levels and profiles are separate ideas. A level says how much a corpus declares. A profile says
-whose types it uses. So a profile is not "level 3": a corpus at level 2 can use the evidence profile,
+whose types it uses. So a profile is not "level 3": a corpus at level 2 can use the claims profile,
 the sdlc profile and its own types all at once.
 
 ![Levels 0 to 2 on one side, profiles on the other](diagrams/levels-profiles.svg)
@@ -197,13 +203,25 @@ end up using the word for this too. Whether model-schema switches its word is an
 - **D6. The spec has a level 0.** The merged SPEC.md defines it: a corpus that declares nothing,
   whose relative links must resolve.
 - **Record folders are in the first release, 0.1.0. The JSON/SQLite build is later work.**
+- **D8. The evidence types follow VA-Spec** (decided 2026-11-08). VA-Spec is GA4GH's Variant
+  Annotation spec. It is a JSON Schema model for claims backed by evidence. We use its model, its
+  type names and its field names: Statement, Evidence Line, Study Result, Method, Document and
+  Contribution. Study results have no `focus` or `harness` field. What a study result is about comes
+  from the statements that cite it, because one observation can support statements about several
+  things. Other words come later as name overrides (task 24).
+
+  We looked at other standards for the same idea. Assurance cases name the same parts claim,
+  argument and evidence: ISO/IEC/IEEE 15026-2, OMG SACM and GSN. OASIS OSLC Quality Management
+  covers tests and test results. None of them has a JSON Schema for the whole chain. Their words
+  feed the name overrides and the testing profile.
 
 ### Still open
 
 - **D4. How types are defined.** Profiles written as packs, or plain JSON Schema files that packs
   compile to.
 - **D5. What "db" means.** The query layer, or nothing until we build one.
-- **D7. When to publish.** The current course is to merge #729, then publish 0.1.0.
+- **D7. When to publish.** The current course is to merge the release pull request
+  [osdlc/osdlc#726](https://github.com/osdlc/osdlc/pull/726), then publish 0.1.0.
 
 ### Names we considered
 
@@ -218,62 +236,91 @@ The numbers match the task graph at the top. "After" says what must come first.
 
 **The spec and the evidence project**
 
-1. **Rename to corpus-schema**, with the levels in the spec text:
-   [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). Done.
-2. **Record folders** in corpus-schema:
-   [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729). After 1. Reviewed; waiting on the
-   owner.
-3. **Publish 0.1.0.** The owner merges #729, then the release script publishes. After 2.
-4. **Evidence types** for the evidence project: references and evidence exist, claims are not built
-   yet. Needs the owner's answers on
-   [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74).
-5. **The evidence project writes records.** After 3 and 4.
-6. **x-warn**: a schema can mark a rule as a warning instead of an error. After 3.
-7. **The Obsidian dialect**: wikilinks without a warning, able to reach beyond the corpus, and
-   embeds. After 3.
-8. **skillwright uses the npm package.** harness-reference switches from its `workspace:*` copy of
-   markdown-db to `@osdlc/corpus-schema` and renames its root file to `corpus-schema.md`. After 3.
-9. **Profiles.** Decide D4, then let a corpus take its level-2 types from profiles. model-schema
-   moves to osdlc. After 3 and [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069).
-10. **markdown-store on the shared parts**, writing the spec's layout. After 3.
+- **1. Rename to corpus-schema**, with the levels in the spec text:
+  [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725). Done.
+- **2. Record folders** in corpus-schema:
+  [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729). After 1. Done: merged on 2026-11-09.
+- **3. Publish 0.1.0.** The owner merges the release pull request
+  [osdlc/osdlc#726](https://github.com/osdlc/osdlc/pull/726), then publishes. After 2.
+- **4. Evidence types on VA-Spec**, in harness-reference
+  ([osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74)). Start with a short
+  mapping note, `docs/profiles/claims.md` in this repo: which VA-Spec classes and fields we take,
+  which we leave out, and why. Check it against VA-Spec's published schemas. The note is the first
+  draft of the claims profile.
+  - Rename `references` to `documents` and `evidence` to `study-results`. Add `methods` and
+    `statements`.
+  - A statement holds its proposition (subject, predicate, object) and its evidence lines. Each
+    line names study results, says whether it supports or disputes the statement, and how strongly.
+  - Contribution (who, when, what role) is a field on records, not a type of its own.
+  - These are plain level-2 JSON Schema files, with no profile yet.
+
+  Can start now.
+- **22. Capture writes study results.** harness-reference's capture command writes VA-Spec study
+  results, with a contribution. After 4.
+- **5. The evidence project writes records.** After 3, 4 and 22.
+- **6. x-warn**: a schema can mark a rule as a warning instead of an error. After 3.
+- **7. The Obsidian dialect**: wikilinks without a warning, able to reach beyond the corpus, and
+  embeds. After 3.
+- **8. skillwright uses the npm package.** harness-reference switches from its `workspace:*` copy of
+  markdown-db to `@osdlc/corpus-schema` and renames its root file to `corpus-schema.md`. After 3.
+- **9. Profiles.** Decide D4, then let a corpus take its level-2 types from profiles. model-schema
+  moves to osdlc. After 3 and [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069).
+  A corpus names its profiles in the root file. The reserved `profiles` key maps a short prefix to a
+  profile and its version, for example `claims: "@osdlc/corpus-profile-claims@0.1"`. A type says
+  which class it is with `x-class: claims/StudyResult`. A class is a type that a profile defines.
+  The prefix is always required, so adding a second profile later breaks nothing. A profile can
+  extend another profile through the same key. It may add rules but never loosen them. An unknown
+  prefix is an error.
+- **23. The claims profile.** Move the evidence types from harness-reference into a versioned claims
+  profile, kept and published from this repo. harness-reference then names the profile in its root
+  file, and each of its types gets an `x-class` line. After 4 and 9.
+- **24. Name overrides.** A corpus can give a profile's types its own folder names and map each one
+  to its class with `x-class`. Field names stay the profile's, so tools and exports work
+  everywhere. Write down one tested word set from assurance cases: claim, argument, evidence and
+  source. After 23.
+- **25. An acceptance-testing profile** that extends claims. Requirements or acceptance criteria are
+  what statements are about. Tests are methods. Test runs are study results, kept as record folders
+  with their scripts, queries and CSV results. Pass and fail are the direction. Words come from OSLC
+  QM and the ISTQB glossary. After 23 and 24.
+- **10. markdown-store on the shared parts**, writing the spec's layout. After 3.
 
 **The corpus model**
 
-11. **Teach markdown-link to resolve links.** Land
-    [osdlc/osdlc#649](https://github.com/osdlc/osdlc/pull/649) and then
-    [#651](https://github.com/osdlc/osdlc/pull/651), which is stacked on it. Then add a TypeScript
-    resolver taken from vault-graph-core's copy of the Rust one, with shared cases. Can start now.
-12. **One TypeScript corpus model**, markdown-corpus: markdown-vault and vault-graph-core merged into
-    osdlc on top of markdown-link's resolver. After 11.
-13. **Switch the users** to the new model and resolver: markdown-vault-query, markdown-astro, and
-    determined (its vault-graph app and its graph and notes experiences). They also move off dev's
-    private copy of markdown-link. After 12.
-14. **The validator reads the corpus model** instead of walking the folder itself. After 3 and 12.
-15. **One query layer.** Move markdown-vault-query to osdlc on top of the corpus model. After 12 and
-    D5.
-16. **The JSON/SQLite build**: write every valid record to JSON files and a SQLite file. After 15.
+- **11. Teach markdown-link to resolve links.** Land
+  [osdlc/osdlc#649](https://github.com/osdlc/osdlc/pull/649) and then
+  [#651](https://github.com/osdlc/osdlc/pull/651), which is stacked on it. Then add a TypeScript
+  resolver taken from vault-graph-core's copy of the Rust one, with shared cases. Can start now.
+- **12. One TypeScript corpus model**, markdown-corpus: markdown-vault and vault-graph-core merged into
+  osdlc on top of markdown-link's resolver. After 11.
+- **13. Switch the users** to the new model and resolver: markdown-vault-query, markdown-astro, and
+  determined (its vault-graph app and its graph and notes experiences). They also move off dev's
+  private copy of markdown-link. After 12.
+- **14. The validator reads the corpus model** instead of walking the folder itself. After 3 and 12.
+- **15. One query layer.** Move markdown-vault-query to osdlc on top of the corpus model. After 12 and
+  D5.
+- **16. The JSON/SQLite build**: write every valid record to JSON files and a SQLite file. After 15.
 
 **Separate work**
 
-17. **Finish moving the render, edit and site packages**:
-    [osdlc/osdlc#719](https://github.com/osdlc/osdlc/pull/719) and
-    [#720](https://github.com/osdlc/osdlc/pull/720), then markdown-editor and markdown-ui. Rename
-    the vault words to corpus. In progress.
-18. **This plan**: [osdlc/markdown#4](https://github.com/osdlc/markdown/pull/4). Waiting on the
-    owner.
-19. **Point other repos here**: osdlc/osdlc, sksizer/dev, osdlc/skillwright and sksizer/rust-ontogen
-    get the note in [pointing-here.md](pointing-here.md). After 18.
-20. **The architecture doc**: [osdlc/markdown#5](https://github.com/osdlc/markdown/pull/5). In
-    progress.
+- **17. Finish moving the render, edit and site packages**:
+  [osdlc/osdlc#719](https://github.com/osdlc/osdlc/pull/719) and
+  [#720](https://github.com/osdlc/osdlc/pull/720), then markdown-editor and markdown-ui. Rename
+  the vault words to corpus. In progress.
+- **18. This plan**: [osdlc/markdown#4](https://github.com/osdlc/markdown/pull/4). Waiting on the
+  owner.
+- **19. Point other repos here**: osdlc/osdlc, sksizer/dev, osdlc/skillwright and sksizer/rust-ontogen
+  get the note in [pointing-here.md](pointing-here.md). After 18.
+- **20. The architecture doc**: [osdlc/markdown#5](https://github.com/osdlc/markdown/pull/5). In
+  progress.
 
 **Moving packages here**
 
-21. **Release setup here, then move corpus-schema.** Give this repo its own release setup:
-    Changesets, a publish workflow with npm trusted publishing, package checks, the conformance
-    check, a CI matrix and shared configs. Then move `@osdlc/corpus-schema` and its spec family from
-    osdlc/osdlc into this repo as its first package. The npm name stays the same. After 3. Other
-    markdown packages follow the same path later. SPEC.md says the spec will move to "a repository
-    of its own once stable". This repo is meant to be that home, so that line in osdlc needs
-    updating when the move happens.
+- **21. Release setup here, then move corpus-schema.** Give this repo its own release setup:
+  Changesets, a publish workflow with npm trusted publishing, package checks, the conformance
+  check, a CI matrix and shared configs. Then move `@osdlc/corpus-schema` and its spec family from
+  osdlc/osdlc into this repo as its first package. The npm name stays the same. After 3. Other
+  markdown packages follow the same path later. SPEC.md says the spec moves to osdlc/markdown
+  once this repo has its own release setup. This task is that move, so SPEC.md needs updating when
+  it happens.
 
 We will track each task as an issue in this repo.
