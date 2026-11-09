@@ -64,12 +64,20 @@ written in the spec or in the corpus's own files, never only in code. So a valid
 another language can check a corpus the same way. The spec's conformance cases sit beside it for
 that reason.
 
+A second rule matters as much: a corpus can be moved. You can drop a corpus folder into a larger
+vault or repo, and its data still works. Its links are relative, so they still point at the right
+files. Its root file still marks where it starts, and the validator finds every corpus below the
+folder you give it. So a team can ship a bundle of records, such as a set of shared types with
+example data, and people can copy it into their own notes without fixing anything.
+
 What it is not:
 
 - It is not a database. It does not answer queries, keep an index or handle many writers at once.
   In v0 a write replaces the whole file and the last writer wins.
 - It is not a query engine. Reading a corpus as a database is a separate layer that we plan to
-  build later on the same files.
+  build later on the same files. That layer needs running code: something has to load the
+  records, keep an index and answer queries. corpus-schema is only the data definition, so that
+  layer can be built on top of it, in any language, without changing the files.
 - It does not check the structure of a single document, such as its headings and sections.
   [`@osdlc/markdown-contract`](https://github.com/osdlc/osdlc/tree/main/packages/ts/markdown-contract#readme)
   does that. corpus-schema checks a whole folder: data against schemas, and links, ids and
@@ -721,8 +729,8 @@ We tested this in Obsidian 1.12.7. When we moved a corpus that used wikilinks, O
 corpus's own links to vault paths, such as `[[Archive/2026/harness-reference/harnesses/Claude Code]]`.
 The corpus no longer worked anywhere else. With relative Markdown links, the corpus's files did not
 change at all. GitHub follows relative links, and so do Docusaurus, VitePress and MkDocs. None of
-them follows wikilinks without a plugin. The cost is `%20` for spaces and quoted strings for links
-in frontmatter.
+them follows wikilinks without a plugin. This is what lets a corpus be dropped into a larger vault
+and keep working. The cost is `%20` for spaces and quoted strings for links in frontmatter.
 
 Two smaller choices go with it. The validator checks paths literally, with no fallback to matching
 by name, because that catches the broken path that Obsidian hides and a published site would show
