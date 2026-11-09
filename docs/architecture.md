@@ -19,7 +19,8 @@ the set of packages that lets programs do that safely, without breaking what peo
 - **corpus-schema** is the spec for what a corpus can declare about itself: its types, ids and
   schemas. This name is decided.
 - A **record** is one note (or YAML or JSON file) that holds data of one type.
-- A **twin** is a TypeScript package and a Rust package that do the same job and pass the same tests.
+- A **twin** is a TypeScript package and a Rust package that do the same job and are meant to pass
+  the same tests. Some twins still keep their tests inside their own packages.
   A **binding** is different: it is one package built for another runtime, such as the Rust
   yaml-splice built to WebAssembly for TypeScript. A binding has no tests of its own.
 

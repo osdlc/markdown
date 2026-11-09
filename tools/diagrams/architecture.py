@@ -3,9 +3,7 @@
 Run from the repo root: python3 tools/diagrams/architecture.py
 It uses build.py's shared style and helpers, so both pages look the same.
 """
-from build import ARROW, CH, CW, DARK, LIGHT, OUT, W, X0, chip, esc, svg
-
-GX = 8
+from build import ARROW, DARK, KEY, LIGHT, OUT, W, X0, esc, grid, svg
 
 
 def extra(c):
@@ -58,18 +56,27 @@ LAYERS = [
 ]
 
 
+def key(y):
+    """build.py's repo key, plus "other" for the evidence project."""
+    out, x = [f'<text class="cs" x="{X0}" y="{y + 4}">Repo:</text>'], X0 + 40
+    for repo, name in KEY + [("ext", "other")]:
+        out.append(f'<g class="chip r-{repo}"><circle cx="{x}" cy="{y}" r="4.5" class="dot"/></g>'
+                   f'<text class="cs" x="{x + 8}" y="{y + 4}">{name}</text>')
+        x += 22 + len(name) * 6.6
+    return "".join(out)
+
+
 def layers():
-    out, y = [], 10
+    out, y = [key(12)], 26
     for num, name, sub, ts, rs in LAYERS:
         top, body, yy = y, [], y + 52
         for lang, items in (("TYPESCRIPT", ts), ("RUST", rs)):
             if not items:
                 continue
             body.append(f'<text class="lang" x="{X0 + 2}" y="{yy + 4}">{lang}</text>')
-            for i, (n, s, repo, *rest) in enumerate(items):
-                r, c = divmod(i, 2)
-                body.append(chip(X0 + c * (CW + GX), yy + 16 + r * (CH + 14), n, s, repo, "later" in rest))
-            yy += 16 + ((len(items) + 1) // 2) * (CH + 14)
+            g, gh = grid(yy + 16, items)
+            body.append(g)
+            yy += 16 + gh
         h = yy - top + 2
         out.append(f'<rect class="band" x="6" y="{top}" width="{W - 12}" height="{h}" rx="10"/>')
         out.append(f'<text class="lnum" x="{W - 26}" y="{top + 24}" text-anchor="end">{num}</text>'
