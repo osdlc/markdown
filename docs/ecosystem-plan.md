@@ -244,17 +244,18 @@ read the project's own corpus and see what holds and what was set aside.
 
 ### Decided
 
+- **D1. The word for a folder of notes is corpus.** It follows from D2, which keeps "corpus" as the
+  level-0 word. The vault names in our packages move to corpus over time.
 - **D2. The spec's name is corpus-schema** (decided 2026-11-08). The package is
   `@osdlc/corpus-schema`, the command is `corpus-schema`, and the root file is `corpus-schema.md`
   (or `.yaml`, `.json`). It says what the spec adds: a schema on top of a corpus. A level-0 corpus
   simply has no schema file.
-- **D1. The word for a folder of notes is corpus.** It follows from D2, which keeps "corpus" as the
-  level-0 word. The vault names in our packages move to corpus over time.
 - **D3. The TypeScript corpus model is called markdown-corpus**, the same as its Rust twin. The
   markdown-corpus crate keeps its name.
 - **D6. The spec has a level 0.** The merged SPEC.md defines it: a corpus that declares nothing,
   whose relative links must resolve.
-- **Record folders are in the first published version, 0.2.0. The JSON/SQLite build is later work.**
+- **D7. When to publish** (decided 2026-11-09). `@osdlc/corpus-schema` 0.2.0 was published, with
+  record folders. There is no 0.1.0 on npm (see task 3).
 - **D8. The evidence types follow VA-Spec** (decided 2026-11-08). VA-Spec is GA4GH's Variant
   Annotation spec. It is a JSON Schema model for claims backed by evidence. We use its model, its
   type names and its field names: Statement, Evidence Line, Study Result, Method, Document and
@@ -266,11 +267,8 @@ read the project's own corpus and see what holds and what was set aside.
   argument and evidence: ISO/IEC/IEEE 15026-2, OMG SACM and GSN. OASIS OSLC Quality Management
   covers tests and test results. None of them has a JSON Schema for the whole chain. Their words
   feed the name overrides and the testing profile.
-
-- **D7. When to publish** (decided 2026-11-09). `@osdlc/corpus-schema` 0.2.0 was published, with
-  record folders. There is no 0.1.0 on npm (see task 3).
-
-- **The profile is called claims** (decided 2026-11-08). The folder is `profiles/claims/`, the npm
+- **D9. Record folders are in the first published version, 0.2.0.** The JSON/SQLite build is later work.
+- **D10. The profile is called claims** (decided 2026-11-08). The folder is `profiles/claims/`, the npm
   package is `@osdlc/corpus-profile-claims` and the root-file prefix is `claims`. "Claims" is the
   plain word for statements backed by evidence. It doesn't clash with a type name, as "evidence"
   would. "va-spec" would read as genomics to anyone outside that field.

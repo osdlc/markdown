@@ -254,7 +254,7 @@ def task_graph():
     # groups: (column, first row, title, members, fed by)
     groups = [(1, 3, "After 0.2.0", [6, 7, 8, 10, 33, 34, 21, 31, 9], 3),
               (2, 2, "After the TS model", [13, 15, 16, 14, 32], 12)]
-    gpitch = 54
+    gpitch = 62
     bodies = []
     node_pos = []
     bottom = 0
@@ -269,6 +269,10 @@ def task_graph():
         sx, sy = at(*place[src])
         out.append(edge(sx + tw / 2, sy + th, cx(c), gy))
         bottom = max(bottom, gy + gh)
+    # arrows inside the TS-model box: 15 -> 16 and 14 -> 32
+    ys_all = {n: g_y for g_y, n in node_pos}
+    for a, b in ((15, 16), (14, 32)):
+        out.append(edge(cx(2), ys_all[a] + th, cx(2), ys_all[b]))
     # evidence column: 26, 22 and 5 sit below 4, with 26 level with task 9
     ys = {n: g_y for g_y, n in node_pos}
     y9 = ys[9]
@@ -283,6 +287,9 @@ def task_graph():
     # 8 feeds 26 from the side of its box
     sx, sy = cols[1] - 3, ys[8] + th / 2
     out.append(f'<path class="edge" d="M{sx},{sy} C{sx - 40},{sy} {cols[0] + 100},{sy} {cols[0] + 100},{y9 - 5}" marker-end="url(#ah)"/>')
+    # 4 feeds 31 down the gap between the columns
+    x4r, y4r = cols[0] + tw, at(*place[4])[1] + th / 2
+    out.append(f'<path class="edge" d="M{x4r},{y4r} C{x4r + 4},{y4r + 20} {x4r + 4},{ys[31] + th / 2 - 20} {cols[1] - 3},{ys[31] + th / 2}" marker-end="url(#ah)"/>')
     # profile chain: below the TS-model group in the last column, fed by 9, 21 and 31
     gx, gy = cols[2] - 3, bottom + 20
     cpitch = 66
