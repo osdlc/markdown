@@ -1,0 +1,40 @@
+# Releases the libraries under packages/ts/ with Changesets on every push to
+# main: the full packages-ci.yml matrix, then ts-packages-release.yml from
+# osdlc/osdlc, which opens the Version Packages pull request or publishes the
+# versions not on npm yet. packages/README.md describes the release steps.
+#
+# npm auth is trusted publishing (OIDC) only, with provenance. npm checks the
+# calling workflow, so each package's trusted publisher on npmjs.com names
+# this file, packages-publish.yml, and the file keeps its name. The `release`
+# job grants `id-token: write`, which ts-packages-release.yml gives only to
+# its `publish` job.
+#
+# The Version Packages pull request is opened as the osdlc-release GitHub App,
+# whose key is in the release-plz environment.
+name: packages-publish
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: packages-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/packages-ci.yml
+
+  release:
+    needs: verify
+    permissions:
+      contents: write
+      id-token: write
+    # TODO: pin to osdlc main after osdlc/osdlc#749 merges
+    uses: osdlc/osdlc/.github/workflows/ts-packages-release.yml@52581f8e2438b4d54f5ccd32e023c171d90cb737 # shared-ci/workflows
+    with:
+      app-client-id: Iv23liYTGAl78fzN8YWm

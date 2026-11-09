@@ -1,10 +1,12 @@
 packages:
   - 'packages/ts/*'
 
-# Versions shared across the packages. A package names one as `"catalog:"`, so
-# a bump is one edit here. `pnpm pack` and `pnpm publish` write the concrete
-# range into the packed package.json. The versions match osdlc/osdlc's catalog.
+# Versions shared across the workspace. A package or the root names one as
+# `"catalog:"`, so a bump is one edit here. `pnpm pack` and `pnpm publish`
+# write the concrete range into the packed package.json. The versions match
+# osdlc/osdlc's catalog.
 catalog:
+  '@changesets/cli': 3.0.3
   '@types/node': ^26.1.0
   '@vitest/coverage-v8': ^5.0.5
   oxlint: ^1.65.0
