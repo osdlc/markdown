@@ -55,13 +55,13 @@ before the rest of the plan. It is tasks 1 to 5, 22 and 26, in the first columns
   Each type has a schema. A few example records show the whole chain. A statement is a claim
   together with the evidence lines that support or dispute it. A README at
   `profiles/claims/README.md` maps each type to VA-Spec and says what we leave out. CI checks the
-  example with `@osdlc/corpus-schema` from npm, so this comes after 3. People copy it with
+  example with `@osdlc/corpus-schema` from npm, so that check waits on 3. People copy it with
   `npx degit osdlc/markdown/profiles/claims/example <dir>`. We don't need an npm package for that
   yet. In progress, in a separate pull request.
 - **26. harness-reference adopts the claims types.** harness-reference copies the type folders from
   the example and moves its records over. `references` becomes `documents`, `evidence` becomes
   `study-results`, and the `harness` field goes away. After 4 and 8.
-- **22. Capture writes study results.** harness-reference has a capture command. It now writes
+- **22. Capture writes study results.** harness-reference has a capture command. It will write
   VA-Spec study results, each with a contribution (who, when and in what role). After 26.
 - **5. The project writes records.** It copies the types from the example and starts keeping its
   evidence as records, checked by the validator. After 3, 4 and 22.
@@ -309,7 +309,7 @@ The numbers match the task graph at the top. "After" says what must come first.
   - People copy it with `npx degit osdlc/markdown/profiles/claims/example <dir>`. No npm package is
     needed yet.
 
-  After 3. In progress, in a separate pull request.
+  In progress, in a separate pull request. The CI check waits on 3.
 - **26. harness-reference adopts the claims types.** Copy the type folders from the example and move
   harness-reference's records over: `references` becomes `documents` (they live today in
   [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74)), `evidence` becomes
