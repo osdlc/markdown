@@ -81,12 +81,14 @@ $defs:
           Links to the study results this line rests on. Each one must be a relative Markdown link
           into the study-results folder. After the folder name, no part of the path may start with
           a dot, and the path may not hold an encoded dot or slash (%2E, %2F), so a link cannot
-          step back out of the folder.
+          step back out of the folder. The link may not point at the type's schema file. The
+          pattern has two gaps that wait for nested x-ref: a link to a file in a record folder that
+          is not the record still passes, and a link that leaves the corpus only warns.
         type: array
         minItems: 1
         items:
           type: string
-          pattern: "\\]\\((\\.\\./)+study-results/(?!\\.|[^)]*(/\\.|%2[EeFf]))[^)]+\\.md\\)$"
+          pattern: "\\]\\((\\.\\./)+study-results/(?!\\.|study-results\\.schema\\.md\\)|[^)]*(/\\.|%2[EeFf]))[^)]+\\.md\\)$"
       directionOfEvidenceProvided:
         description: Whether the line supports or disputes the proposition, or neither.
         enum: [supports, neutral, disputes]
@@ -153,8 +155,12 @@ The rules a description does not say clearly:
   direction has no strength.
 - Each link in `hasEvidenceItems` must resolve, as every link in a record must. The field cannot use
   `x-ref` yet, because corpus-schema v0 allows `x-ref` only on top-level fields. Until it can, a
-  pattern checks that each link points into the `study-results` folder and does not step back out
-  of it with `..`.
+  pattern checks that each link points into the `study-results` folder, does not step back out of
+  it with `..`, and does not point at `study-results.schema.md`. The pattern cannot catch two
+  things. A link to another `.md` file inside a record folder, such as
+  `study-results/linux/Linux probe/notes.md`, passes, though that file is not a record. A link
+  that climbs above the corpus, such as `../../study-results/x.md`, gets only a warning from the
+  validator. Both are fixed when `x-ref` works in nested objects (plan task 31).
 - `subject` may link to a record of a type the corpus adds itself, such as a `tools` type. The
   claims types do not define one. The validator checks that the link resolves, but not what type
   it points at, because `x-ref` does not work inside the proposition yet.

@@ -157,9 +157,12 @@ A contribution has `contributor` (an Agent with `name` and `agentType`), `activi
    type.
 4. Evidence items are not type-checked by `x-ref`. corpus-schema v0 allows `x-ref` only on
    top-level fields, and `hasEvidenceItems` sits inside an evidence line. Each link must still
-   resolve, and a pattern checks that it points into `study-results` and does not step back out
-   with `..`, plain or percent-encoded. When corpus-schema allows `x-ref` inside nested objects,
-   the pattern becomes `x-ref: study-results`.
+   resolve, and a pattern checks that it points into `study-results`, does not step back out with
+   `..`, plain or percent-encoded, and does not point at the type's schema file. The pattern has
+   two gaps. A link to a `.md` file inside a record folder that is not the record itself still
+   passes. A link that climbs above the corpus into some other `study-results` folder gets only a
+   warning, and `corpus-schema validate` still exits 0. Both close when corpus-schema allows
+   `x-ref` inside nested objects (task 31): the pattern then becomes `x-ref: study-results`.
 5. Evidence items are study results only. VA-Spec also lets an evidence line cite statements and
    other information entities. Citing another statement can come later.
 6. Strength is a plain word, not a concept object. VA-Spec's `strength` and
@@ -236,8 +239,10 @@ npx --yes @osdlc/corpus-schema@^0.2.0 validate profiles/claims/example
 [tests/](tests/) checks that the schemas reject what they should. Each folder in `tests/cases/`
 holds one record that breaks one rule, such as a neutral statement with a strength, a null
 `object`, an evidence link that steps out of `study-results`, or an extra field on a contribution.
-Its `expected-error.txt` holds the error the validator must print. The tests sit outside
-`example/`, so a copy of the example has no broken records in it.
+Its `expected-error.txt` holds the error the validator must print. One case,
+`evidence-leaves-corpus`, has an `expected-warning.txt` instead. It writes down a known gap: a link
+that leaves the corpus gets only a warning. The tests sit outside `example/`, so a copy of the
+example has no broken records in it.
 
 Run them from the root of this repository:
 
@@ -245,9 +250,10 @@ Run them from the root of this repository:
 sh profiles/claims/tests/run.sh
 ```
 
-For each case the script copies the example, adds the record, and runs the validator. A case
-passes when the validator reports exactly one error, the expected one. CI runs the script after
-it checks the example.
+For each case the script copies the example, adds the record, and runs the validator. An error
+case passes when the validator reports exactly one error, the expected one. A warning case passes
+when the validator exits 0 and prints the expected warning. CI runs the script after it checks the
+example.
 
 ## Copy the types
 
