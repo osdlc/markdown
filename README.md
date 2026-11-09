@@ -16,6 +16,8 @@ one at a time.
   between them.
 - [Pointing here from another repo](docs/pointing-here.md): a short note to paste into another
   repo's `CLAUDE.md` or `AGENTS.md`.
+- [Packages](packages/README.md): the libraries published from here, starting with
+  `@osdlc/corpus-schema` and its spec in `packages/`.
 - The diagrams are made by `tools/diagrams/build.py` (the plan) and
   `tools/diagrams/architecture.py` (the architecture), which uses build.py's style. Run
   architecture.py after you change it. After you change build.py, run both.
