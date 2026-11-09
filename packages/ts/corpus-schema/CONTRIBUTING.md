@@ -62,7 +62,7 @@ here. A change to the spec's rules gets a case there. Write the case's `input` b
 - Add a test for each behaviour change or bug fix.
 - A new export gets TSDoc, a use in `examples/`, which imports the package by
   name, and a mention in the README.
-- For a change users can see, add a changeset: run `pnpm changeset` at the
-  repository root. Start a breaking change's summary with `**Breaking:**`.
-  Do not edit `CHANGELOG.md` or `version` by hand. The release writes them.
-  See [packages/README.md](https://github.com/osdlc/markdown/blob/main/packages/README.md).
+- Releases are not set up in this repository yet. Until they are, describe a
+  change users can see in the pull request, and start a breaking change's
+  description with `**Breaking:**`. Do not edit `CHANGELOG.md` or `version` by
+  hand. See [packages/README.md](https://github.com/osdlc/markdown/blob/main/packages/README.md).

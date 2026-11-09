@@ -30,8 +30,8 @@ Build first: the tests and the typecheck read the built `dist/`.
 Releases from this repository are not set up yet. The CI workflow, the package and conformance
 checks, and the publish workflow are being extracted in osdlc/osdlc into shared, versioned pieces,
 and this repository will use them. Until then `.github/workflows/packages-ci.yml` only builds,
-tests and typechecks, and nothing is published from here. The versions on npm were published from
-osdlc/osdlc.
+tests, smokes and typechecks, and nothing is published from here. The versions on npm were published
+from osdlc/osdlc.
 
 When the release setup lands, it follows osdlc/osdlc's rules:
 

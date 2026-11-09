@@ -1,5 +1,5 @@
-# Temporary. Builds, tests and typechecks the packages under packages/ts/ on
-# every pull request and push to main. The shared osdlc workflows, being
+# Temporary. Builds, tests, smokes and typechecks the packages under
+# packages/ts/ on every pull request and push to main. The shared osdlc workflows, being
 # extracted in osdlc/osdlc, replace this file, and add the lint, format,
 # package and conformance checks and the publish workflow.
 #
@@ -49,6 +49,10 @@ jobs:
 
       - name: Test
         run: pnpm -r test
+
+      # Runs the built package by name, which the unit tests do not.
+      - name: Smoke
+        run: pnpm -r --if-present run smoke
 
       - name: Typecheck
         run: pnpm -r typecheck
