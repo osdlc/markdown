@@ -329,7 +329,12 @@ A corpus must not sit inside a type folder.
   type folder holds at most one schema file.
 - The type's name is its folder name. Type names are unique within a corpus. A type folder can sit
   at any depth, but not inside another type folder.
-- A type folder that breaks either rule is an error, and the folder is not treated as a type.
+- A type folder with the same name as another type, or inside another type folder, is an error,
+  and that folder is not a type. Its schema file is still checked for links. Its records count as
+  the outer type's records when it sits inside another type folder, and as narrative otherwise.
+- A schema file whose name does not match exactly, such as `harnesses/Harnesses.schema.md`, is not
+  a schema file. The folder is then not a type, and its files are narrative. No error is reported.
+- A second schema file in one type folder is an error. The type keeps the first one.
 - The schema is a JSON Schema, draft 2020-12, for a record's data. In a `.md` schema file the
   frontmatter is the schema and the body documents the type. In `.yaml` and `.json` the whole file
   is the schema.
@@ -562,7 +567,8 @@ package already has dialects in this sense.
 ### Profiles (proposed)
 
 A profile would be a shared, versioned set of types that many corpora can follow. The first one is
-the claims profile, for statements backed by evidence. Its design is in the plan.
+the claims profile, for statements backed by evidence. Its design is in
+[the plan](ecosystem-plan.md).
 
 - A corpus would name its profiles in the root file, under a short prefix, with a version. The
   prefix is always required, so adding a second profile later breaks nothing. An unknown prefix
@@ -814,12 +820,13 @@ on a shared corpus model that does not exist in TypeScript yet. So the build wai
 
 Others considered: a 1.0 release.
 
-The package and the spec are a few days old, so a 1.0 promise would come too early. The first
-release is `0.1.0`. All eight exports are stable within 0.x. A minor release may change any export,
-and the changelog marks the change as breaking. A patch release does not. The `<file>: <field>`
-part of a problem line is part of the contract, and the message text is not. This is
+The version line is
 [D-02](https://github.com/osdlc/osdlc/blob/main/packages/ts/corpus-schema/docs/planning/decisions/D-02-version-line-and-stability.md),
-which is still proposed and waits for the owner's sign-off.
+which is still proposed and waits for the owner's sign-off. The package and the spec are new, so a
+1.0 promise would come too early. The first release is `0.1.0`, and every export is stable within
+0.x. A minor release may change any export, and the changelog marks the change as breaking. A patch
+release does not. The `<file>: <field>` part of a problem line is part of the contract, as the spec
+fixes it. The message text is not.
 
 ### Inheritance is explicit: no silent shadowing (proposed)
 
@@ -1020,10 +1027,11 @@ rules.
 `corpus-schema: 0` says the corpus follows version 0 of the spec. A tool must refuse a corpus whose
 version it does not support, so a tool never checks your corpus by rules it does not know.
 
-Version 0 is young. We rewrite it in place while it is at version 0, so a rule can still change. For
-the package, a change that changes what is reported comes in a minor release, marked as breaking in
-the changelog. The `<file>: <field>` part of each problem line is fixed. The message text is not,
-and error codes are not defined yet. New root keys get a warning from a validator that does not
+Version 0 is young. We rewrite it in place while it is at version 0, so a rule can still change.
+The spec fixes the `<file>: <field>` part of each problem line. The message text is not fixed, and
+error codes are not defined yet. For the package, D-02 proposes that a change to what is reported
+comes in a minor release, marked as breaking in the changelog. D-02 still waits for the owner's
+sign-off. New root keys get a warning from a validator that does not
 know them, not an error, so adding a key does not break older validators.
 
 ### How do I check a corpus in CI?
