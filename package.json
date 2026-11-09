@@ -14,11 +14,11 @@
     "smoke": "pnpm -r --if-present run smoke",
     "lint": "pnpm -r --if-present run lint",
     "format:check": "pnpm -r --if-present run format:check",
-    "version-packages": "changeset version && conformance write --reference ts"
+    "version-packages": "changeset version && conformance-suites write --reference ts"
   },
   "devDependencies": {
     "@changesets/cli": "catalog:",
-    "@osdlc/conformance": "^0.1.0",
+    "@osdlc/conformance-suites": "^0.1.0",
     "@osdlc/package-checks": "^0.1.0"
   }
 }

@@ -29,8 +29,8 @@ CI also runs each package's `smoke`, `lint`, `format:check` and `check:extra` sc
 defined, and these checks from the root devDependencies:
 
 ```sh
-pnpm exec package-checks ts    # pack each package and check the tarball
-pnpm exec conformance check    # check the conformance suites, and regenerate them
+pnpm exec package-checks ts          # pack each package and check the tarball
+pnpm exec conformance-suites check  # check the conformance suites, and regenerate them
 ```
 
 `package-checks` checks each package against osdlc's package shape. The root
