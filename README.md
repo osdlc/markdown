@@ -14,6 +14,8 @@ one at a time.
   up, and how we get there.
 - [The architecture](docs/architecture.md): the layers we are building toward, and the rules
   between them.
+- [The corpus-schema guide](docs/corpus-schema.md): the spec for typed records kept as notes, its
+  levels, and why it is shaped this way.
 - [Pointing here from another repo](docs/pointing-here.md): a short note to paste into another
   repo's `CLAUDE.md` or `AGENTS.md`.
 - The diagrams are made by `tools/diagrams/build.py` (the plan) and
