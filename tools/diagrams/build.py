@@ -184,13 +184,13 @@ TARGET = [
 TASKS = {
     1: ("corpus-schema", "rename, levels", "done"),
     2: ("Record folders", "osdlc PR 729", "done"),
-    3: ("Publish 0.1.0", "release PR 726", "owner"),
-    4: ("Evidence types", "on VA-Spec", "todo"),
+    3: ("Publish 0.1.0", "publish run", "owner"),
+    4: ("Claims example", "profiles/claims", "doing"),
     5: ("Project writes", "evidence as records", "todo"),
     6: ("x-warn", "soft schema rules", "todo"),
     7: ("Obsidian", "dialect: wikilinks", "todo"),
     8: ("Use npm", "skillwright, root file", "todo"),
-    9: ("Profiles", "from model-schema", "todo"),
+    9: ("Profiles", "extends: types", "todo"),
     10: ("Store layout", "markdown-store", "todo"),
     11: ("Link resolver", "after PRs 649, 651", "todo"),
     12: ("One TS model", "vault + graph", "todo"),
@@ -204,7 +204,12 @@ TASKS = {
     20: ("Arch doc", "markdown PR 5", "doing"),
     21: ("Release here", "then move the spec", "todo"),
     22: ("Capture", "writes study results", "todo"),
-    23: ("Claims profile", "after 4 and 9", "todo"),
+    26: ("Adopt claims", "harness-reference", "todo"),
+    27: ("Extends", "parents, pinned", "todo"),
+    28: ("Refine, waive", "local vs inherited", "todo"),
+    29: ("Sync", "_inherited copy", "todo"),
+    30: ("Org principles", "first real case", "todo"),
+    23: ("Claims profile", "after 9 and 21", "todo"),
     24: ("Name overrides", "own folder names", "todo"),
     25: ("Testing profile", "extends claims", "todo"),
 }
@@ -240,10 +245,10 @@ def task_graph():
     for c, name in enumerate(["EVIDENCE PROJECT", "THE SPEC", "CORPUS MODEL"]):
         out.append(f'<text class="lang" x="{cols[c] + 2}" y="40">{name}</text>')
     cx = lambda c: cols[c] + tw / 2
-    place = {4: (0, 0), 22: (1, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1), 5: (3, 0)}
-    edges = [(1, 2), (11, 12), (2, 3), (4, 22), (22, 5), (3, 5)]
+    place = {4: (3, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1)}
+    edges = [(1, 2), (11, 12), (2, 3), (3, 4)]
     # groups: (column, first row, title, members, fed by)
-    groups = [(1, 3, "After 0.1.0", [6, 7, 8, 9, 10, 21], 3),
+    groups = [(1, 3, "After 0.1.0", [6, 7, 8, 10, 21, 9], 3),
               (2, 2, "After the TS model", [13, 15, 16, 14], 12)]
     gpitch = 54
     bodies = []
@@ -260,22 +265,47 @@ def task_graph():
         sx, sy = at(*place[src])
         out.append(edge(sx + tw / 2, sy + th, cx(c), gy))
         bottom = max(bottom, gy + gh)
-    # profile chain: below task 5 in the evidence column, fed by task 9
-    y9 = next(g_y for g_y, n in node_pos if n == 9)
-    gx, gy = cols[0] - 3, y9 + th + 14
+    # evidence column: 26, 22 and 5 sit below 4, with 26 level with task 9
+    ys = {n: g_y for g_y, n in node_pos}
+    y9 = ys[9]
+    ev = {26: y9, 22: y9 + pitch, 5: y9 + 2 * pitch}
+    x4, y4 = at(*place[4])
+    chain_nodes = [4, 26, 22, 5]
+    ev_y = {4: y4, **ev}
+    for n in (26, 22, 5):
+        bodies.append(node(n, cols[0], ev_y[n]))
+    for n1, n2 in zip(chain_nodes, chain_nodes[1:]):
+        out.append(edge(cx(0), ev_y[n1] + th, cx(0), ev_y[n2]))
+    # 8 feeds 26 from the side of its box
+    sx, sy = cols[1] - 3, ys[8] + th / 2
+    out.append(f'<path class="edge" d="M{sx},{sy} C{sx - 40},{sy} {cols[0] + 100},{sy} {cols[0] + 100},{y9 - 5}" marker-end="url(#ah)"/>')
+    # profile chain: below the TS-model group in the last column, fed by 9 and 21
+    gx, gy = cols[2] - 3, bottom + 20
     cpitch = 66
     gh = 24 + 3 * cpitch - 20
     out.append(f'<rect class="group" x="{gx}" y="{gy}" width="{tw + 6}" height="{gh}" rx="10"/>'
                f'<text class="gt" x="{gx + 10}" y="{gy + 16}">After profiles</text>')
     chain = [(23, gy + 24), (24, gy + 24 + cpitch), (25, gy + 24 + 2 * cpitch)]
     for n, ny in chain:
-        bodies.append(node(n, cols[0], ny))
+        bodies.append(node(n, cols[2], ny))
     for (_, y1), (_, y2) in zip(chain, chain[1:]):
-        out.append(edge(cols[0] + tw / 2, y1 + th, cols[0] + tw / 2, y2))
-    sx, sy = cols[1], y9 + th / 2
-    tx = cols[0] + tw / 2
-    out.append(f'<path class="edge" d="M{sx},{sy} C{sx - 50},{sy} {tx},{sy} {tx},{gy - 5}" marker-end="url(#ah)"/>')
-    bottom = max(bottom, gy + gh)
+        out.append(edge(cols[2] + tw / 2, y1 + th, cols[2] + tw / 2, y2))
+    for n, tx in ((21, cols[2] + 100), (9, cols[2] + 40)):
+        sx, sy = cols[1] + tw, ys[n] + th / 2
+        out.append(f'<path class="edge" d="M{sx},{sy} C{sx + 40},{sy} {tx},{sy + 10} {tx},{gy - 5}" marker-end="url(#ah)"/>')
+    bottom1 = gy + gh
+    # inheritance chain: below group 1 in the middle column, fed by 9
+    gx, gy = cols[1] - 3, max(bottom, y9 + th) + 20
+    gh = 24 + 4 * cpitch - 20
+    out.append(f'<rect class="group" x="{gx}" y="{gy}" width="{tw + 6}" height="{gh}" rx="10"/>'
+               f'<text class="gt" x="{gx + 10}" y="{gy + 16}">After 9</text>')
+    ichain = [(27, gy + 24), (28, gy + 24 + cpitch), (29, gy + 24 + 2 * cpitch), (30, gy + 24 + 3 * cpitch)]
+    for n, ny in ichain:
+        bodies.append(node(n, cols[1], ny))
+    for (_, y1), (_, y2) in zip(ichain, ichain[1:]):
+        out.append(edge(cx(1), y1 + th, cx(1), y2))
+    out.append(edge(cx(1), y9 + th, cx(1), gy))
+    bottom = max(bottom1, gy + gh)
     for a, b in edges:
         (ax, ay), (bx, by) = at(*place[a]), at(*place[b])
         out.append(edge(ax + tw / 2, ay + th, bx + tw / 2, by))
