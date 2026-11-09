@@ -1,6 +1,6 @@
 # corpus-schema
 
-A format for what a [corpus](../../../docs/terms/corpus.md), a folder of Markdown notes and the
+A format for what a [corpus](https://github.com/osdlc/osdlc/blob/main/docs/terms/corpus.md), a folder of Markdown notes and the
 files they link to, can declare about itself. A root file (`corpus-schema.md`, `.yaml` or `.json`)
 marks the folder. Each type is a folder holding a JSON Schema named after it, and each record is a
 Markdown, YAML or JSON file in that folder. Links between records are relative Markdown links.
@@ -12,8 +12,7 @@ records. Level 2 gives every type a schema. [SPEC.md](SPEC.md) states the format
 | ---------------------------------- | ---------- | --------------------------- |
 | `@osdlc/corpus-schema` (reference) | TypeScript | `packages/ts/corpus-schema` |
 
-The spec lives here until [osdlc/markdown](https://github.com/osdlc/markdown) has its own release
-setup. Then it moves there, with this suite, its corpora and the TypeScript package.
+The spec lives here, in osdlc/markdown, with this suite, its corpora and the TypeScript package.
 
 ## The suite
 

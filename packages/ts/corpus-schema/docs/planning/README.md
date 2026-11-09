@@ -4,7 +4,7 @@ Why `@osdlc/corpus-schema` has the shape it has. The [README](../../README.md) s
 package, and the [corpus-schema spec](../../../../conformance/corpus-schema/SPEC.md) states the format
 it checks. This folder says why the package is shaped as it is.
 
-These files are maintained here, in [osdlc/osdlc](https://github.com/osdlc/osdlc). Open an issue
+These files are maintained here, in [osdlc/markdown](https://github.com/osdlc/markdown). Open an issue
 or a pull request there.
 
 ## Layout

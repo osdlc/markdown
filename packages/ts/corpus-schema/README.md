@@ -7,7 +7,7 @@ exist.
 
 It is for people and tools that keep typed records as Markdown, YAML and JSON files in a folder,
 edit them as plain notes (in Obsidian, on GitHub, in an editor) and want CI to catch mistakes. The
-format is the [corpus-schema spec](https://github.com/osdlc/osdlc/blob/main/packages/conformance/corpus-schema/SPEC.md),
+format is the [corpus-schema spec](https://github.com/osdlc/markdown/blob/main/packages/conformance/corpus-schema/SPEC.md),
 version 0. A corpus, a folder of notes and the files they link to, declares what it holds in a
 root file, `corpus-schema.md`, and each type folder holds the type's JSON Schema. Every rule this
 package checks comes from that spec or from the corpus's own files.
@@ -134,7 +134,7 @@ backup. Run them on files under version control.
 - [`@synstack/markdown-db`](https://www.npmjs.com/package/@synstack/markdown-db) uses Markdown files
   with frontmatter as a database from TypeScript code. It has no written spec for the folder.
 - [`markdown-corpus`](https://github.com/osdlc/osdlc/tree/main/packages/rust/markdown-corpus#readme),
-  a Rust crate in this repository, models any corpus: its files, links and frontmatter. It does not
+  a Rust crate in osdlc/osdlc, models any corpus: its files, links and frontmatter. It does not
   apply the corpus-schema rules.
 - [`@osdlc/markdown-contract`](https://github.com/osdlc/osdlc/tree/main/packages/ts/markdown-contract#readme)
   checks the sections and blocks of one Markdown document. This package checks a whole corpus:
@@ -148,7 +148,7 @@ beside the spec for that reason.
 
 `pnpm run build`, then `pnpm run test`. The CLI tests run the built program.
 `tests/conformance.test.ts` runs the spec's conformance cases from
-[`packages/conformance/corpus-schema/`](https://github.com/osdlc/osdlc/tree/main/packages/conformance/corpus-schema#readme). A case compares
+[`packages/conformance/corpus-schema/`](https://github.com/osdlc/markdown/tree/main/packages/conformance/corpus-schema#readme). A case compares
 only the `<file>: <field>` prefix of each problem, as a set. Message text and order are not part of
 it.
 

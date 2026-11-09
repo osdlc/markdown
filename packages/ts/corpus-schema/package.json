@@ -6,11 +6,11 @@
   "author": "sksizer",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/osdlc/osdlc.git",
+    "url": "git+https://github.com/osdlc/markdown.git",
     "directory": "packages/ts/corpus-schema"
   },
-  "homepage": "https://github.com/osdlc/osdlc/tree/main/packages/ts/corpus-schema#readme",
-  "bugs": "https://github.com/osdlc/osdlc/issues",
+  "homepage": "https://github.com/osdlc/markdown/tree/main/packages/ts/corpus-schema#readme",
+  "bugs": "https://github.com/osdlc/markdown/issues",
   "keywords": [
     "markdown",
     "corpus-schema",
@@ -64,15 +64,15 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.build.json --noEmit"
   },
   "dependencies": {
-    "@osdlc/frontmatter-lossless": "workspace:^",
-    "@osdlc/markdown-link": "workspace:^",
+    "@osdlc/frontmatter-lossless": "^1.1.2",
+    "@osdlc/markdown-link": "^0.8.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@osdlc/prettier-config": "workspace:^",
-    "@osdlc/tsconfig": "workspace:^",
+    "@osdlc/prettier-config": "^0.3.1",
+    "@osdlc/tsconfig": "^0.4.1",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "oxlint": "catalog:",

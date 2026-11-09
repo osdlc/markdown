@@ -5,14 +5,14 @@ Thanks for your interest in `@osdlc/corpus-schema`.
 ## Issues
 
 Report bugs and ask for features in the
-[issue tracker](https://github.com/osdlc/osdlc/issues). For a bug, include the
+[issue tracker](https://github.com/osdlc/markdown/issues). For a bug, include the
 library version, your runtime and its version, and the smallest corpus that
 misbehaves. Report security problems privately. See
 [SECURITY.md](./SECURITY.md).
 
 ## Pull requests
 
-This package lives in [osdlc/osdlc](https://github.com/osdlc/osdlc) under
+This package lives in [osdlc/markdown](https://github.com/osdlc/markdown) under
 `packages/ts/corpus-schema`. Open pull requests there. They are reviewed and
 merged there.
 
@@ -48,7 +48,7 @@ pnpm run format:check
 ## The cases
 
 The corpus-schema spec and its conformance cases live in
-[`packages/conformance/corpus-schema/`](https://github.com/osdlc/osdlc/tree/main/packages/conformance/corpus-schema):
+[`packages/conformance/corpus-schema/`](https://github.com/osdlc/markdown/tree/main/packages/conformance/corpus-schema):
 `SPEC.md`, `suite.json`, and one corpus folder under `corpora/` for each case. A case names no
 code, so another implementation can run the same cases. `tests/conformance.test.ts` runs them
 here. A change to the spec's rules gets a case there. Write the case's `input` by hand, then run
@@ -65,4 +65,4 @@ here. A change to the spec's rules gets a case there. Write the case's `input` b
 - For a change users can see, add a changeset: run `pnpm changeset` at the
   repository root. Start a breaking change's summary with `**Breaking:**`.
   Do not edit `CHANGELOG.md` or `version` by hand. The release writes them.
-  See [packages/README.md](https://github.com/osdlc/osdlc/blob/main/packages/README.md).
+  See [packages/README.md](https://github.com/osdlc/markdown/blob/main/packages/README.md).

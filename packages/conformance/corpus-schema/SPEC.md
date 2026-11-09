@@ -1,14 +1,13 @@
 # corpus-schema, version 0
 
 **Status: in force, version 0.** Accepted 2026-11-05. It is rewritten in place while it is at
-version 0. It was first called markdown-db, and its [design review](../../../docs/parley/markdown-db-v0.json)
-keeps that name. It lives here, beside its [conformance cases](README.md), until
-[osdlc/markdown](https://github.com/osdlc/markdown) has its own release setup; then it moves there
-with its cases and the TypeScript package.
+version 0. It was first called markdown-db, and its [design review](https://github.com/osdlc/osdlc/blob/main/docs/parley/markdown-db-v0.json)
+keeps that name. It lives here, in osdlc/markdown, beside its [conformance cases](README.md) and
+the TypeScript package.
 
 ## Purpose
 
-A [corpus](../../../docs/terms/corpus.md) is a folder of Markdown notes and the files they link
+A [corpus](https://github.com/osdlc/osdlc/blob/main/docs/terms/corpus.md) is a folder of Markdown notes and the files they link
 to. corpus-schema is what a corpus can declare about itself on top of that: that it is a corpus,
 which types of records it holds, and the JSON Schema each type follows. People still browse and
 edit the files as plain notes, and tools validate them.
@@ -173,7 +172,7 @@ a method that the record describes.
 - A folder inside a type folder with no record file named after it is not a record folder. It is a
   plain folder, as before: each `.md`, `.yaml` and `.json` file in it is a record of the type.
 
-This is the shape osdlc calls a [bundle](../../../docs/terms/corpus.md#not-to-be-confused-with): a note's folder holding `<name>/<name>.md` and the files
+This is the shape osdlc calls a [bundle](https://github.com/osdlc/osdlc/blob/main/docs/terms/corpus.md#not-to-be-confused-with): a note's folder holding `<name>/<name>.md` and the files
 beside it. Moving the folder moves the record and its files together, and their relative links
 keep working.
 
@@ -282,7 +281,7 @@ corpus-schema validate <folder>
 
 The package's tests hold it to this spec. [`suite.json`](suite.json) and the corpora under
 [`corpora/`](corpora/), beside this file, are cases that name no code, so a validator in another
-language can run the same ones. [S-conformance-suites](../../../docs/planning/standards/S-conformance-suites.md)
+language can run the same ones. [S-conformance-suites](https://github.com/osdlc/osdlc/blob/main/docs/planning/standards/S-conformance-suites.md)
 says how they are kept.
 
 ## Exemptions
