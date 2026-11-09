@@ -16,10 +16,10 @@ CW, CH, GX, GY = 200, 46, 8, 8
 X0 = 16
 
 LIGHT = dict(bg="#fbfaf7", fg="#1d1d1b", mut="#5d5d58", band="#f0eee8", line="#d8d5cc", chip="#ffffff",
-             osdlc="#2f855a", md="#b83280", dev="#2b6cb0", ont="#6b46c1", sw="#c05621", ext="#8a8a84",
+             osdlc="#2f855a", md="#b83280", dev="#2b6cb0", ont="#6b46c1", sw="#c05621",
              bad="#c53030", badbg="#fde8e8", acc="#b8741a", accbg="#fde7c8")
 DARK = dict(bg="#16161a", fg="#ececea", mut="#a3a39d", band="#222227", line="#3a3a40", chip="#2b2b31",
-            osdlc="#68d391", md="#f687b3", dev="#63b3ed", ont="#b794f4", sw="#f6ad55", ext="#a0a09a",
+            osdlc="#68d391", md="#f687b3", dev="#63b3ed", ont="#b794f4", sw="#f6ad55",
             bad="#fc8181", badbg="#3b1d1d", acc="#f6ad55", accbg="#3d2f1c")
 
 
@@ -35,12 +35,9 @@ def rules(c):
 .r-dev rect{{stroke:{c['dev']}}} .r-dev .dot{{fill:{c['dev']}}}
 .r-ont rect{{stroke:{c['ont']}}} .r-ont .dot{{fill:{c['ont']}}}
 .r-sw rect{{stroke:{c['sw']}}} .r-sw .dot{{fill:{c['sw']}}}
-.r-ext rect{{stroke:{c['ext']}}} .r-ext .dot{{fill:{c['ext']}}}
 .fb rect{{fill:{c['badbg']};stroke:{c['bad']}}} .fb text{{font-size:10.5px;font-weight:700;fill:{c['bad']}}}
 .dup{{stroke:{c['bad']};stroke-width:1.6;stroke-dasharray:4 3}}
 .edge{{fill:none;stroke:{c['mut']};stroke-width:1.4}} .ahp{{fill:{c['mut']}}}
-.node rect{{fill:{c['chip']};stroke:{c['line']};stroke-width:1.4}} .node.first rect{{fill:{c['accbg']};stroke:{c['acc']}}}
-.num{{fill:{c['fg']}}} .numt{{font-size:11px;font-weight:700;fill:{c['bg']}}} .nn{{font-size:11.5px;font-weight:650;fill:{c['fg']}}}
 .lvl rect{{fill:{c['chip']};stroke:{c['line']}}} .prof rect{{fill:{c['accbg']};stroke:{c['acc']}}}
 .tie{{stroke:{c['acc']};stroke-width:1.6;fill:none}}
 .task rect{{stroke-width:1.6}} .tt{{font-size:11.5px;font-weight:650;fill:{c['fg']}}}
@@ -207,7 +204,7 @@ TASKS = {
     20: ("Arch doc", "markdown PR 5", "doing"),
     21: ("Release here", "then move the spec", "todo"),
     22: ("Capture", "writes study results", "todo"),
-    23: ("Claims profile", "types move here", "todo"),
+    23: ("Claims profile", "after 4 and 9", "todo"),
     24: ("Name overrides", "own folder names", "todo"),
     25: ("Testing profile", "extends claims", "todo"),
 }
@@ -235,7 +232,6 @@ def task_graph():
         return f'<path class="edge" d="M{x1},{y1} C{x1},{my} {x2},{my} {x2},{y2 - 5}" marker-end="url(#ah)"/>'
 
     out = [ARROW]
-    # status key
     x = X0
     for st, name in STATUS:
         out.append(f'<g class="task t-{st}"><rect x="{x}" y="6" width="12" height="12" rx="3"/></g>'
@@ -286,7 +282,6 @@ def task_graph():
     for n, (r, c) in place.items():
         out.append(node(n, *at(r, c)))
     out.extend(bodies)
-    # separate work
     y = bottom + 22
     band_h = 32 + 2 * th + 12 + 14  # label, two rows, gap, bottom padding
     out.append(f'<rect class="band" x="6" y="{y}" width="{W - 12}" height="{band_h}" rx="10"/>'
