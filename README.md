@@ -23,3 +23,5 @@ one at a time.
   architecture.py after you change it. After you change build.py, run both.
   The task graph's statuses and dependencies live in `TASKS` and `task_graph()` in `build.py`.
   Update them together with the plan.
+- [The claims profile](profiles/claims/): the first draft of the claims profile, record types for
+  claims and their evidence, with an example corpus to copy.
