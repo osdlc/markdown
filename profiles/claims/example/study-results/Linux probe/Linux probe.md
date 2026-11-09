@@ -12,10 +12,12 @@ ancillaryResults:
 qualityMeasures:
   os: Ubuntu 24.04
   fernlogVersion: 2.3.1
-  runs: 6
+  places: 2
+  runsPerPlace: 3
 ---
 
-fernlog read `~/.config/fernlog/config.toml` on all three runs. It ignored `~/.fernlog.toml`.
+fernlog read `~/.config/fernlog/config.toml` on all three runs at that place. It ignored
+`~/.fernlog.toml` on all three runs there.
 
 - The script that ran: [probe.sh](probe.sh).
 - Its output, one row per run: [results.csv](results.csv).

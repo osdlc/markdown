@@ -1,7 +1,9 @@
 # Checks the example corpora under profiles/ with the corpus-schema validator.
 # The example must pass with no errors and no warnings.
 #
-# Every action is pinned to a commit SHA; the comment names its release.
+# Every action is pinned to a commit SHA; the comment names its release. The
+# validator is taken from npm by the range ^0.1.0 on purpose, so the example
+# is checked against the latest 0.x release of corpus-schema v0.
 name: examples
 
 on:
