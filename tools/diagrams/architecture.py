@@ -39,8 +39,8 @@ LAYERS = [
   ("6", "Query (later)", "read a corpus as a database",
    [("query layer", "Bases queries, loader, builds", "osdlc", "later")], []),
   ("5", "Profiles (proposal)", "shared sets of types",
-   [("evidence profile", "sources, findings, claims", "md", "later"),
-    ("acceptance testing", "builds on evidence", "md", "later")], []),
+   [("claims profile", "VA-Spec evidence types", "md", "later"),
+    ("acceptance testing", "builds on claims", "md", "later")], []),
   ("4", "corpus-schema", "the spec and its validator",
    [("@osdlc/corpus-schema", "levels 0–2, validate --fix", "md")],
    [("Rust validator", "later, same tests", "md", "later")]),
@@ -84,9 +84,10 @@ def layers():
 def settings():
     out = [ARROW, f'<text class="rl" x="{X0}" y="26">Three settings on a corpus</text>',
            f'<text class="rs" x="{X0}" y="44">Each answers a different question. Proposal.</text>']
-    code = ["# corpus-schema.yaml", "corpus-schema: 0", "level: 2", "dialect: obsidian", "profiles: [acceptance-testing@0]"]
+    code = ["# corpus-schema.yaml", "corpus-schema: 0", "level: 2", "dialect: obsidian", "profiles:", '  claims: "@osdlc/corpus-profile-claims@0.1"',
+            '  testing: "@osdlc/corpus-profile-testing@0.1"']
     out.append(f'<g class="code"><rect x="{X0}" y="58" width="{W - 2 * X0}" height="{18 * len(code) + 16}" rx="8"/>')
-    out.extend(f'<text x="{X0 + 14}" y="{80 + 18 * i}">{esc(line)}</text>' for i, line in enumerate(code))
+    out.extend(f'<text x="{X0 + 14}" y="{80 + 18 * i}">{esc(line.replace(chr(32) * 2, chr(160) * 2))}</text>' for i, line in enumerate(code))
     out.append('</g>')
     y = 58 + 18 * len(code) + 34
 
@@ -107,16 +108,16 @@ def settings():
 
     out.append(f'<text class="rl" x="{X0}" y="{y}">Profiles</text><text class="rs" x="{X0 + 70}" y="{y}">whose types it uses</text>')
     y += 12
-    out.append(box(X0, y, 190, 48, "evidence", "sources, findings, claims", "prof"))
+    out.append(box(X0, y, 190, 48, "claims", "statements, study results", "prof"))
     out.append(box(X0 + 218, y, 190, 48, "acceptance testing", "+ build, commit, environment", "prof"))
     out.append(arrow(X0 + 216, y + 24, X0 + 192, y + 24))
-    out.append(f'<text class="cs" x="{X0}" y="{y + 66}">acceptance testing builds on evidence:</text>'
+    out.append(f'<text class="cs" x="{X0}" y="{y + 66}">acceptance testing builds on claims:</text>'
                f'<text class="cs" x="{X0}" y="{y + 82}">it adds, it never loosens.</text>')
     y += 82
     out.append(box(X0 + 218, y, 190, 48, "your corpus", "its own types + the profile"))
     out.append(arrow(X0 + 313, y - 2, X0 + 313, y - 32))
     out.append(f'<text class="cs" x="{X0}" y="{y + 30}">So a record valid under acceptance</text>'
-               f'<text class="cs" x="{X0}" y="{y + 46}">testing is also valid under evidence.</text>')
+               f'<text class="cs" x="{X0}" y="{y + 46}">testing is also valid under claims.</text>')
     y += 62
     return svg(STYLE + "".join(out), y, "Level, dialect and profiles, with a root file example")
 

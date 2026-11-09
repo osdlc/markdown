@@ -83,7 +83,8 @@ The spec, and the validator that checks a corpus against it.
   `<folder>.md`, `.yaml` or `.json`. That file is the record, and it owns every other file in the
   folder. A record folder can't hold another record folder or a type folder. A test run keeps its
   script, query and results this way. Record folders are part of level 1 and ship in 0.1.0. This is
-  decided. The work is in [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), still open.
+  decided. The work is in [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), merged on
+  2026-11-09.
 - Packages: `@osdlc/corpus-schema` (TypeScript). It is on osdlc's main branch
   ([osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged) but not published yet. Its
   first release is 0.1.0. skillwright still has an older copy named `@osdlc/markdown-db`. Once this
@@ -96,26 +97,35 @@ Shared sets of types.
 
 - A profile is a versioned set of types and rules that many corpora can use. A corpus can use more
   than one, next to its own types.
-- The first one is the evidence profile: sources, findings and claims. Sources and findings exist
-  as the `references` and `evidence` types in
-  [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74). Claims are not built yet.
-  Until profiles work, a corpus copies those schemas in as plain files.
+- The first one is the claims profile. It follows VA-Spec, GA4GH's Variant Annotation spec, which is
+  a JSON Schema model for claims backed by evidence. Its types are Statement, Evidence Line, Study
+  Result, Method and Document, and a Contribution field on records. The profile is kept and
+  published from this repo, and a first draft of it is the mapping note `docs/profiles/claims.md`.
+  Until profiles work, harness-reference builds the types as plain files in
+  [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74), and a corpus copies them in.
+- A corpus names its profiles in the root file. The reserved `profiles` key maps a short prefix to a
+  profile and its version. A type says which class it is with `x-class`, for example
+  `x-class: claims/StudyResult`. The prefix is always required, so adding a second profile later
+  breaks nothing, and an unknown prefix is an error.
 - dev's model-schema already does much of this. It calls a profile a "pack": a folder of YAML that
   declares kinds and compiles to JSON Schema. A pack can name packs it `requires`, a record can
   `extends` another record, and a pack can `augment` another pack's records. See
   [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069) and
   [sksizer/dev#4070](https://github.com/sksizer/dev/pull/4070). We'd rather use the word profile,
   because that is the usual word in data standards and "pack" already means something else in dev.
-- A profile can build on other profiles. It names the profiles it builds on and adds types or fields
-  to theirs. It never removes or loosens a rule from the profile below. So a record that is valid
+- A profile can build on other profiles through the same `profiles` key. It adds types or fields to
+  theirs. It never removes or loosens a rule from the profile below. So a record that is valid
   under the child is also valid under the parent. VA-Spec and FHIR profiles work this way. dev's
   packs don't promise this yet: a record's own property replaces the one it inherits, and `strict`
   can be overridden. So adopting packs as profiles would need that rule added.
-- Example: an acceptance-testing profile built on the evidence profile. An acceptance criterion is
-  the question a claim answers. A test is a method. A test run is a finding. Pass or fail is whether
-  the finding supports or disputes the claim. The testing profile adds fields like build, commit and
-  environment. It can let a folder use testing words, such as `evidence/` for findings, while the
-  field names stay the same as in the evidence profile.
+- Example: an acceptance-testing profile built on the claims profile. Requirements or acceptance
+  criteria are what statements are about. A test is a method. A test run is a study result, kept as
+  a record folder with its script, query and CSV results. Pass or fail is the direction: whether the
+  run supports or disputes the statement. The words come from OSLC Quality Management and the ISTQB
+  glossary.
+- A corpus can rename a profile's folders. It gives a type its own folder name and maps it to its
+  class with `x-class`. Field names stay the profile's, so tools and exports work everywhere. This
+  is the plan's task 24, name overrides.
 
 ### 6. Query (later)
 
@@ -155,7 +165,9 @@ A corpus says three separate things about itself in its root file:
 corpus-schema: 0
 level: 2
 dialect: obsidian
-profiles: [acceptance-testing@0]
+profiles:
+  claims: "@osdlc/corpus-profile-claims@0.1"
+  testing: "@osdlc/corpus-profile-testing@0.1"
 ```
 
 As `corpus-schema.md`, the same keys go in YAML frontmatter between `---` lines. Today only
@@ -172,8 +184,9 @@ warns about them; `level` is part of this proposal.
   outside the corpus, and add embeds. A tool that knows the dialect checks it. A tool that doesn't
   checks the baseline and says what it skipped. There is no promise that every tool handles every
   dialect.
-- The **profiles** say whose types it uses. A corpus that uses the acceptance-testing profile also
-  gets the evidence profile it builds on.
+- The **profiles** say whose types it uses. Each one has a short prefix, and a type names its class
+  as `prefix/Class`. A corpus that uses the testing profile lists the claims profile it builds on
+  too.
 
 These are separate on purpose. A profile is not a higher level, and a dialect is not a profile.
 
@@ -224,7 +237,7 @@ The order of the moves is in the [plan](ecosystem-plan.md#all-the-work).
 ## Open questions
 
 - Do we adopt the three settings, and the word profile?
-- How does a profile let a folder use its own words (like `evidence/`) without renaming fields?
+- Which words go in the first tested name override set (task 24)?
 - Is a profile written as YAML (like model-schema packs) or as plain JSON Schema files, or can it be
   either?
 - What exactly is in the baseline, and what goes in the obsidian dialect?
