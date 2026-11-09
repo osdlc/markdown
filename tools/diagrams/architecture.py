@@ -6,19 +6,16 @@ It uses build.py's shared style and helpers, so both pages look the same.
 from build import ARROW, DARK, LIGHT, OUT, TARGET_KEY, W, X0, esc, grid, key, svg
 
 
-EXT = {id(LIGHT): "#8a8a84", id(DARK): "#a0a09a"}
-
-
-def extra(c):
+def extra(c, ext):
     """Styles only these diagrams use; the shared ones come from build.py."""
     return f"""
-.r-ext rect{{stroke:{EXT[id(c)]}}} .r-ext .dot{{fill:{EXT[id(c)]}}}
+.r-ext rect{{stroke:{ext}}} .r-ext .dot{{fill:{ext}}}
 .lnum{{font-size:12px;font-weight:700;fill:{c['mut']}}}
 .lvl.opt rect{{stroke-dasharray:5 4}}
 .code rect{{fill:{c['chip']};stroke:{c['line']}}} .code text{{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;fill:{c['fg']}}}"""
 
 
-STYLE = f"<style>{extra(LIGHT)}\n@media (prefers-color-scheme: dark) {{{extra(DARK)}\n}}</style>"
+STYLE = f"<style>{extra(LIGHT, '#8a8a84')}\n@media (prefers-color-scheme: dark) {{{extra(DARK, '#a0a09a')}\n}}</style>"
 
 
 def box(x, y, w, h, title, sub, cls="lvl"):
@@ -36,7 +33,7 @@ LAYERS = [
   ("8", "Apps", "use the layers below; keep their own rules",
    [("sdlc", "planning corpus", "dev"), ("skillwright", "skills, harness-reference", "sw"),
     ("evidence project", "records + files", "ext")],
-   [("determined", "notes app", "dev"), ("markdown-store", "typed records from Rust", "ont")]),
+   [("determined", "notes app", "dev"), ("markdown-store", "typed records; home open", "ont")]),
   ("7", "Render, edit, sites", "show notes to people",
    [("markdown-render", "notes → HTML", "osdlc"), ("markdown-editor", "live editor", "osdlc"),
     ("markdown-ui", "viewing chrome", "osdlc"), ("markdown-astro", "notes → site", "osdlc")], []),
@@ -61,9 +58,9 @@ LAYERS = [
 
 
 def layers():
-    # The key needs two rows to fit; the second drops its own "Repo:" label.
+    # The key needs two rows to fit; the second has no label.
     repos = TARGET_KEY + [("ext", "other")]
-    out, y = [key(12, repos[:3]), key(28, repos[3:]).replace(">Repo:<", "><")], 42
+    out, y = [key(12, repos[:3]), key(28, repos[3:], label="")], 42
     for num, name, sub, ts, rs in LAYERS:
         top, body, yy = y, [], y + 52
         for lang, items in (("TYPESCRIPT", ts), ("RUST", rs)):
@@ -88,8 +85,8 @@ def layers():
 def settings():
     out = [ARROW, f'<text class="rl" x="{X0}" y="26">Three settings on a corpus</text>',
            f'<text class="rs" x="{X0}" y="44">Each answers a different question. Proposal.</text>']
-    code = ["# corpus-schema.yaml", "corpus-schema: 0", "level: 2", "dialect: obsidian", "profiles:", '  claims: "@osdlc/corpus-profile-claims@0.1"',
-            '  testing: "@osdlc/corpus-profile-testing@0.1"']
+    code = ["# corpus-schema.yaml", "corpus-schema: 0", "level: 2", "dialect: obsidian", "extends:", '  org: "github:acme/org-corpus@4f2a9c1"',
+            '  claims: "npm:@osdlc/corpus-profile-claims@0.1"']
     out.append(f'<g class="code"><rect x="{X0}" y="58" width="{W - 2 * X0}" height="{18 * len(code) + 16}" rx="8"/>')
     out.extend(f'<text x="{X0 + 14}" y="{80 + 18 * i}">{esc(line.replace(chr(32) * 2, chr(160) * 2))}</text>' for i, line in enumerate(code))
     out.append('</g>')
@@ -110,15 +107,15 @@ def settings():
     out.append(box(X0 + 208, y, 200, 48, "obsidian", "wikilinks, embeds, no warning", "lvl opt"))
     y += 76
 
-    out.append(f'<text class="rl" x="{X0}" y="{y}">Profiles</text><text class="rs" x="{X0 + 70}" y="{y}">whose types it uses</text>')
+    out.append(f'<text class="rl" x="{X0}" y="{y}">Extends</text><text class="rs" x="{X0 + 66}" y="{y}">whose types and records it uses</text>')
     y += 12
-    out.append(box(X0, y, 190, 48, "claims", "statements, study results", "prof"))
+    out.append(box(X0, y, 190, 48, "claims", "a profile: types only", "prof"))
     out.append(box(X0 + 218, y, 190, 48, "acceptance testing", "+ build, commit, environment", "prof"))
     out.append(arrow(X0 + 216, y + 24, X0 + 192, y + 24))
     out.append(f'<text class="cs" x="{X0}" y="{y + 66}">acceptance testing builds on claims:</text>'
                f'<text class="cs" x="{X0}" y="{y + 82}">it adds, it never loosens.</text>')
     y += 82
-    out.append(box(X0 + 218, y, 190, 48, "your corpus", "its own types + the profile"))
+    out.append(box(X0 + 218, y, 190, 48, "your corpus", "its own types + parents"))
     out.append(arrow(X0 + 313, y - 2, X0 + 313, y - 32))
     out.append(f'<text class="cs" x="{X0}" y="{y + 30}">So a record valid under acceptance</text>'
                f'<text class="cs" x="{X0}" y="{y + 46}">testing is also valid under claims.</text>')

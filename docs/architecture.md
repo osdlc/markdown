@@ -65,7 +65,8 @@ Every note in a corpus at once.
   what links to it), frontmatter, tags, and keeping all of that up to date as files change.
 - It does not know about types or schemas, and it never rejects a note. A note with broken
   frontmatter is read as body only.
-- Today: markdown-corpus (Rust, osdlc) does this. In TypeScript the same job is split between
+- Today: markdown-corpus (Rust, osdlc) does this. markdown-relink (Rust, osdlc) moves notes and
+  fixes the links that point at them. In TypeScript the same job is split between
   markdown-vault and vault-graph-core in dev, and they resolve links in two different ways.
 - Target: one TypeScript package called markdown-corpus, made from those two, the twin of the Rust
   crate. The crate keeps its name. This is decided.
@@ -95,17 +96,18 @@ The spec, and the validator that checks a corpus against it.
 
 Shared sets of types.
 
-- A profile is a versioned set of types and rules that many corpora can use. A corpus can use more
-  than one, next to its own types.
+- A profile is a versioned set of types and rules that many corpora can use. It is a corpus that
+  has only types. A corpus can use more than one, next to its own types.
 - The first one is the claims profile. It follows VA-Spec, GA4GH's Variant Annotation spec, which is
   a JSON Schema model for claims backed by evidence. Its types are Statement, Evidence Line, Study
-  Result, Method and Document, and a Contribution field on records. The profile is kept and
-  published from this repo, and a first draft of it is the mapping note `docs/profiles/claims.md`.
-  Until profiles work, harness-reference builds the types as plain files in
-  [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74), and a corpus copies them in.
-- A corpus names its profiles in the root file. The reserved `profiles` key maps a short prefix to a
-  profile and its version. A type says which class it is with `x-class`, for example
-  `x-class: claims/StudyResult`. The prefix is always required, so adding a second profile later
+  Result, Method and Document, and a Contribution field on records. It starts as an example corpus
+  in this repo, `profiles/claims/example/`, with a README that maps each type to VA-Spec. The plan's
+  task 4 builds it, and it is in progress. Until profiles work, a corpus copies the type folders
+  from the example. Later the profile is published from this repo as
+  `@osdlc/corpus-profile-claims`.
+- A corpus names its profiles in the root file. The reserved `extends` key maps a short prefix to a
+  parent corpus and its version. A type says which type it builds on with `x-extends`, for example
+  `x-extends: claims/StudyResult`. The prefix is always required, so adding a second profile later
   breaks nothing, and an unknown prefix is an error.
 - dev's model-schema already does much of this. It calls a profile a "pack": a folder of YAML that
   declares kinds and compiles to JSON Schema. A pack can name packs it `requires`, a record can
@@ -113,7 +115,7 @@ Shared sets of types.
   [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069) and
   [sksizer/dev#4070](https://github.com/sksizer/dev/pull/4070). We'd rather use the word profile,
   because that is the usual word in data standards and "pack" already means something else in dev.
-- A profile can build on other profiles through the same `profiles` key. It adds types or fields to
+- A profile can build on other profiles through the same `extends` key. It adds types or fields to
   theirs. It never removes or loosens a rule from the profile below. So a record that is valid
   under the child is also valid under the parent. VA-Spec and FHIR profiles work this way. dev's
   packs don't promise this yet: a record's own property replaces the one it inherits, and `strict`
@@ -124,8 +126,13 @@ Shared sets of types.
   run supports or disputes the statement. The words come from OSLC Quality Management and the ISTQB
   glossary.
 - A corpus can rename a profile's folders. It gives a type its own folder name and maps it to its
-  class with `x-class`. Field names stay the profile's, so tools and exports work everywhere. This
+  parent type with `x-extends`. Field names stay the profile's, so tools and exports work everywhere. This
   is the plan's task 24, name overrides.
+- `extends` can also name a whole corpus with its records, not only types. Then an org's principles
+  can reach team and project corpora, read-only, pinned to a commit or version. A local record can
+  cite an inherited one, narrow it with `refines`, or set it aside with `waives`. This is a
+  separate proposal in the plan's [Sharing across corpora](ecosystem-plan.md#proposal-sharing-across-corpora)
+  (tasks 27 to 30).
 
 ### 6. Query (later)
 
@@ -165,13 +172,13 @@ A corpus says three separate things about itself in its root file:
 corpus-schema: 0
 level: 2
 dialect: obsidian
-profiles:
-  claims: "@osdlc/corpus-profile-claims@0.1"
-  testing: "@osdlc/corpus-profile-testing@0.1"
+extends:
+  org: "github:acme/org-corpus@4f2a9c1"
+  claims: "npm:@osdlc/corpus-profile-claims@0.1"
 ```
 
 As `corpus-schema.md`, the same keys go in YAML frontmatter between `---` lines. Today only
-`corpus-schema: 0` is required. Version 0 treats `dialect` and `profiles` as reserved keys and only
+`corpus-schema: 0` is required. Version 0 treats `dialect` and `extends` as reserved keys and only
 warns about them; `level` is part of this proposal.
 
 - The **level** says how much the corpus declares. Level 0 declares nothing: any folder of linked
@@ -184,9 +191,9 @@ warns about them; `level` is part of this proposal.
   outside the corpus, and add embeds. A tool that knows the dialect checks it. A tool that doesn't
   checks the baseline and says what it skipped. There is no promise that every tool handles every
   dialect.
-- The **profiles** say whose types it uses. Each one has a short prefix, and a type names its class
-  as `prefix/Class`. A corpus that uses the testing profile lists the claims profile it builds on
-  too.
+- The **extends** key says which parent corpora it uses. A profile is a parent that has only types.
+  Each parent has a short prefix, and a type builds on a parent type as `x-extends: prefix/Type`. A
+  profile that builds on another, such as testing on claims, names it under its own `extends`.
 
 These are separate on purpose. A profile is not a higher level, and a dialect is not a profile.
 
@@ -201,7 +208,7 @@ implementation runs them.
   tiered-dirs, and the corpus-schema spec (TypeScript only for now).
 - Planned: markdown-link (with the resolver), markdown-corpus, markdown-contract and gfm-table, whose
   cases still live inside their packages.
-- yaml-splice is not a family. It is one crate and its WebAssembly binding.
+- yaml-splice is not a twin. It is one crate and its WebAssembly binding.
 
 A twin can have extras the other doesn't need. It just has to pass the shared cases.
 
@@ -236,7 +243,7 @@ The order of the moves is in the [plan](ecosystem-plan.md#all-the-work).
 
 ## Open questions
 
-- Do we adopt the three settings, and the word profile?
+- Do we adopt the three settings, and the word profile? Does `extends` replace `profiles`?
 - Which words go in the first tested name override set (task 24)?
 - Is a profile written as YAML (like model-schema packs) or as plain JSON Schema files, or can it be
   either?
