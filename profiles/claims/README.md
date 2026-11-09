@@ -194,7 +194,7 @@ tool, fernlog: that version 2.3 reads its config file from `~/.config/fernlog/co
 Check it with the validator, from the root of this repository:
 
 ```sh
-npx --yes @osdlc/corpus-schema@^0.1.0 validate profiles/claims/example
+npx --yes @osdlc/corpus-schema@^0.2.0 validate profiles/claims/example
 ```
 
 ## Copy the types
