@@ -83,14 +83,14 @@ The spec, and the validator that checks a corpus against it.
 - A record folder is a folder inside a type folder that holds a file with the folder's own name:
   `<folder>.md`, `.yaml` or `.json`. That file is the record, and it owns every other file in the
   folder. A record folder can't hold another record folder or a type folder. A test run keeps its
-  script, query and results this way. Record folders are part of level 1 and ship in 0.1.0. This is
-  decided. The work is in [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), merged on
+  script, query and results this way. Record folders are part of level 1 and ship in the first published
+  version. This is decided. The work is in [osdlc/osdlc#729](https://github.com/osdlc/osdlc/pull/729), merged on
   2026-11-09.
 - Packages: `@osdlc/corpus-schema` (TypeScript). It is on osdlc's main branch
-  ([osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged) but not published yet. Its
-  first release is 0.1.0. skillwright still has an older copy named `@osdlc/markdown-db`. Once this
+  ([osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged) and published. Its
+  first version on npm is 0.2.0. skillwright still has an older copy named `@osdlc/markdown-db`. Once this
   repo has its own release setup, the package and its spec move here, with the same npm name. A Rust
-  validator comes later and runs the same tests.
+  validator comes later and runs the same tests (the plan's task 32).
 
 ### 5. Profiles (proposal)
 
@@ -178,8 +178,8 @@ extends:
 ```
 
 As `corpus-schema.md`, the same keys go in YAML frontmatter between `---` lines. Today only
-`corpus-schema: 0` is required. Version 0 treats `dialect` and `extends` as reserved keys and only
-warns about them; `level` is part of this proposal.
+`corpus-schema: 0` is required. Version 0 already has `level`. It treats `dialect` and `profiles` as reserved keys
+and only warns about them. The `extends` key would replace `profiles`.
 
 - The **level** says how much the corpus declares. Level 0 declares nothing: any folder of linked
   notes. Level 1 adds the root file, type folders, ids and record folders. Level 2 gives each type a
@@ -243,7 +243,7 @@ The order of the moves is in the [plan](ecosystem-plan.md#all-the-work).
 
 ## Open questions
 
-- Do we adopt the three settings, and the word profile? Does `extends` replace `profiles`?
+- Do we adopt the three settings, and the word profile? Does `extends` replace the reserved `profiles` key?
 - Which words go in the first tested name override set (task 24)?
 - Is a profile written as YAML (like model-schema packs) or as plain JSON Schema files, or can it be
   either?
