@@ -19,5 +19,5 @@ one at a time.
 - The diagrams are made by `tools/diagrams/build.py` (the plan) and
   `tools/diagrams/architecture.py` (the architecture), which uses build.py's style. Run
   architecture.py after you change it. After you change build.py, run both.
-  The task graph's statuses and dependencies live in `TASKS` and `task_graph()` in `build.py`. Update
-  them together with the plan.
+  The task graph's statuses and dependencies live in `TASKS` and `task_graph()` in `build.py`.
+  Update them together with the plan.

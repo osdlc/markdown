@@ -6,9 +6,13 @@ It uses build.py's shared style and helpers, so both pages look the same.
 from build import ARROW, DARK, LIGHT, OUT, TARGET_KEY, W, X0, esc, grid, key, svg
 
 
+EXT = {id(LIGHT): "#8a8a84", id(DARK): "#a0a09a"}
+
+
 def extra(c):
     """Styles only these diagrams use; the shared ones come from build.py."""
     return f"""
+.r-ext rect{{stroke:{EXT[id(c)]}}} .r-ext .dot{{fill:{EXT[id(c)]}}}
 .lnum{{font-size:12px;font-weight:700;fill:{c['mut']}}}
 .lvl.opt rect{{stroke-dasharray:5 4}}
 .code rect{{fill:{c['chip']};stroke:{c['line']}}} .code text{{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;fill:{c['fg']}}}"""
