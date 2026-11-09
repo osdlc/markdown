@@ -79,12 +79,14 @@ $defs:
       hasEvidenceItems:
         description: >-
           Links to the study results this line rests on. Each one must be a relative Markdown link
-          into the study-results folder.
+          into the study-results folder. After the folder name, no part of the path may start with
+          a dot, and the path may not hold an encoded dot or slash (%2E, %2F), so a link cannot
+          step back out of the folder.
         type: array
         minItems: 1
         items:
           type: string
-          pattern: "\\]\\((\\.\\./)+study-results/[^)]+\\.md\\)$"
+          pattern: "\\]\\((\\.\\./)+study-results/(?!\\.|[^)]*(/\\.|%2[EeFf]))[^)]+\\.md\\)$"
       directionOfEvidenceProvided:
         description: Whether the line supports or disputes the proposition, or neither.
         enum: [supports, neutral, disputes]
@@ -151,7 +153,8 @@ The rules a description does not say clearly:
   direction has no strength.
 - Each link in `hasEvidenceItems` must resolve, as every link in a record must. The field cannot use
   `x-ref` yet, because corpus-schema v0 allows `x-ref` only on top-level fields. Until it can, a
-  pattern checks that each link points into the `study-results` folder.
+  pattern checks that each link points into the `study-results` folder and does not step back out
+  of it with `..`.
 - `subject` may link to a record of a type the corpus adds itself, such as a `tools` type. The
   claims types do not define one. The validator checks that the link resolves, but not what type
   it points at, because `x-ref` does not work inside the proposition yet.

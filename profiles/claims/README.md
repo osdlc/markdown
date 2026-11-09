@@ -157,8 +157,9 @@ A contribution has `contributor` (an Agent with `name` and `agentType`), `activi
    type.
 4. Evidence items are not type-checked by `x-ref`. corpus-schema v0 allows `x-ref` only on
    top-level fields, and `hasEvidenceItems` sits inside an evidence line. Each link must still
-   resolve, and a pattern checks that it points into `study-results`. When corpus-schema allows
-   `x-ref` inside nested objects, the pattern becomes `x-ref: study-results`.
+   resolve, and a pattern checks that it points into `study-results` and does not step back out
+   with `..`, plain or percent-encoded. When corpus-schema allows `x-ref` inside nested objects,
+   the pattern becomes `x-ref: study-results`.
 5. Evidence items are study results only. VA-Spec also lets an evidence line cite statements and
    other information entities. Citing another statement can come later.
 6. Strength is a plain word, not a concept object. VA-Spec's `strength` and
@@ -208,6 +209,24 @@ Check it with the validator, from the root of this repository:
 ```sh
 npx --yes @osdlc/corpus-schema@^0.2.0 validate profiles/claims/example
 ```
+
+## The tests
+
+[tests/](tests/) checks that the schemas reject what they should. Each folder in `tests/cases/`
+holds one record that breaks one rule, such as a neutral statement with a strength, a null
+`object`, an evidence link that steps out of `study-results`, or an extra field on a contribution.
+Its `expected-error.txt` holds the error the validator must print. The tests sit outside
+`example/`, so a copy of the example has no broken records in it.
+
+Run them from the root of this repository:
+
+```sh
+sh profiles/claims/tests/run.sh
+```
+
+For each case the script copies the example, adds the record, and runs the validator. A case
+passes when the validator reports exactly one error, the expected one. CI runs the script after
+it checks the example.
 
 ## Copy the types
 
@@ -267,7 +286,7 @@ Copy the type folders into your corpus, as [Copy the types](#copy-the-types) say
   top-level field can point at them with `x-ref`.
 - Keep the field names the claims types use. If you add a field that VA-Spec defines and the claims
   types leave out, such as `score`, give it VA-Spec's meaning.
-- For strict checking, put `additionalProperties: false` back on your copies once they list your
+- For strict checking, add `additionalProperties: false` to your copies once they list your
   fields. Your copy is yours to close.
 
 The example statement

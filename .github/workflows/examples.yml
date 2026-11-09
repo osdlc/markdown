@@ -1,5 +1,6 @@
 # Checks the example corpora under profiles/ with the corpus-schema validator.
-# The example must pass with no errors and no warnings.
+# The example must pass with no errors and no warnings, and each broken record
+# under profiles/claims/tests/ must fail with its one expected error.
 #
 # Every action is pinned to a commit SHA; the comment names its release. The
 # validator is taken from npm by the range ^0.2.0 on purpose, so the example
@@ -47,3 +48,6 @@ jobs:
             echo "::error::the example must validate with no warnings"
             exit 1
           fi
+
+      - name: Check that the broken claims records fail
+        run: sh profiles/claims/tests/run.sh
