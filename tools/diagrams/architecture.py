@@ -33,7 +33,8 @@ LAYERS = [
   ("8", "Apps", "use the layers below; keep their own rules",
    [("sdlc", "planning corpus", "dev"), ("skillwright", "skills, harness-reference", "sw"),
     ("evidence project", "records + files", "ext")],
-   [("determined", "notes app", "dev"), ("markdown-store", "typed records; home open", "ont")]),
+   [("determined", "notes app", "dev"), ("markdown-store", "typed records; home open", "ont"),
+    ("ontogen", "Rust structs → notes", "ont")]),
   ("7", "Render, edit, sites", "show notes to people",
    [("markdown-render", "notes → HTML", "osdlc"), ("markdown-editor", "live editor", "osdlc"),
     ("markdown-ui", "viewing chrome", "osdlc"), ("markdown-astro", "notes → site", "osdlc")], []),
@@ -94,7 +95,7 @@ def settings():
 
     out.append(f'<text class="rl" x="{X0}" y="{y}">Level</text><text class="rs" x="{X0 + 52}" y="{y}">how much it declares</text>')
     y += 12
-    for i, (t, s) in enumerate([("0", "nothing"), ("1", "root file, ids"), ("2", "a schema per type")]):
+    for i, (t, s) in enumerate([("0", "nothing"), ("1", "root file, folders, ids"), ("2", "a schema per type")]):
         x = X0 + i * 138
         out.append(box(x, y, 130, 48, f"Level {t}", s))
         if i:
