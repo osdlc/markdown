@@ -210,6 +210,8 @@ TASKS = {
     29: ("Sync", "_inherited copy", "todo"),
     30: ("Org principles", "first real case", "todo"),
     23: ("Claims profile", "after 9, 21, 31", "todo"),
+    33: ("Spec details", "YAML, format, codes", "todo"),
+    34: ("Ids and move", "slug ids, move verb", "todo"),
     31: ("Nested x-ref", "any depth; after 3, 4", "todo"),
     32: ("Rust validator", "after 12 and 14", "todo"),
     24: ("Name overrides", "own folder names", "todo"),
@@ -250,7 +252,7 @@ def task_graph():
     place = {4: (3, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1)}
     edges = [(1, 2), (11, 12), (2, 3), (3, 4)]
     # groups: (column, first row, title, members, fed by)
-    groups = [(1, 3, "After 0.2.0", [6, 7, 8, 10, 21, 31, 9], 3),
+    groups = [(1, 3, "After 0.2.0", [6, 7, 8, 10, 33, 34, 21, 31, 9], 3),
               (2, 2, "After the TS model", [13, 15, 16, 14, 32], 12)]
     gpitch = 54
     bodies = []

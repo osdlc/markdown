@@ -340,7 +340,9 @@ The numbers match the task graph at the top. "After" says what must come first.
   record must pass its own schema and the schema of every type above it. A child type may add rules
   and tighten them, but never loosen them. A type has one parent at first. The prefix is always
   required, so adding a second profile later breaks nothing. An unknown prefix is an error.
-- **23. The claims profile.** The example from task 4 is already in the right place. This task adds
+- **23. The claims profile.** The example from task 4 is already in the right place. The profile's
+  types are open: a proposition's object can be any JSON value, and consumers add their own kinds.
+  This follows the downstream review in [osdlc/markdown#8](https://github.com/osdlc/markdown/issues/8). This task adds
   the profile wrapper, a corpus with only types, and publishes it as
   `@osdlc/corpus-profile-claims`, versioned, from this repo. Corpora then name it under `extends:`
   in their root file and use `x-extends` instead of holding full copies. harness-reference and the
@@ -373,6 +375,13 @@ The numbers match the task graph at the top. "After" says what must come first.
   (`hasEvidenceItems`). Allow `x-ref` at any depth in a schema, then switch the example's evidence
   items from relative links with a pattern check to `x-ref`. After 3 and 4, and before 23, since the
   claims profile should ship with the final form.
+- **33. Spec: YAML 1.2, format, error codes.** The spec says that YAML 1.2 applies, so an unquoted
+  date stays a string, and that JSON Schema `format` is asserted. The TypeScript validator already
+  asserts it through ajv-formats. This task also defines stable error codes for validator messages,
+  so consumers such as agent-call can rely on them. After 3.
+- **34. Stable ids and a move verb.** A profile can require slug ids with a separate `title`. A
+  `move` or `rename` verb rewrites every link to a record. SPEC.md lists it as deferred. After 3. It
+  should land before outside systems depend on ids.
 - **10. markdown-store on the shared parts**, writing the spec's layout. After 3.
 
 **The corpus model**
