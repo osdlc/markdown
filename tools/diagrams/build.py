@@ -129,25 +129,26 @@ PRESENT = [
      [("determined", "notes app", "dev"), ("skillwright CLI", "renames", "sw")]),
     ("Render, edit, sites", "show notes to people",
      [("markdown-render", "Obsidian dialect → HTML", "dev"), ("markdown-editor", "CodeMirror live edit", "dev"),
-      ("markdown-astro", "vault → Astro site", "dev"), ("markdown-ui", "Nuxt viewing chrome", "dev", ("F11",))], []),
+      ("markdown-astro", "vault → Astro site", "dev", ("F1",)), ("markdown-ui", "Nuxt viewing chrome", "dev", ("F11",))], []),
     ("Query and store", "a db over notes",
      [("markdown-vault-query", "Obsidian Bases engine", "dev", ("F9",)),
-      ("markdown-db loader", "planned: loadCorpus", "osdlc", "later", ("F9",))],
+      ("query loader", "planned", "osdlc", "later", ("F9",))],
      [("markdown-store", "typed CRUD, lossless", "ont", ("F6", "F7")), ("ontogen", "Rust structs → notes", "ont")]),
     ("Types", "what a record must hold",
-     [("model-schema", "packs: YAML → JSON Schema", "dev", ("F5",)), ("pack-intent, -sdlc", "sdlc's 14 kinds", "dev", ("F5",)),
-      ("markdown-db", "validator, osdlc PR 725", "osdlc", ("F5", "F8", "F10"))], []),
+     [("model-schema", "packs; dev, open PRs", "dev", ("F5",)), ("pack-intent, -sdlc", "sdlc's 14 kinds", "dev", ("F5",)),
+      ("corpus-schema", "validator, osdlc main", "osdlc", ("F5", "F8"))], []),
     ("Corpus model", "every note, link, backlink",
      [("markdown-vault", "scan + resolve + backlinks", "dev", ("F1", "F4")),
       ("vault-graph-core", "resolve + nodes/edges", "dev", ("F1", "F11"))],
-     [("markdown-corpus", "graph, backlinks, refresh", "osdlc", ("F4", "F12")),
+     [("markdown-corpus", "graph, backlinks, refresh", "osdlc", ("F4",)),
       ("markdown-relink", "move notes, fix links", "osdlc")]),
     ("Note parts", "one note's pieces",
      [("markdown-link", "parse; no resolver", "osdlc", ("F2", "F3")), ("frontmatter-lossless", "split, rewrite", "osdlc"),
-      ("markdown-contract", "one doc's structure", "osdlc"), ("markdown-tags", "#tags; osdlc PR 714", "dev"),
-      ("gfm-table", "pipe tables", "osdlc"), ("yaml-splice", "edit YAML in place", "osdlc")],
+      ("markdown-contract", "one doc's structure", "osdlc"), ("markdown-tags", "#tags, 3 dialects", "osdlc"),
+      ("gfm-table", "pipe tables", "osdlc"), ("yaml-splice", "edit YAML in place", "osdlc"),
+      ("markdown-link copy", "dev, private 0.1.0", "dev", ("F11",))],
      [("markdown-link", "parse + LinkIndex", "osdlc"), ("frontmatter-lossless", "twin", "osdlc"),
-      ("markdown-contract", "twin", "osdlc"), ("markdown-tags", "twin", "dev"),
+      ("markdown-contract", "twin", "osdlc"), ("markdown-tags", "twin", "osdlc"),
       ("gfm-pipe-table", "twin", "osdlc"), ("yaml-splice", "twin + wasm", "osdlc")]),
     ("Files", "walk, read, write",
      [("etag-write", "atomic writes", "osdlc"), ("path-guard", "safe paths", "osdlc")],
@@ -183,9 +184,9 @@ TARGET = [
 
 # The task graph. Status: done, doing, owner (waiting on the owner), todo.
 TASKS = {
-    1: ("corpus-schema", "rename, levels", "owner"),
-    2: ("Folder records", "osdlc PR 729", "owner"),
-    3: ("Publish alpha", "review, merge 725", "owner"),
+    1: ("corpus-schema", "rename, levels", "done"),
+    2: ("Record folders", "osdlc PR 729", "owner"),
+    3: ("Publish 0.1.0", "after PR 729", "owner"),
     4: ("Evidence types", "answers on sw PR 74", "owner"),
     5: ("Project writes", "evidence as records", "todo"),
     6: ("x-warn", "soft schema rules", "todo"),
@@ -193,13 +194,13 @@ TASKS = {
     8: ("Use npm", "skillwright, root file", "todo"),
     9: ("Profiles", "from model-schema", "todo"),
     10: ("Store layout", "markdown-store", "todo"),
-    11: ("Link resolver", "TS LinkIndex, PR 651", "todo"),
+    11: ("Link resolver", "after PRs 649, 651", "todo"),
     12: ("One TS model", "vault + graph", "todo"),
-    13: ("Switch users", "query, determined", "todo"),
+    13: ("Switch users", "query, astro, apps", "todo"),
     14: ("Validator", "reads model; needs 3", "todo"),
     15: ("Query layer", "one, on the model", "todo"),
     16: ("JSON / SQLite", "after query layer", "todo"),
-    17: ("Render/sites", "PRs 714 719 720", "doing"),
+    17: ("Render/sites", "PRs 719 720", "doing"),
     18: ("This plan", "markdown PR 4", "owner"),
     19: ("Point repos", "here, after 18", "todo"),
     20: ("Arch doc", "markdown PR 5", "doing"),
@@ -241,7 +242,7 @@ def task_graph():
     place = {4: (0, 0), 1: (0, 1), 11: (0, 2), 2: (1, 1), 12: (1, 2), 3: (2, 1), 5: (3, 0)}
     edges = [(1, 2), (11, 12), (2, 3), (4, 5), (3, 5)]
     # groups: (column, first row, title, members, fed by)
-    groups = [(1, 3, "After the alpha", [6, 7, 8, 9, 10, 21], 3),
+    groups = [(1, 3, "After 0.1.0", [6, 7, 8, 9, 10, 21], 3),
               (2, 2, "After the TS model", [13, 15, 16, 14], 12)]
     gpitch = 54
     bodies = []
@@ -279,7 +280,8 @@ def task_graph():
 def resolvers():
     rows = [("markdown-vault", "own shortest-path rule", "dev"),
             ("vault-graph-core", "port of the Rust LinkIndex", "dev"),
-            ("markdown-db validator", "own walk and link check", "osdlc"),
+            ("markdown-astro", "first match; embeds by name", "dev"),
+            ("corpus-schema", "own walk and link check", "osdlc"),
             ("markdown-store", "own [[id]] wikilink code", "ont")]
     out = [f'<text class="rl" x="{X0}" y="26">Who decides what a link points to</text>']
     y = 44
@@ -288,12 +290,12 @@ def resolvers():
         out.append(f'<line class="dup" x1="{X0 + 252}" y1="{y + 23}" x2="300" y2="{y + 23}"/>')
         y += 58
     mid = 44 + (len(rows) * 58 - 12) / 2
-    out.append(f'<line class="dup" x1="300" y1="67" x2="300" y2="{44 + 3 * 58 + 23}"/>')
+    out.append(f'<line class="dup" x1="300" y1="67" x2="300" y2="{44 + (len(rows) - 1) * 58 + 23}"/>')
     out.append(f'<g class="fb"><rect x="308" y="{mid - 34}" width="118" height="68" rx="10"/>'
-               f'<text x="367" y="{mid - 12}" text-anchor="middle">4 rules for</text>'
+               f'<text x="367" y="{mid - 12}" text-anchor="middle">5 rules for</text>'
                f'<text x="367" y="{mid + 6}" text-anchor="middle">one question</text>'
                f'<text x="367" y="{mid + 24}" text-anchor="middle">F1 F2 F7 F8</text></g>')
-    return svg("".join(out), y + 4, "Four places resolve links")
+    return svg("".join(out), y + 4, "Five places resolve links")
 
 
 def levels_profiles():
