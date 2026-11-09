@@ -50,8 +50,8 @@ LAYERS = [
    [("markdown-corpus", "from vault + graph", "osdlc", "later")],
    [("markdown-corpus", "the twin", "osdlc"), ("markdown-relink", "move notes, fix links", "osdlc")]),
   ("2", "Note parts", "one note's pieces; one link resolver",
-   [("markdown-link", "+ LinkIndex", "osdlc"), ("frontmatter, yaml, tags", "lossless edits", "osdlc")],
-   [("markdown-link", "LinkIndex", "osdlc"), ("frontmatter, yaml, tags", "twins", "osdlc")]),
+   [("markdown-link", "+ LinkIndex", "osdlc", "later"), ("frontmatter, tags", "lossless edits", "osdlc")],
+   [("markdown-link", "LinkIndex", "osdlc"), ("frontmatter, tags", "twins", "osdlc"), ("yaml-splice", "+ wasm binding", "osdlc")]),
   ("1", "Files", "walk, read, write safely",
    [("etag-write, path-guard", "safe writes and paths", "osdlc")],
    [("vault-fs, vfs-walk, seam", "walk any file system", "osdlc"), ("etag-write, path-guard", "the twins", "osdlc")]),
@@ -84,7 +84,7 @@ def layers():
 def settings():
     out = [ARROW, f'<text class="rl" x="{X0}" y="26">Three settings on a corpus</text>',
            f'<text class="rs" x="{X0}" y="44">Each answers a different question. Proposal.</text>']
-    code = ["# corpus-schema.md", "level: 2", "dialect: obsidian", "profiles: [acceptance-testing@0]"]
+    code = ["# corpus-schema.yaml", "corpus-schema: 0", "level: 2", "dialect: obsidian", "profiles: [acceptance-testing@0]"]
     out.append(f'<g class="code"><rect x="{X0}" y="58" width="{W - 2 * X0}" height="{18 * len(code) + 16}" rx="8"/>')
     out.extend(f'<text x="{X0 + 14}" y="{80 + 18 * i}">{esc(line)}</text>' for i, line in enumerate(code))
     out.append('</g>')
@@ -101,8 +101,8 @@ def settings():
 
     out.append(f'<text class="rl" x="{X0}" y="{y}">Dialect</text><text class="rs" x="{X0 + 64}" y="{y}">syntax beyond the baseline</text>')
     y += 12
-    out.append(box(X0, y, 200, 48, "baseline", "every tool supports it"))
-    out.append(box(X0 + 208, y, 200, 48, "obsidian", "wikilinks, embeds; optional", "lvl opt"))
+    out.append(box(X0, y, 200, 48, "baseline", "every tool; wikilinks warn"))
+    out.append(box(X0 + 208, y, 200, 48, "obsidian", "wikilinks, embeds, no warning", "lvl opt"))
     y += 76
 
     out.append(f'<text class="rl" x="{X0}" y="{y}">Profiles</text><text class="rs" x="{X0 + 70}" y="{y}">whose types it uses</text>')
