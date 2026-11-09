@@ -6,7 +6,6 @@ description: >-
   class Study Result, without its focus field. The record's id, its file name, is a short name for
   the observation.
 type: object
-additionalProperties: false
 required: [contributions]
 properties:
   specifiedBy:

@@ -33,5 +33,6 @@ supports, with moderate strength, because the claim is true where the README say
 on one system the README does not mention.
 
 A sharper claim would name the system: "fernlog 2.3 on Linux reads config from
-`~/.config/fernlog/config.toml`". That is a separate statement, and it would cite the same study
-results.
+`~/.config/fernlog/config.toml`". That is a separate statement,
+[fernlog config path on Linux](fernlog%20config%20path%20on%20Linux.md), and it cites the same
+study results.

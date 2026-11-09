@@ -13,7 +13,10 @@ The claim is a [statement](statements/statements.schema.md). It is backed by thr
 runs, one on Linux and one on macOS. The runs follow one [method](methods/methods.schema.md), and
 the README is a [document](documents/documents.schema.md).
 
-Start with the statement, [fernlog config path](statements/fernlog%20config%20path.md).
+Start with the statement, [fernlog config path](statements/fernlog%20config%20path.md). A second
+statement, [fernlog config path on Linux](statements/fernlog%20config%20path%20on%20Linux.md), makes
+the same claim for Linux only. It shows a field the claims types do not define, and a proposition
+whose object is a structured value.
 
 The types follow GA4GH's Variant Annotation Specification (VA-Spec). The
 [mapping note](https://github.com/osdlc/markdown/blob/main/profiles/claims/README.md) says which of

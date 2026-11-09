@@ -5,7 +5,6 @@ description: >-
   A set of steps that says how to get a result, such as a test procedure or a review checklist.
   VA-Spec class Method. The record's id, its file name, is the method's name.
 type: object
-additionalProperties: false
 properties:
   methodType:
     description: What kind of method it is, such as test procedure, survey or code review. Free text.

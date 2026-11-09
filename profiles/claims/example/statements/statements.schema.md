@@ -6,20 +6,19 @@ description: >-
   class Statement, with its Proposition and Evidence Lines held inline. The record's id, its file
   name, is a short name for the claim.
 type: object
-additionalProperties: false
 required: [proposition, direction, contributions]
 properties:
   proposition:
     description: >-
       The possible fact the statement assesses, as subject, predicate and object. VA-Spec class
-      Proposition.
+      Proposition. A corpus may add its own fields, such as a qualifier.
     type: object
-    additionalProperties: false
     required: [subject, predicate, object]
     properties:
       subject:
         description: >-
-          What the claim is about. Plain text, or a link to a record of the corpus's own types.
+          What the claim is about. Plain text, a slug, or a link to a record of the corpus's own
+          types.
         type: string
         minLength: 1
       predicate:
@@ -27,8 +26,10 @@ properties:
         type: string
         minLength: 1
       object:
-        description: What the subject is related to, or the value it has.
-        type: [string, number, boolean]
+        description: >-
+          What the subject is related to, or the value it has. Any JSON value except null: text, a
+          number, true or false, an object or a list. The corpus decides its shape.
+        type: [string, number, boolean, object, array]
   direction:
     description: Whether the statement holds the proposition true (supports), false (disputes), or neither.
     enum: [supports, neutral, disputes]
@@ -71,9 +72,8 @@ $defs:
   evidenceLine:
     description: >-
       One argument for or against the proposition, built on one or more study results. VA-Spec
-      class Evidence Line.
+      class Evidence Line. A corpus may add its own fields, such as a qualifier.
     type: object
-    additionalProperties: false
     required: [hasEvidenceItems, directionOfEvidenceProvided]
     properties:
       hasEvidenceItems:
@@ -153,6 +153,12 @@ The rules a description does not say clearly:
   `x-ref` yet, because corpus-schema v0 allows `x-ref` only on top-level fields. Until it can, a
   pattern checks that each link points into the `study-results` folder.
 - `subject` may link to a record of a type the corpus adds itself, such as a `tools` type. The
-  claims types do not define one.
+  claims types do not define one. The validator checks that the link resolves, but not what type
+  it points at, because `x-ref` does not work inside the proposition yet.
+- `object` can be any value except null, including an object or a list. The claims types do not
+  say what shape it has. That is up to the corpus.
+- A statement, its proposition and its evidence lines accept fields the schema does not list. A
+  corpus adds the fields its own kind of claim needs. The validator does not check an unlisted
+  field. A contribution and its contributor accept no other fields.
 
 Use the Markdown body to explain the verdict in plain words.

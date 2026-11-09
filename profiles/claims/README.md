@@ -126,7 +126,8 @@ A contribution has `contributor` (an Agent with `name` and `agentType`), `activi
   corpus-schema gives a record no type field.
 - `name` and `description` on records. The file name is the name, and the Markdown body is the
   description. An evidence line has no file, so it keeps `description`.
-- `aliases` and `extensions`. A corpus that needs more fields adds them to its copy of the schema.
+- `aliases` and `extensions`. Records accept fields their schema does not list, so a corpus adds
+  its own fields directly. See [Adding your own kinds](#adding-your-own-kinds).
 - Statement `score` and evidence line `scoreOfEvidenceProvided`. A number invites arithmetic that
   nobody can justify, and it goes stale. The three-step strength is enough for now.
 - Statement `quality` and `classification`, and evidence line `evidenceOutcome`. Each needs a value
@@ -167,9 +168,12 @@ A contribution has `contributor` (an Agent with `name` and `agentType`), `activi
 7. Strength follows direction. Following the ACMG 2015 profile, strength is required when the
    direction is `supports` or `disputes`, and not allowed when it is `neutral`. We apply the rule
    to statements and to evidence lines.
-8. A proposition is three plain values. VA-Spec's Proposition is an abstract class whose `subject`
-   and `object` are entities. Here `subject` and `predicate` are text, and `object` is text, a
-   number or true/false. Text may hold a link to a record. The proposition has no `type`.
+8. A proposition is three values, and its object can be any value. VA-Spec's Proposition is an
+   abstract class whose `subject` and `object` are entities. Here `subject` and `predicate` are
+   text, and `object` is any JSON value except null: text, a number, true or false, an object or a
+   list. The corpus decides the object's shape. `subject` may be a slug or a link to a record. The
+   validator checks that a link resolves, but not what type it points at, until `x-ref` works
+   inside nested objects (task 31). The proposition has no `type`.
 9. Some optional fields are required. `title` on a document, `contributions` on study results and
    statements, `hasEvidenceItems` on an evidence line, and all three parts of a contribution. A
    record without them does not carry enough to check.
@@ -178,18 +182,26 @@ A contribution has `contributor` (an Agent with `name` and `agentType`), `activi
 11. The contribution schema is copied into both the study-results and statements schemas.
     corpus-schema v0 keeps each type's schema apart, so one cannot `$ref` another. A profile will
     define it once.
+12. Records are open. VA-Spec closes Document, Method, Statement, EvidenceLine, Contribution and
+    Agent, and gives each an `extensions` list for anything else. Its abstract classes, Proposition
+    and StudyResult, stay open so that its own profiles can add fields. Here the four record types,
+    the proposition and the evidence line are all open, because each one is a base that a corpus
+    builds on. Contribution and Agent stay closed.
 
 ## The example
 
-[example/](example/) is a valid level-2 corpus. It checks one claim about a made-up command line
-tool, fernlog: that version 2.3 reads its config file from `~/.config/fernlog/config.toml`.
+[example/](example/) is a valid level-2 corpus. It checks a claim about a made-up command line
+tool, fernlog: that version 2.3 reads its config file from `~/.config/fernlog/config.toml`. It
+also checks a narrower form of the same claim, for Linux only.
 
 - A document: the tool's README.
 - A method: a probe that tries each config path in turn.
 - Three study results. One is what the README says. Two are runs of the probe: one on Linux, kept
   as a record folder with its script and CSV, and one on macOS.
-- A statement with two evidence lines. The README and the Linux run support the claim. The macOS
-  run disputes it.
+- Two statements. The first has two evidence lines: the README and the Linux run support the
+  claim, and the macOS run disputes it. The second makes the narrower claim for Linux only. It
+  also has a field the claims types do not define and an object for its value. See
+  [Adding your own kinds](#adding-your-own-kinds).
 
 Check it with the validator, from the root of this repository:
 
@@ -211,3 +223,89 @@ Rewrite the front page in `corpus-schema.md` too, since its links point at the e
 To add the types to a corpus you already have, copy the type folders you want, each with its
 `<type>.schema.md`, next to your own types. Keep the folder names and field names as they are
 here. Giving the types other names is task 24 in the plan.
+
+## Adding your own kinds
+
+The claims types hold only the generic structure of a claim: documents, methods, study results,
+statements, evidence lines, contributions and propositions. They know nothing about any one
+field of study. The kinds of thing a corpus makes claims about, and the fields those claims need,
+belong to the corpus that uses the types.
+
+For example, osdlc/skillwright's harness-reference makes claims about agent harnesses. It needs
+harnesses and subjects as types of their own, a scope on each claim, and a value with a set shape
+for each subject. None of these belong in the claims types. See the review in
+[osdlc/markdown#8](https://github.com/osdlc/markdown/issues/8).
+
+### What is open and what is closed
+
+A record may carry fields its schema does not list. The fields the claims types do list are still
+checked: a wrong `direction`, or a `specifiedBy` that is not text, is an error as before. A field
+the schema does not list is not checked at all.
+
+| Object                | Open or closed | Why                                                                          |
+| --------------------- | -------------- | ---------------------------------------------------------------------------- |
+| the four record types | open           | Each is a base that a corpus builds on.                                      |
+| proposition           | open           | A corpus may qualify a claim, as VA-Spec's own profiles add qualifiers.      |
+| evidence line         | open           | A corpus may qualify a line, such as the platform a run covered.             |
+| contribution          | closed         | Who did what and when is the whole of it. Anything more is about the record. |
+| contributor (Agent)   | closed         | A name and a kind tell agents apart. A version goes in the name.             |
+
+Closed is the choice that can be undone. Opening a closed object later breaks no corpus. Closing an
+open one breaks every corpus that added a field to it.
+
+The proposition's `object` takes any JSON value except null. In YAML, `object:` with nothing after
+it reads as null, so allowing null would let a claim with a missing value pass. To claim that
+something has no value, write an empty list, an empty object, `false`, or a word such as `none`.
+
+### Today: copy the types and add to them
+
+Copy the type folders into your corpus, as [Copy the types](#copy-the-types) says. Then:
+
+- Add your fields to your copy of a type's schema, so the validator checks them. A field you leave
+  out of the schema is still allowed, but nothing checks it.
+- Add your own types, such as `harnesses` or `subjects`, as folders beside the claims types. A
+  top-level field can point at them with `x-ref`.
+- Keep the field names the claims types use. If you add a field that VA-Spec defines and the claims
+  types leave out, such as `score`, give it VA-Spec's meaning.
+- For strict checking, put `additionalProperties: false` back on your copies once they list your
+  fields. Your copy is yours to close.
+
+The example statement
+[fernlog config path on Linux](example/statements/fernlog%20config%20path%20on%20Linux.md) has a
+`platform` field that the claims types do not define, and its proposition's object is
+`{ paths: [...] }`. It validates with no errors and no warnings.
+
+### Later: `x-extends` (proposed)
+
+This part is a proposal. corpus-schema v0 does not support it, and the validator does not check
+it.
+
+Plan task 9 lets a type build on another type with `x-extends`. A type in your corpus names a
+claims type and adds fields to it. A record must pass its own schema and the parent's. A child type
+may add rules and tighten them, but never loosen them. That is why the claims types are open: a
+closed parent would reject every field a child adds.
+
+harness-reference's claims type could then be this:
+
+```yaml
+x-extends: claims/Statement
+properties:
+  harness: { type: string, x-ref: harnesses }
+  subject: { type: string, x-ref: subjects }
+  scope: { type: object }
+```
+
+`harness` and `subject` are top-level fields here, so they can be typed links. A typed link inside
+the proposition needs `x-ref` in nested objects, which is plan task 31. After task 23 the claims
+types ship as `@osdlc/corpus-profile-claims`, and a corpus no longer holds copies.
+
+### What stays in your corpus
+
+These belong to the corpus that uses the claims types, not to the types:
+
+- Status and supersession: whether a claim is current, superseded or open, and which claim replaces
+  which.
+- The shape of each subject's value. The claims types say only that `object` is a value. Which
+  shape it takes for a given subject is a rule of your domain.
+- Rules across records, such as "a `model` field only on subjects marked `model_dependent`". A
+  schema checks one record at a time, so these need a script of your own.

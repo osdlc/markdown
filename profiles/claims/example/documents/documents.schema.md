@@ -5,7 +5,6 @@ description: >-
   Something written that we can point at, such as a web page, a README, a paper or a manual. VA-Spec
   class Document. The record's id, its file name, is a short display name for it.
 type: object
-additionalProperties: false
 required: [title]
 properties:
   title:
