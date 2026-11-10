@@ -31,4 +31,8 @@ runs:
           git checkout -- package.json
         fi
         pnpm --filter @osdlc/corpus-schema run build
-        echo "$GITHUB_WORKSPACE/packages/ts/corpus-schema/bin" >> "$GITHUB_PATH"
+        # The bin file is corpus-schema.js, so a link gives the command its name.
+        mkdir -p "$RUNNER_TEMP/corpus-schema-bin"
+        ln -sf "$GITHUB_WORKSPACE/packages/ts/corpus-schema/bin/corpus-schema.js" \
+          "$RUNNER_TEMP/corpus-schema-bin/corpus-schema"
+        echo "$RUNNER_TEMP/corpus-schema-bin" >> "$GITHUB_PATH"
