@@ -50,21 +50,8 @@ jobs:
           corepack enable
           sh tools/build-corpus-schema.sh
 
-      # The validator prints warnings on stderr and still exits 0, so the
-      # step keeps stderr and fails on any warning line.
       - name: Validate the claims profile and its example
-        run: |
-          set +e
-          node packages/ts/corpus-schema/bin/corpus-schema.js validate \
-            profiles/claims/corpus profiles/claims/example 2> "$RUNNER_TEMP/stderr.txt"
-          status=$?
-          set -e
-          cat "$RUNNER_TEMP/stderr.txt" >&2
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
-          if grep -q '^warning:' "$RUNNER_TEMP/stderr.txt"; then
-            echo "::error::the profile and the example must validate with no warnings"
-            exit 1
-          fi
+        run: sh tools/validate-strict.sh profiles/claims/corpus profiles/claims/example
 
       - name: Check that the broken claims records fail
         run: sh profiles/claims/tests/run.sh
