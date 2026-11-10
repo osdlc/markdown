@@ -1,12 +1,134 @@
 {
   "schema": 1,
   "pr": 14,
-  "head": null,
-  "base": null,
-  "round": 0,
+  "head": "291911f89b46a674e4b41652350f4d7e75076704",
+  "base": "b9b0604d6c1aebe35d748660df6f25fe7a196801",
+  "round": 1,
   "claim": {
     "owner": "Mac.local:claude-g393m4",
     "at": "2026-11-10T03:31:01.804Z"
   },
-  "findings": []
+  "findings": [
+    {
+      "id": "r1-1",
+      "round": 1,
+      "path": ".github/workflows/planning.yml",
+      "line": 65,
+      "title": "Profile warnings are not gated in CI",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-2",
+      "round": 1,
+      "path": "tools/build-corpus-schema.sh",
+      "line": 13,
+      "title": "EXIT-only trap can leave root package.json stripped",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-3",
+      "round": 1,
+      "path": ".github/workflows/planning.yml",
+      "line": 24,
+      "title": "Path filters miss root package.json and pnpm-workspace.yaml",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-4",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 101,
+      "title": "schemaChain hardcodes .schema.md and corpus-schema.md",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-5",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 98,
+      "title": "schemaChain re-implements the validator's x-extends resolution",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-6",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 108,
+      "title": "No test for the path-only parent problem",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-7",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 3,
+      "title": "Header comment pins dependency state",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-8",
+      "round": 1,
+      "path": "docs/planning/tasks/tasks.schema.md",
+      "line": 37,
+      "title": "Schema body repeats the field list",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-9",
+      "round": 1,
+      "path": "docs/planning/milestones/milestones.schema.md",
+      "line": 25,
+      "title": "Schema body repeats the field list",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-10",
+      "round": 1,
+      "path": "docs/ecosystem-plan.md",
+      "line": 40,
+      "title": "Unwrapped prose lines",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-11",
+      "round": 1,
+      "path": null,
+      "line": null,
+      "title": "docs/architecture.md section 5 does not name the planning profile",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    }
+  ]
 }
