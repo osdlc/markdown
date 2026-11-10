@@ -2,10 +2,10 @@ name: diagrams
 
 on:
   pull_request:
-    paths: ["tools/diagrams/**", "docs/diagrams/**", "docs/ecosystem-plan.md", ".github/workflows/diagrams.yml"]
+    paths: ["tools/diagrams/**", "docs/diagrams/**", ".github/workflows/diagrams.yml"]
   push:
     branches: [main]
-    paths: ["tools/diagrams/**", "docs/diagrams/**", "docs/ecosystem-plan.md", ".github/workflows/diagrams.yml"]
+    paths: ["tools/diagrams/**", "docs/diagrams/**", ".github/workflows/diagrams.yml"]
 
 permissions:
   contents: read
