@@ -1,12 +1,90 @@
 {
   "schema": 1,
   "pr": 15,
-  "head": null,
-  "base": null,
-  "round": 0,
+  "head": "5bdf5b898b6caa58297cf8feb59bd646ed43c3b1",
+  "base": "c0609b9f179c2092d8f880fc5267b3f22426fe1a",
+  "round": 1,
   "claim": {
     "owner": "Mac.local:claude-r7q2mz",
     "at": "2026-11-10T03:25:25.663Z"
   },
-  "findings": []
+  "findings": [
+    {
+      "id": "r1-1",
+      "round": 1,
+      "path": ".github/actions/corpus-schema/action.yml",
+      "line": 34,
+      "title": "corpus-schema is not on PATH: bin/ holds only corpus-schema.js, CI fails with exit 127",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-2",
+      "round": 1,
+      "path": ".github/actions/corpus-schema/action.yml",
+      "line": 22,
+      "title": "install fallback runs on any failure and blames the lockfile",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-3",
+      "round": 1,
+      "path": "profiles/claims/tests/package.sh",
+      "line": 80,
+      "title": "error checks do not assert exactly one error",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-4",
+      "round": 1,
+      "path": ".github/actions/corpus-schema/action.yml",
+      "line": 8,
+      "title": "comment pins volatile state and has no removal pointer",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-5",
+      "round": 1,
+      "path": "profiles/claims/tests/package.sh",
+      "line": 23,
+      "title": "validate() and its comment duplicated from run.sh",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-6",
+      "round": 1,
+      "path": null,
+      "line": null,
+      "title": "docs/ecosystem-plan.md still says CI uses the npm validator and to degit/copy the example",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-7",
+      "round": 1,
+      "path": null,
+      "line": null,
+      "title": "tools/diagrams/build.py task 23 still todo",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    }
+  ]
 }
