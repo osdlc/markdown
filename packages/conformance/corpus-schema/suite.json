@@ -148,6 +148,160 @@
             ],
             "warnings": []
           }
+        },
+        {
+          "name": "extends resolves a parent by a relative path, and an x-ref links into its synced copy",
+          "input": {
+            "corpus": "corpora/extends-path"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "extends resolves parents by package name, with and without a corpus field",
+          "input": {
+            "corpus": "corpora/extends-package"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a three-level chain: a record passes every schema up its x-extends chain",
+          "input": {
+            "corpus": "corpora/extends-chain"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "an unknown prefix in x-extends or x-ref is an error",
+          "input": {
+            "corpus": "corpora/extends-unknown-prefix"
+          },
+          "expect": {
+            "errors": [
+              "rules/rules.schema.yaml: follows",
+              "rules/rules.schema.yaml: x-extends"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a cycle of extends is an error",
+          "input": {
+            "corpus": "corpora/extends-cycle"
+          },
+          "expect": {
+            "errors": [
+              "corpus-schema.md: extends.p"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a package that is not installed is an error",
+          "input": {
+            "corpus": "corpora/extends-missing-package"
+          },
+          "expect": {
+            "errors": [
+              "corpus-schema.md: extends.claims"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a parent folder or package with no root file is an error",
+          "input": {
+            "corpus": "corpora/extends-not-a-corpus"
+          },
+          "expect": {
+            "errors": [
+              "corpus-schema.md: extends.pkg",
+              "corpus-schema.md: extends.plain"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "extends needs level 2",
+          "input": {
+            "corpus": "corpora/extends-level-1"
+          },
+          "expect": {
+            "errors": [
+              "corpus-schema.md: extends"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a record must pass its parent type's schema",
+          "input": {
+            "corpus": "corpora/extends-parent-schema"
+          },
+          "expect": {
+            "errors": [
+              "rules/No Statement.md: statement"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "x-ref to an inherited type accepts its records and local records whose type extends it",
+          "input": {
+            "corpus": "corpora/extends-xref"
+          },
+          "expect": {
+            "errors": [
+              "guides/Wrong Type.md: follows"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a local record must not take an inherited record's id",
+          "input": {
+            "corpus": "corpora/extends-id-collision"
+          },
+          "expect": {
+            "errors": [
+              "rules/be kind.md: id"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a link into _inherited/ with no copy asks for sync",
+          "input": {
+            "corpus": "corpora/extends-copy-missing"
+          },
+          "expect": {
+            "errors": [
+              "_inherited/org: (copy)"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a stale _inherited/ copy reports each differing file",
+          "input": {
+            "corpus": "corpora/extends-copy-stale"
+          },
+          "expect": {
+            "errors": [
+              "_inherited/old: (copy)",
+              "_inherited/org/principles/Extra.md: (copy)",
+              "_inherited/org/principles/Ship Small.md: (copy)"
+            ],
+            "warnings": []
+          }
         }
       ]
     }

@@ -3,8 +3,8 @@
  * (packages/conformance/corpus-schema/SPEC.md). Nothing here knows a particular corpus: every rule
  * comes from the spec, the root file or a type's schema.
  */
-import { type Dirent, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, extname, join, posix } from 'node:path'
+import { type Dirent, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { basename, extname, join, posix, resolve as resolvePath } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { Ajv2020, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.js'
 import addFormatsModule, { type FormatsPlugin } from 'ajv-formats'
@@ -21,12 +21,24 @@ import {
   wikilinkIndex,
   type WikilinkIndex,
 } from './links.ts'
+import {
+  entries,
+  hasRootFile,
+  INHERITED,
+  listFiles,
+  oneLine,
+  PREFIX,
+  resolveSource,
+  ROOT_FILES,
+  sameBytes,
+  skipped,
+  whyFailed,
+} from './inherit.ts'
 
 // ajv-formats is CommonJS: under Node's ESM loader the plugin is the `default` property.
 const addFormats = (addFormatsModule as unknown as { default: FormatsPlugin }).default
 
-export const ROOT_FILES = ['corpus-schema.md', 'corpus-schema.yaml', 'corpus-schema.json']
-const ROOT_KEYS = new Set(['corpus-schema', 'id', 'formats', 'level'])
+const ROOT_KEYS = new Set(['corpus-schema', 'id', 'formats', 'level', 'extends'])
 /** Root keys a later version defines. v0 accepts them and checks nothing in them. */
 const RESERVED_KEYS = new Set(['dialect', 'profiles'])
 
@@ -38,24 +50,34 @@ export type Data = Record<string, unknown>
 
 interface Ref {
   field: string
+  /** The type as the schema names it: `<type>` or `<prefix>/<type>`. */
   type: string
+  /** The type it names, or undefined when it names none. */
+  target: Type | undefined
   /** The `x-ref` sits on the property's `items`, so each item is a link. */
   items: boolean
 }
 
 interface Type {
   name: string
+  /** The corpus that holds the type. */
+  corpus: Corpus
   dir: string
   schemaFile: string
   validate: ValidateFunction | undefined
   idPattern: RegExp | undefined
+  /** The schema's `x-extends`, as written, and the type it names. */
+  extendsName: string | undefined
+  base: Type | undefined
   refs: Ref[]
   /** Valid records by id. */
   records: Map<string, { file: string; data: Data }>
 }
 
-interface Corpus {
+export interface Corpus {
   root: string
+  /** The corpus folder's real path, which identifies it among its parents. */
+  real: string
   name: string
   id: string | undefined
   level: 1 | 2 | undefined
@@ -72,8 +94,23 @@ interface Corpus {
   recordType: Map<string, Type>
   /** Files whose links are checked: the root file, schema files and records, with their data. */
   checked: Map<string, { text: string; data: Data | undefined }>
+  /** The prefixes `extends` declares, and the parents that loaded, by prefix. */
+  declared: Set<string>
+  parents: Map<string, Corpus>
+  /** The files under `_inherited/`, relative to it. */
+  inheritedFiles: string[]
+  /** The prefixes a checked file links into, through `_inherited/<prefix>/`. */
+  linked: Set<string>
+  /** Errors that stop `sync`: no usable root file, or a parent that does not resolve. */
+  fatal: string[]
   errors: string[]
   warnings: string[]
+}
+
+/** The corpora loaded while validating one corpus, by real path, and the chain being loaded. */
+export interface Loader {
+  done: Map<string, Corpus>
+  stack: Corpus[]
 }
 
 /** What `validateCorpus` found in one corpus. */
@@ -101,21 +138,10 @@ export interface CorpusReport {
   fixed: string[]
 }
 
-const skipped = (name: string): boolean => name.startsWith('.') || name === 'node_modules'
-const entries = (abs: string): Dirent[] => readdirSync(abs, { withFileTypes: true })
-/** `s` on one line, so each problem stays one line. */
-const oneLine = (s: string): string => s.replace(/\s*\r?\n\s*/g, ' ').trim()
-/** Why a file or folder could not be read or written: its error code, such as EACCES, or the message. */
-const whyFailed = (e: unknown): string =>
-  (e as NodeJS.ErrnoException).code ?? oneLine((e as Error).message)
-// Exact names: existsSync ignores case on macOS and Windows.
-const hasRootFile = (names: Dirent[]): boolean =>
-  names.some((d) => d.isFile() && ROOT_FILES.includes(d.name))
-
 /**
  * Every corpus root at or below `dir`, nested ones included: each folder that holds a root file.
- * Each path is `dir` joined with the folder's path below it. Dot folders, `node_modules` and
- * symlinks are not searched.
+ * Each path is `dir` joined with the folder's path below it. Dot folders, `node_modules`,
+ * symlinks and a corpus's `_inherited/` copies are not searched.
  *
  * A folder that cannot be read inside a corpus already found is skipped, since `validateCorpus`
  * reports it as an error of that corpus.
@@ -136,7 +162,8 @@ export function findCorpora(dir: string): string[] {
     const isRoot = hasRootFile(names)
     if (isRoot) found.push(path)
     for (const d of names)
-      if (d.isDirectory() && !skipped(d.name)) visit(join(path, d.name), inCorpus || isRoot)
+      if (d.isDirectory() && !skipped(d.name) && !(isRoot && d.name === INHERITED))
+        visit(join(path, d.name), inCorpus || isRoot)
   }
   visit(dir, false)
   return found
@@ -145,7 +172,7 @@ export function findCorpora(dir: string): string[] {
 /**
  * The corpus's files and folders, relative and with `/`, stopping at nested corpora, and the files
  * of those nested corpora. Symlinks are not followed: the corpus's own are listed in `symlinks`.
- * A folder that cannot be read is an error in `problems`.
+ * `_inherited/` at the root is left out. A folder that cannot be read is an error in `problems`.
  */
 function walk(root: string): {
   files: string[]
@@ -173,7 +200,7 @@ function walk(root: string): {
   }
   const visit = (rel: string, names: Dirent[], inNested: boolean): void => {
     for (const d of names) {
-      if (skipped(d.name)) continue
+      if (skipped(d.name) || (rel === '' && d.name === INHERITED)) continue
       const path = rel === '' ? d.name : `${rel}/${d.name}`
       if (d.isSymbolicLink() && !inNested) symlinks.push(path)
       if (d.isFile()) (inNested ? nestedFiles : files).push(path)
@@ -253,21 +280,40 @@ function describe(e: ErrorObject): string {
   return `${path === '' ? '(data)' : path}: ${e.message ?? 'invalid'}`
 }
 
-/** Paths to every object in a schema that holds `x-ref`. */
-function xrefPlaces(node: unknown, path: string[] = []): string[][] {
+/** Paths to every object in a schema that holds `keyword`. */
+function places(keyword: string, node: unknown, path: string[] = []): string[][] {
   if (node === null || typeof node !== 'object') return []
-  const here = !Array.isArray(node) && 'x-ref' in node ? [path] : []
-  return [...here, ...Object.entries(node).flatMap(([k, v]) => xrefPlaces(v, [...path, k]))]
+  const here = !Array.isArray(node) && keyword in node ? [path] : []
+  return [...here, ...Object.entries(node).flatMap(([k, v]) => places(keyword, v, [...path, k]))]
 }
 
 const stem = (file: string): string => basename(file, extname(file))
 
-/** Read the root file, the types and their records, checking everything but links. */
-function load(root: string): Corpus {
+const realOrSame = (path: string): string => {
+  try {
+    return realpathSync(path)
+  } catch {
+    return resolvePath(path)
+  }
+}
+
+/** `type`, then each type it extends, nearest first. */
+function chain(type: Type): Type[] {
+  const out: Type[] = []
+  for (let t: Type | undefined = type; t !== undefined && !out.includes(t); t = t.base) out.push(t)
+  return out
+}
+
+/**
+ * Read the root file, the parents, the types and their records, checking everything but links.
+ * Each parent is loaded and checked in full, once per `loader`.
+ */
+export function load(root: string, loader: Loader = { done: new Map(), stack: [] }): Corpus {
   const { files, dirs, nested, nestedFiles, symlinks, problems } = walk(root)
   const c: Corpus = {
     root,
-    name: basename(root),
+    real: realOrSame(root),
+    name: basename(resolvePath(root)),
     id: undefined,
     level: undefined,
     files: new Set(files),
@@ -279,16 +325,27 @@ function load(root: string): Corpus {
     types: new Map(),
     recordType: new Map(),
     checked: new Map(),
+    declared: new Set(),
+    parents: new Map(),
+    inheritedFiles: listFiles(join(root, INHERITED)),
+    linked: new Set(),
+    fatal: [],
     errors: problems,
     warnings: [],
   }
-  const extensions = readRoot(c)
-  if (extensions === undefined) return c
+  const walked = c.errors.length
+  const top = readRoot(c)
+  // Every root-file error stops sync, as do the extends errors readParents adds.
+  c.fatal.push(...c.errors.slice(walked))
+  if (top === undefined) return c
+  loader.stack.push(c)
+  readParents(c, top.file, top.data, loader)
+  loader.stack.pop()
   const schemaFiles = readTypes(c, dirs)
   for (const link of symlinks)
     if ([...c.types.values()].some((t) => link.startsWith(`${t.dir}/`)))
       c.warnings.push(`${link}: (symlink): not followed, so not checked`)
-  readRecords(c, files, dirs, extensions, schemaFiles)
+  readRecords(c, files, dirs, top.extensions, schemaFiles)
   return c
 }
 
@@ -314,8 +371,11 @@ function readChecked(c: Corpus, file: string): Data | undefined {
   return data
 }
 
-/** Check the root file. Returns the record extensions it allows, or undefined to stop. */
-function readRoot(c: Corpus): string[] | undefined {
+/**
+ * Check the root file. Returns it, its data and the record extensions it allows, or undefined to
+ * stop.
+ */
+function readRoot(c: Corpus): { file: string; data: Data; extensions: string[] } | undefined {
   const rootFiles = ROOT_FILES.filter((f) => c.files.has(f))
   const rootFile = rootFiles[0]
   if (rootFile === undefined) {
@@ -350,9 +410,74 @@ function readRoot(c: Corpus): string[] | undefined {
     new Set(list).size < list.length
   ) {
     c.errors.push(`${rootFile}: formats: must list one or more of md, yaml, json, once each`)
-    return ['.md']
+    return { file: rootFile, data, extensions: ['.md'] }
   }
-  return list.map((f) => FORMATS[String(f)] as string)
+  return { file: rootFile, data, extensions: list.map((f) => FORMATS[String(f)] as string) }
+}
+
+/**
+ * Resolve and load each parent the root file's `extends` names. A parent that does not resolve,
+ * or closes a cycle, is an error that stops `sync`. A parent with errors of its own is an error
+ * here too.
+ */
+function readParents(c: Corpus, rootFile: string, data: Data, loader: Loader): void {
+  const map = data['extends']
+  if (map === undefined) return
+  const fatal = (line: string): void => {
+    c.errors.push(line)
+    c.fatal.push(line)
+  }
+  if (map === null || typeof map !== 'object' || Array.isArray(map))
+    return fatal(`${rootFile}: extends: must map each prefix to a package name or a ./ or ../ path`)
+  if (c.level !== 2) return fatal(`${rootFile}: extends: needs level: 2 in the root file`)
+  for (const [prefix, source] of Object.entries(map)) {
+    const at = `${rootFile}: extends.${prefix}`
+    if (!PREFIX.test(prefix)) {
+      fatal(`${at}: a prefix holds only lowercase letters, digits and -`)
+      continue
+    }
+    c.declared.add(prefix)
+    if (typeof source !== 'string') {
+      fatal(`${at}: must be a package name or a ./ or ../ path`)
+      continue
+    }
+    const r = resolveSource(c.root, source)
+    if ('problem' in r) {
+      fatal(`${at}: ${r.problem}`)
+      continue
+    }
+    const onStack = loader.stack.findIndex((s) => s.real === r.dir)
+    if (onStack >= 0) {
+      const names = [...loader.stack.slice(onStack).map((s) => s.name), loader.stack[onStack]?.name]
+      fatal(`${at}: ${source} closes a cycle: ${names.join(' → ')}`)
+      continue
+    }
+    let parent = loader.done.get(r.dir)
+    if (parent === undefined) {
+      parent = load(r.dir, loader)
+      check(parent)
+      loader.done.set(r.dir, parent)
+    }
+    c.parents.set(prefix, parent)
+    const first = parent.errors[0]
+    if (first !== undefined)
+      c.errors.push(`${at}: ${source} has ${parent.errors.length} error(s); the first: ${first}`)
+  }
+}
+
+/** The type `name` names from corpus `c`: a local type, or `<prefix>/<type>` in a parent. */
+function lookupType(c: Corpus, name: string): Type | { problem: string } | undefined {
+  const slash = name.indexOf('/')
+  if (slash < 0) return c.types.get(name) ?? { problem: `names unknown type "${name}"` }
+  const prefix = name.slice(0, slash)
+  const parent = c.parents.get(prefix)
+  // A declared parent that did not load is already an error at its extends entry.
+  if (parent === undefined)
+    return c.declared.has(prefix)
+      ? undefined
+      : { problem: `names unknown prefix "${prefix}"; extends declares no such parent` }
+  const type = parent.types.get(name.slice(slash + 1))
+  return type ?? { problem: `names "${name}", but ${prefix} has no such type` }
 }
 
 /** Find the types: folders holding `<their name>.schema.{md,yaml,json}`. Returns every schema file. */
@@ -369,8 +494,8 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
     strictRequired: false,
   })
   addFormats(ajv)
-  ajv.addKeyword({ keyword: 'x-ref', schemaType: 'string' })
-  ajv.addKeyword({ keyword: 'x-id-pattern', schemaType: 'string' })
+  for (const keyword of ['x-ref', 'x-id-pattern', 'x-extends'])
+    ajv.addKeyword({ keyword, schemaType: 'string' })
   const schemaFiles = new Set<string>()
   const typeDirs = new Map<string, string>()
   for (const dir of dirs) {
@@ -402,10 +527,13 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
 
     const type: Type = {
       name,
+      corpus: c,
       dir,
       schemaFile,
       validate: undefined,
       idPattern: undefined,
+      extendsName: undefined,
+      base: undefined,
       refs: [],
       records: new Map(),
     }
@@ -426,7 +554,11 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
       } catch (e) {
         c.errors.push(`${schemaFile}: x-id-pattern: ${oneLine((e as Error).message)}`)
       }
-    for (const place of xrefPlaces(schema)) {
+    for (const place of places('x-extends', schema))
+      if (place.length > 0)
+        c.errors.push(`${schemaFile}: ${place.join('.')}: x-extends sits only at the schema root`)
+    if (typeof schema['x-extends'] === 'string') type.extendsName = schema['x-extends']
+    for (const place of places('x-ref', schema)) {
       const [first, field, third] = place
       const items = third === 'items'
       if (first !== 'properties' || field === undefined || place.length !== (items ? 3 : 2)) {
@@ -437,19 +569,43 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
       }
       const prop = (schema['properties'] as Record<string, Data>)[field] as Data
       const holder = (items ? prop['items'] : prop) as Data
-      type.refs.push({ field, type: String(holder['x-ref']), items })
+      type.refs.push({ field, type: String(holder['x-ref']), target: undefined, items })
     }
   }
-  for (const type of c.types.values())
-    for (const ref of type.refs)
-      if (!c.types.has(ref.type))
-        c.errors.push(`${type.schemaFile}: ${ref.field}: x-ref names unknown type "${ref.type}"`)
+  linkTypes(c)
   for (const n of c.nested) {
     const inType = [...c.types.values()].find((t) => n.startsWith(`${t.dir}/`))
     if (inType !== undefined)
       c.errors.push(`${n}: (folder): a corpus must not sit inside type folder ${inType.dir}`)
   }
   return schemaFiles
+}
+
+/** Resolve each type's `x-extends` and `x-ref` names, and break `x-extends` cycles. */
+function linkTypes(c: Corpus): void {
+  for (const type of c.types.values()) {
+    if (type.extendsName !== undefined) {
+      const base = lookupType(c, type.extendsName)
+      if (base !== undefined && 'problem' in base)
+        c.errors.push(`${type.schemaFile}: x-extends: ${base.problem}`)
+      else type.base = base
+    }
+    for (const ref of type.refs) {
+      const target = lookupType(c, ref.type)
+      if (target !== undefined && 'problem' in target)
+        c.errors.push(`${type.schemaFile}: ${ref.field}: x-ref ${target.problem}`)
+      else ref.target = target
+    }
+  }
+  // Only local types can form a cycle: a parent never extends its child.
+  const cyclic = [...c.types.values()].filter(
+    (t) => t.base !== undefined && chain(t.base).includes(t),
+  )
+  for (const type of cyclic) {
+    const names = [...chain(type), type].map((t) => t.name)
+    c.errors.push(`${type.schemaFile}: x-extends: cycle: ${names.join(' → ')}`)
+  }
+  for (const type of cyclic) type.base = undefined
 }
 
 /**
@@ -472,9 +628,20 @@ function recordFolders(c: Corpus, type: Type, dirs: string[]): string[] {
   return found
 }
 
+/** The inherited record `id` collides with, in a type `type` extends from another corpus. */
+function inheritedClash(type: Type, id: string): string | undefined {
+  const key = fold(id)
+  for (const t of chain(type))
+    if (t.corpus !== type.corpus)
+      for (const [other, { file }] of t.records)
+        if (fold(other) === key) return `${t.corpus.name}/${file}`
+  return undefined
+}
+
 /**
  * Check each type's records: the .md, .yaml and .json files under its folder, at any depth. In a
  * record folder only the file named after the folder is a record. Its other files belong to it.
+ * A record passes its type's schema and the schema of every type up its `x-extends` chain.
  */
 function readRecords(
   c: Corpus,
@@ -486,6 +653,7 @@ function readRecords(
   for (const type of c.types.values()) {
     const ids = new Map<string, string>()
     const folders = recordFolders(c, type, dirs)
+    const types = chain(type)
     for (const file of files) {
       if (!file.startsWith(`${type.dir}/`) || schemaFiles.has(file)) continue
       const folder = folders.find((f) => file.startsWith(`${f}/`))
@@ -511,27 +679,47 @@ function readRecords(
       const id = stem(file)
       const problem = idProblem(id)
       if (problem !== undefined) c.errors.push(`${file}: id: "${id}" ${problem}`)
-      else if (type.idPattern !== undefined && !type.idPattern.test(id))
-        c.errors.push(`${file}: id: "${id}" does not match x-id-pattern ${type.idPattern.source}`)
+      for (const t of types)
+        if (problem === undefined && t.idPattern !== undefined && !t.idPattern.test(id))
+          c.errors.push(`${file}: id: "${id}" does not match x-id-pattern ${t.idPattern.source}`)
       const other = ids.get(fold(id))
       if (other !== undefined) c.errors.push(`${file}: id: "${id}" is also ${other}`)
       else ids.set(fold(id), file)
+      const inherited = inheritedClash(type, id)
+      if (inherited !== undefined)
+        c.errors.push(`${file}: id: "${id}" is also the inherited record ${inherited}`)
 
       const data = readChecked(c, file)
       if (data === undefined) continue
-      if (type.validate !== undefined && !type.validate(data)) {
-        // The if/then wrapper repeats the `then` failure at the root.
-        for (const e of type.validate.errors ?? [])
-          if (e.keyword !== 'if') c.errors.push(`${file}: ${describe(e)}`)
-        continue
-      }
-      if (problem === undefined && other === undefined) type.records.set(id, { file, data })
+      const failures = new Set<string>()
+      for (const t of types)
+        if (t.validate !== undefined && !t.validate(data))
+          // The if/then wrapper repeats the `then` failure at the root.
+          for (const e of t.validate.errors ?? [])
+            if (e.keyword !== 'if') failures.add(`${file}: ${describe(e)}`)
+      c.errors.push(...failures)
+      if (
+        failures.size === 0 &&
+        problem === undefined &&
+        other === undefined &&
+        inherited === undefined
+      )
+        type.records.set(id, { file, data })
     }
   }
 }
 
-/** A file in the corpus, a problem, or undefined for a link not checked (a URL, or within the file). */
-type Resolution = { file: string } | { problem: string; warn?: true } | undefined
+/**
+ * A file in the corpus, a problem, or undefined for a link not checked (a URL, or within the file).
+ * A file under `_inherited/<prefix>/` sits in the parent `owner`, at `at` in it. `unloaded` names
+ * a declared parent that did not load: its `extends` entry is already an error, so the link is not
+ * checked.
+ */
+type Resolution =
+  | { file: string; owner?: Corpus; at?: string }
+  | { problem: string; warn?: true }
+  | { unloaded: string }
+  | undefined
 
 const BETWEEN_CORPORA = 'leaves the corpus; v0 does not define links between corpora'
 
@@ -561,6 +749,11 @@ function resolve(c: Corpus, from: string, link: Link): Resolution {
   const outside = joined === '..' || joined.startsWith('../')
   if (outside || c.nested.some((n) => joined === n || joined.startsWith(`${n}/`)))
     return { problem: `${dest}: ${BETWEEN_CORPORA}`, warn: true }
+  if (joined === INHERITED || joined.startsWith(`${INHERITED}/`)) {
+    const prefix = joined.split('/')[1]
+    if (prefix !== undefined && c.parents.has(prefix)) c.linked.add(prefix)
+    return intoParent(c, joined, joined, dest)
+  }
   const key = joined.normalize('NFC')
   const file = c.filesByNfc.get(key)
   if (file !== undefined) return { file }
@@ -571,6 +764,38 @@ function resolve(c: Corpus, from: string, link: Link): Resolution {
       warn: true,
     }
   return { problem: `${dest}: no such file` }
+}
+
+/**
+ * Where `path`, under `_inherited/` in `c`, points in the parent it names. The copy is not read:
+ * the link resolves in the installed parent, and `checkCopy` checks the copy.
+ */
+function intoParent(c: Corpus, path: string, file: string, dest: string): Resolution {
+  const [, prefix, ...rest] = path.split('/')
+  if (prefix === undefined) return { file }
+  const parent = c.parents.get(prefix)
+  if (parent === undefined)
+    return c.declared.has(prefix)
+      ? { unloaded: prefix }
+      : {
+          problem: `${dest}: ${INHERITED}/${prefix} is not a parent; extends declares no ${prefix}`,
+        }
+  const inner = rest.join('/')
+  if (inner === INHERITED || inner.startsWith(`${INHERITED}/`)) {
+    // The link must also be live in the parent's own copy, which this corpus's copy repeats.
+    const below = inner.slice(INHERITED.length + 1)
+    const copied = (f: string): boolean => f === below || f.startsWith(`${below}/`)
+    if (below !== '' && !parent.inheritedFiles.some(copied))
+      return {
+        problem: `${dest}: ${prefix} holds no copy of it; run corpus-schema sync in ${prefix}`,
+      }
+    return intoParent(parent, inner, file, dest)
+  }
+  const key = inner.normalize('NFC')
+  const at = inner === '' ? '.' : parent.filesByNfc.get(key)
+  if (at !== undefined) return { file, owner: parent, at }
+  if (parent.dirsByNfc.has(key)) return { file, owner: parent, at: inner }
+  return { problem: `${dest}: no such file in parent ${prefix}` }
 }
 
 /** Calls `visit` with each string in `value` and the dotted field it sits in. */
@@ -607,7 +832,7 @@ function checkLinks(c: Corpus): void {
 
   for (const type of c.types.values())
     for (const { file, data } of type.records.values()) {
-      for (const ref of type.refs) {
+      for (const ref of chain(type).flatMap((t) => t.refs)) {
         const value = data[ref.field]
         if (value === undefined) continue
         const values = ref.items && Array.isArray(value) ? value : [value]
@@ -623,16 +848,82 @@ function checkLinks(c: Corpus): void {
             continue
           }
           const r = resolve(c, file, link)
+          if (r !== undefined && 'unloaded' in r) continue
           // A URL or a link to a heading in this file.
           if (r === undefined)
             c.errors.push(`${file}: ${ref.field}: must link to a ${ref.type} record file`)
           else if ('problem' in r && r.warn)
-            c.errors.push(`${file}: ${ref.field}: must link to a ${ref.type} record in this corpus`)
-          else if ('file' in r && c.recordType.get(r.file)?.name !== ref.type)
+            c.errors.push(
+              `${file}: ${ref.field}: must link to a ${ref.type} record in this corpus or a parent`,
+            )
+          else if ('file' in r && !isA((r.owner ?? c).recordType.get(r.at ?? r.file), ref.target))
             c.errors.push(`${file}: ${ref.field}: ${r.file} is not a ${ref.type} record`)
         }
       }
     }
+}
+
+/** Whether a record of `type` counts as a record of `target`: it is that type or extends it. */
+const isA = (type: Type | undefined, target: Type | undefined): boolean =>
+  type !== undefined && target !== undefined && chain(type).includes(target)
+
+const COPY_LINES = 10
+
+/**
+ * Check `_inherited/`: each `<prefix>/` folder in it, and each one a checked file links into,
+ * holds exactly the files of the installed parent, byte for byte. Reports up to COPY_LINES files
+ * per parent.
+ */
+function checkCopy(c: Corpus): void {
+  const sync = 'run corpus-schema sync'
+  const present = new Map<string, string[]>()
+  for (const f of c.inheritedFiles) {
+    const slash = f.indexOf('/')
+    const prefix = slash < 0 ? f : f.slice(0, slash)
+    const list = present.get(prefix) ?? []
+    list.push(slash < 0 ? '' : f.slice(slash + 1))
+    present.set(prefix, list)
+  }
+  for (const prefix of [...new Set([...present.keys(), ...c.linked])].sort()) {
+    const here = `${INHERITED}/${prefix}`
+    const parent = c.parents.get(prefix)
+    if (parent === undefined) {
+      // A declared parent that did not load is already an error at its extends entry.
+      if (!c.declared.has(prefix))
+        c.errors.push(`${here}: (copy): ${prefix} is not a parent in extends; ${sync}`)
+      continue
+    }
+    const copy = new Set(present.get(prefix) ?? [])
+    if (copy.size === 0) {
+      c.errors.push(`${here}: (copy): missing, and a file links into it; ${sync}`)
+      continue
+    }
+    const expected = copyFiles(parent)
+    const lines: string[] = []
+    for (const f of expected)
+      if (!copy.has(f)) lines.push(`${here}/${f}: (copy): missing; ${sync}`)
+      else if (!sameBytes(join(parent.root, f), join(c.root, here, f)))
+        lines.push(`${here}/${f}: (copy): differs from the installed parent; ${sync}`)
+    const wanted = new Set(expected)
+    for (const f of copy)
+      if (!wanted.has(f)) lines.push(`${here}/${f}: (copy): not in the installed parent; ${sync}`)
+    c.errors.push(...lines.slice(0, COPY_LINES))
+    if (lines.length > COPY_LINES)
+      c.errors.push(`${here}: (copy): ${lines.length - COPY_LINES} more files differ; ${sync}`)
+  }
+}
+
+/**
+ * The files `sync` copies from a parent corpus, relative to its root: the corpus's own files and
+ * the files of its `_inherited/`.
+ */
+export const copyFiles = (c: Corpus): string[] =>
+  [...c.files, ...c.inheritedFiles.map((f) => `${INHERITED}/${f}`)].sort()
+
+/** The checks that need every corpus loaded: links, `x-ref` fields and the `_inherited/` copy. */
+function check(c: Corpus): void {
+  checkLinks(c)
+  checkCopy(c)
 }
 
 /** `value` with each link in its strings replaced by one marker, to compare data across a fix. */
@@ -715,7 +1006,7 @@ export function validateCorpus(root: string, { fix = false } = {}): CorpusReport
   let c = load(root)
   const fixes = fix ? fixWikilinks(c) : { fixed: [], warnings: [], errors: [] }
   if (fixes.fixed.length > 0) c = load(root)
-  checkLinks(c)
+  check(c)
   return {
     root,
     name: c.name,

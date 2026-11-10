@@ -1,0 +1,4 @@
+x-extends: org/principles
+properties:
+  team: { type: string }
+  follows: { type: string, x-ref: org/principles }

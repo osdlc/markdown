@@ -58,10 +58,66 @@ are not checked. The record links to them with relative links, such as
 one is an error. A folder with no record named after it, such as `harnesses/google/`, is a plain
 folder of records.
 
+## Extending a corpus
+
+A corpus can build on other corpora: a shared profile of types, or an organisation's records. Each
+parent is a folder that holds a corpus. It comes from an npm package, or from a relative path in a
+monorepo. The root file names each parent under a prefix, and the corpus must be at level 2:
+
+```yaml
+corpus-schema: 0
+level: 2
+extends:
+  claims: '@osdlc/corpus-profile-claims' # a package name, found as Node finds it from this folder
+  org: ../org-principles # or a path from this folder
+```
+
+A package's corpus is the package folder, or the folder its `package.json` names in a `"corpus"`
+field. Install packages as usual. `package.json` holds the range and the lockfile pins it:
+
+```json
+{
+  "devDependencies": {
+    "@osdlc/corpus-profile-claims": "^0.1.0",
+    "acme-principles": "github:acme/principles#v3"
+  }
+}
+```
+
+The second form is a git dependency. It suits a private corpus with no registry.
+
+A local type builds on a parent's type with `x-extends` at the root of its schema. A record then
+passes every schema up the chain, so a child can add or tighten rules but not loosen them. A schema
+that holds only `x-extends` uses the parent's type as it is:
+
+```yaml
+# rules/rules.schema.yaml
+x-extends: org/principles
+properties:
+  team: { type: string }
+```
+
+`x-ref: org/principles` links a field to the parent's records, and also to local records whose type
+extends `org/principles`. A local record of such a type must not take an inherited record's id.
+
+To link to a parent's records, keep a copy of each parent in the corpus:
+
+```sh
+corpus-schema sync
+```
+
+`sync` writes `_inherited/<prefix>/`, a byte-for-byte copy of each parent, and removes stale files.
+Commit the copy. Links such as `[Be Kind](../_inherited/org/principles/Be%20Kind.md)` then work in
+Obsidian and on GitHub, and `validate` resolves them in the installed parent. `validate` never
+writes the copy. When the copy is missing or differs from the installed parent, it says to run
+`corpus-schema sync`. A corpus that uses a parent's types and never links to its records needs no
+copy.
+
 ## Command line
 
 ```sh
 corpus-schema validate [--fix] <folder>...
+corpus-schema sync [<folder>...]
 ```
 
 `validate` checks every corpus at or below each folder. It prints one line per problem, as
@@ -70,11 +126,21 @@ for each corpus that passes. A problem that is not in one field puts a word in p
 field's place, such as `(data)` for frontmatter that does not parse. `--fix` first rewrites every
 wikilink it can resolve as a relative Markdown link.
 
-| Exit code | Meaning                                                                       |
-| --------- | ----------------------------------------------------------------------------- |
-| `0`       | Every corpus is valid. Warnings may have been printed.                        |
-| `1`       | A corpus has an error, a folder holds no corpus, or a folder cannot be read. |
-| `2`       | Bad usage: an unknown verb or option, or no folder.                           |
+`sync` writes the `_inherited/` copies of every corpus at or below each folder, by default `.`. A
+corpus syncs after the corpora it extends, so a chain of corpora in one repository syncs in one
+run. It prints `wrote:` and `removed:` for each file it changes, and `synced: <name>: <counts>`.
+Run it again and it changes nothing.
+
+`sync` owns `_inherited/` outright. It removes every file there that no parent holds, so in a
+corpus with no `extends` it empties the folder. It does not write through a symbolic link there;
+it reports one instead. With any error in the root file or its `extends`, it writes nothing in that
+corpus.
+
+| Exit code | Meaning                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------- |
+| `0`       | Every corpus is valid, or synced. Warnings may have been printed.                        |
+| `1`       | A corpus has an error, a folder holds no corpus, or a folder cannot be read or written. |
+| `2`       | Bad usage: an unknown verb or option, or `validate` with no folder.                      |
 
 ## Library
 
@@ -98,6 +164,10 @@ returns a `CorpusReport`. Every problem it finds is a line in the report, never 
 holds `root`, `name`, `id` and `level` (the level the root file states), `records` (valid records by type, then id, each record's `Data`),
 `files` (the corpus-relative path of each of those records), `errors`, `warnings` and `fixed`.
 
+`syncCorpus(root)` writes one corpus's `_inherited/` copies and returns a `SyncReport`: `root`,
+`name`, `written` and `removed` (corpus-relative paths) and `errors`. It writes nothing when the
+root file or its `extends` has an error.
+
 Writers of records can use the same rules the validator reads with:
 
 | Export                     | Use                                                        |
@@ -115,6 +185,8 @@ A corpus's schemas run on its data. JSON Schema `pattern` and the spec's `x-id-p
 expressions the corpus supplies, and a badly written one can take a very long time on some input
 (ReDoS). Validate a corpus from a source you do not trust only with a time limit, for example in a
 CI job with a timeout.
+
+A parent's schemas run on the corpus's records too. Treat a parent package as you treat the corpus.
 
 `--fix` and `validateCorpus(root, { fix: true })` rewrite files in place. They change only
 wikilinks, and they leave a file alone if the rewrite would change its data, but they do not keep a

@@ -2,7 +2,15 @@ import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, test } from 'vitest'
 
 import { spawnSync } from 'node:child_process'
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -19,6 +27,8 @@ const cli = (...args: string[]): { status: number | null; stdout: string; stderr
   const r = spawnSync(process.execPath, [CLI, ...args], { cwd: dir, encoding: 'utf8' })
   return { status: r.status, stdout: r.stdout, stderr: r.stderr }
 }
+const USAGE =
+  'usage: corpus-schema validate [--fix] <folder>...\n       corpus-schema sync [<folder>...]\n'
 const corpus = (rel: string, id: string): void => {
   put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nid: ${id}\nformats: [md, yaml, json]\n`)
   put(`${rel}/notes/notes.schema.json`, '{}')
@@ -116,10 +126,11 @@ describe('corpus-schema validate', () => {
       ['validate'],
       ['validate', '--fix'],
       ['validate', '.', '--bogus'],
+      ['sync', '--fix'],
     ]) {
       const r = cli(...args)
       assert.equal(r.status, 2, args.join(' '))
-      assert.equal(r.stderr, 'usage: corpus-schema validate [--fix] <folder>...\n')
+      assert.equal(r.stderr, USAGE)
     }
   })
 
@@ -133,5 +144,56 @@ describe('corpus-schema validate', () => {
     assert.equal(r.stderr, '')
     assert.equal(read('c/notes/B.json'), '{"see": "[A](A.md)"}\n')
     assert.equal(read('c/notes/C.yaml'), 'see: "[the A note](A.md)"\n')
+  })
+})
+
+describe('corpus-schema sync', () => {
+  const parent = (rel: string, parents = ''): void => {
+    put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nlevel: 2\n${parents}`)
+    put(`${rel}/notes/notes.schema.yaml`, 'type: object\n')
+    put(`${rel}/notes/A.md`, `${rel}\n`)
+  }
+
+  test('syncs every corpus below the folder, parents first, and a second run changes nothing', () => {
+    parent('z')
+    parent('y', 'extends:\n  z: ../z\n')
+    parent('x', 'extends:\n  y: ../y\n')
+    put('x/notes/B.md', 'See [A](../_inherited/y/_inherited/z/notes/A.md).\n')
+    const before = cli('validate', 'x')
+    assert.equal(before.status, 1)
+    assert.match(before.stderr, /^_inherited\/y: \(copy\): missing/m)
+    assert.equal(existsSync(join(dir, 'x/_inherited')), false)
+
+    // x is found first, but syncs after y, which syncs after z.
+    const r = cli('sync')
+    assert.equal(r.status, 0, r.stderr)
+    const synced = [...r.stdout.matchAll(/^synced: (.*)$/gm)].map((m) => m[1])
+    assert.deepEqual(synced, [
+      'z: 0 written, 0 removed',
+      'y: 3 written, 0 removed',
+      'x: 6 written, 0 removed',
+    ])
+    assert.match(r.stdout, /^wrote: _inherited\/y\/_inherited\/z\/notes\/A\.md$/m)
+    assert.equal(cli('validate', '.').status, 0)
+
+    const again = cli('sync', '.')
+    assert.equal(again.status, 0, again.stderr)
+    assert.doesNotMatch(again.stdout, /^(wrote|removed):/m)
+  })
+
+  test('prints what it removes, and exits 1 when a parent does not resolve', () => {
+    parent('a')
+    put('a/_inherited/old/x.md', 'stale\n')
+    const r = cli('sync', 'a')
+    assert.equal(r.status, 0, r.stderr)
+    assert.equal(r.stdout, 'removed: _inherited/old/x.md\nsynced: a: 0 written, 1 removed\n')
+
+    parent('b', 'extends:\n  gone: "@acme/gone"\n')
+    const bad = cli('sync', 'b')
+    assert.equal(bad.status, 1)
+    assert.equal(
+      bad.stderr,
+      'corpus-schema.yaml: extends.gone: package @acme/gone is not installed\nb: 1 error(s)\n',
+    )
   })
 })

@@ -37,3 +37,9 @@ parse.
 `dialect` and `profiles`. `corpora/folder-record-*` cover record folders: a record with a script, a
 query and a CSV beside it, a folder with no record file, a record folder inside another, and a
 record file in a format the corpus does not allow.
+
+`corpora/extends-*` cover `extends`, `x-extends`, cross-corpus `x-ref` and the `_inherited/` copy.
+A case's parents sit inside its folder: a nested corpus for a path, and a package under the case's
+own `node_modules/` for a package name. The root `.gitignore` keeps those `node_modules/` folders.
+The `_inherited/` copies were written with `corpus-schema sync`. `extends-copy-stale` edits its
+copy by hand, on purpose.
