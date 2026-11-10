@@ -273,8 +273,8 @@ that many corpora share, or a corpus with records, such as an organisation's pri
 corpus-schema: 0
 level: 2
 extends:
-  claims: "@osdlc/corpus-profile-claims"   # a package name
-  org: "../org-principles"                 # a path from the corpus root
+  claims: "@osdlc/corpus-profile-claims" # a package name
+  org: "../org-principles" # a path from the corpus root
 ```
 
 #### Resolving parents
