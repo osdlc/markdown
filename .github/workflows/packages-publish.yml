@@ -10,7 +10,8 @@
 # its `publish` job.
 #
 # The Version Packages pull request is opened as the osdlc-release GitHub App,
-# whose key is in the release-plz environment.
+# whose key is in the release-plz environment. The `release` job passes the
+# key by name; ts-packages-release.yml says why.
 name: packages-publish
 
 on:
@@ -34,6 +35,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: osdlc/osdlc/.github/workflows/ts-packages-release.yml@ecf430c446bcd95f7f0e9176d2a67383cd67ea68 # TODO: pin to osdlc main after osdlc/osdlc#749 merges
+    uses: osdlc/osdlc/.github/workflows/ts-packages-release.yml@aaa35db118c6dcffb3b3c742c67162ef2cce5ba0 # osdlc/osdlc main
     with:
       app-client-id: Iv23liYTGAl78fzN8YWm
+    secrets:
+      RELEASE_PLZ_APP_PRIVATE_KEY: ${{ secrets.RELEASE_PLZ_APP_PRIVATE_KEY }}
