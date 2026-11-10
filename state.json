@@ -1,123 +1,12 @@
 {
   "schema": 1,
   "pr": 16,
-  "head": "c5db67b79468b1d8a3217920e358345fe8181a1f",
-  "base": "5bdf5b898b6caa58297cf8feb59bd646ed43c3b1",
-  "round": 1,
+  "head": null,
+  "base": null,
+  "round": 0,
   "claim": {
     "owner": "Mac.local:claude-r7m2qd",
     "at": "2026-11-10T03:29:55.960Z"
   },
-  "findings": [
-    {
-      "id": "r1-1",
-      "round": 1,
-      "path": ".github/workflows/example-pair.yml",
-      "line": 50,
-      "title": "Workflow uses the local corpus-schema action that #15 has since deleted",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-2",
-      "round": 1,
-      "path": ".github/workflows/example-pair.yml",
-      "line": 23,
-      "title": "Path filters miss pnpm-lock.yaml, which the validator build installs from",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-3",
-      "round": 1,
-      "path": "examples/README.md",
-      "line": 27,
-      "title": "Check them build command fails on a fresh clone",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-4",
-      "round": 1,
-      "path": ".github/workflows/example-pair.yml",
-      "line": 75,
-      "title": "Untracked-file check fails with no message; git add -N folds it into the diff",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-5",
-      "round": 1,
-      "path": "examples/fernlog/corpus-schema.md",
-      "line": 22,
-      "title": "statements is not used as it is: it adds follows",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-6",
-      "round": 1,
-      "path": ".github/workflows/example-pair.yml",
-      "line": 10,
-      "title": "Header restates the steps and omits why sync+diff is needed beside validate",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-7",
-      "round": 1,
-      "path": "examples/test.sh",
-      "line": 8,
-      "title": "Header case list duplicates the check calls",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-8",
-      "round": 1,
-      "path": "examples/test.sh",
-      "line": 18,
-      "title": "validate() copies profiles/claims/tests/validator.sh",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-9",
-      "round": 1,
-      "path": ".github/workflows/example-pair.yml",
-      "line": 66,
-      "title": "No-warnings gate copied from examples.yml",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    },
-    {
-      "id": "r1-10",
-      "round": 1,
-      "path": "examples/org-principles/principles/Prefer standard locations.md",
-      "line": 6,
-      "title": "The example decision breaks the principle it cites on macOS",
-      "comment": null,
-      "status": "open",
-      "reason": null,
-      "fixedIn": null
-    }
-  ]
+  "findings": []
 }
