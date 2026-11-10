@@ -18,8 +18,9 @@ one at a time.
   repo's `CLAUDE.md` or `AGENTS.md`.
 - [Packages](packages/README.md): the libraries published from here, starting with
   `@osdlc/corpus-schema` and its spec in `packages/`.
+- [The plan as records](docs/planning/README.md): every task, milestone and decision, and the
+  components the plan changes, as Markdown files that CI checks with corpus-schema. Update a task's
+  record when its status changes.
 - The diagrams are made by `tools/diagrams/build.py` (the plan) and
   `tools/diagrams/architecture.py` (the architecture), which uses build.py's style. Run
   architecture.py after you change it. After you change build.py, run both.
-  The task graph's statuses and dependencies live in `TASKS` and `task_graph()` in `build.py`.
-  Update them together with the plan.
