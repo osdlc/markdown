@@ -1,8 +1,8 @@
 # Checks the example pair under examples/: an org principles corpus, and the
 # fernlog project corpus that extends it and the claims profile.
 #
-# The validator is this repository's packages/ts/corpus-schema, built by the
-# local corpus-schema action, since the published 0.2.x does not read
+# The validator is this repository's packages/ts/corpus-schema, built by
+# tools/build-corpus-schema.sh, since the published 0.2.x does not read
 # `extends`. fernlog installs the claims profile from profiles/claims/ with
 # its own lockfile; it is not in the repository's workspace.
 #
@@ -20,7 +20,8 @@ on:
       - "examples/**"
       - "profiles/claims/**"
       - "packages/ts/corpus-schema/**"
-      - ".github/actions/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
       - ".github/workflows/example-pair.yml"
   push:
     branches: [main]
@@ -28,7 +29,8 @@ on:
       - "examples/**"
       - "profiles/claims/**"
       - "packages/ts/corpus-schema/**"
-      - ".github/actions/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
       - ".github/workflows/example-pair.yml"
 
 permissions:
@@ -47,7 +49,11 @@ jobs:
         with:
           node-version: "24"
 
-      - uses: ./.github/actions/corpus-schema
+      # corepack provides the pnpm that package.json's packageManager names.
+      - name: Build corpus-schema
+        run: |
+          corepack enable
+          sh tools/build-corpus-schema.sh
 
       - name: Install fernlog's parents
         working-directory: examples/fernlog
@@ -58,7 +64,7 @@ jobs:
       - name: Validate both corpora
         run: |
           set +e
-          corpus-schema validate examples 2> "$RUNNER_TEMP/stderr.txt"
+          node packages/ts/corpus-schema/bin/corpus-schema.js validate examples 2> "$RUNNER_TEMP/stderr.txt"
           status=$?
           set -e
           cat "$RUNNER_TEMP/stderr.txt" >&2
@@ -70,7 +76,7 @@ jobs:
 
       - name: The committed _inherited/ copy is current
         run: |
-          corpus-schema sync examples
+          node packages/ts/corpus-schema/bin/corpus-schema.js sync examples
           git diff --exit-code -- examples
           test -z "$(git status --porcelain -- examples)"
 
