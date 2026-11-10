@@ -14,6 +14,8 @@ one at a time.
   up, and how we get there.
 - [The architecture](docs/architecture.md): the layers we are building toward, and the rules
   between them.
+- [The corpus-schema guide](docs/corpus-schema.md): the spec for typed records kept as notes, its
+  levels, and why it is shaped this way.
 - [Pointing here from another repo](docs/pointing-here.md): a short note to paste into another
   repo's `CLAUDE.md` or `AGENTS.md`.
 - [Packages](packages/README.md): the libraries published from here, starting with
@@ -24,3 +26,7 @@ one at a time.
 - The diagrams are made by `tools/diagrams/build.py` (the plan) and
   `tools/diagrams/architecture.py` (the architecture), which uses build.py's style. Run
   architecture.py after you change it. After you change build.py, run both.
+- [The claims profile](profiles/claims/): the first draft of the claims profile, record types for
+  claims and their evidence, with an example corpus to copy.
+- [The ecosystem explorer](tools/explorer/README.md): an interactive view of the components and the
+  work, built from the records.
