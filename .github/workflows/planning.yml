@@ -4,8 +4,9 @@
 # Both jobs build the validator from packages/ts/corpus-schema with tools/build-corpus-schema.sh,
 # not take it from npm: the plan uses `extends` and `x-extends`, which 0.2.0 does not know.
 #
-# validate: the corpus must pass corpus-schema with no errors and no warnings. Validating it also
-# validates the profile, as its parent.
+# validate: the plan and the profile must pass corpus-schema with no errors and no warnings. The
+# profile is validated on its own too: the plan's report carries a parent's errors, not its
+# warnings.
 #
 # explorer: installs tools/explorer, whose @osdlc/corpus-schema is a link: to the built package,
 # rebuilds data/*.json from the records and fails when the committed JSON differs, then
@@ -23,6 +24,8 @@ on:
       - "packages/ts/corpus-schema/**"
       - "pnpm-lock.yaml"
       - "tools/build-corpus-schema.sh"
+      - "package.json"
+      - "pnpm-workspace.yaml"
       - ".github/workflows/planning.yml"
   push:
     branches: [main]
@@ -33,6 +36,8 @@ on:
       - "packages/ts/corpus-schema/**"
       - "pnpm-lock.yaml"
       - "tools/build-corpus-schema.sh"
+      - "package.json"
+      - "pnpm-workspace.yaml"
       - ".github/workflows/planning.yml"
 
 permissions:
@@ -62,13 +67,13 @@ jobs:
       - name: Validate the plan's records
         run: |
           set +e
-          node packages/ts/corpus-schema/bin/corpus-schema.js validate docs/planning 2> "$RUNNER_TEMP/stderr.txt"
+          node packages/ts/corpus-schema/bin/corpus-schema.js validate docs/planning profiles/planning 2> "$RUNNER_TEMP/stderr.txt"
           status=$?
           set -e
           cat "$RUNNER_TEMP/stderr.txt" >&2
           if [ "$status" -ne 0 ]; then exit "$status"; fi
           if grep -q '^warning:' "$RUNNER_TEMP/stderr.txt"; then
-            echo "::error::docs/planning must validate with no warnings"
+            echo "::error::docs/planning and profiles/planning must validate with no warnings"
             exit 1
           fi
 
