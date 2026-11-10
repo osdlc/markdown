@@ -25,5 +25,6 @@ one at a time.
   architecture.py after you change it. After you change build.py, run both.
   The task graph's statuses and dependencies live in `TASKS` and `task_graph()` in `build.py`.
   Update them together with the plan.
-- [The claims profile](profiles/claims/): the first draft of the claims profile, record types for
-  claims and their evidence, with an example corpus to copy.
+- [The claims profile](profiles/claims/): record types for claims and their evidence, as a corpus
+  that other corpora extend. It is packaged as `@osdlc/corpus-profile-claims`, and an example
+  corpus shows it at work.

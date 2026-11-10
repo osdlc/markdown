@@ -586,8 +586,10 @@ package already has dialects in this sense.
 ### Profiles
 
 A profile is a shared, versioned set of types that many corpora can follow: a parent corpus that
-holds types and no records. The first one will be the claims profile, for statements backed by
-evidence. Its design is in [the plan](ecosystem-plan.md). It is not published as a package yet.
+holds types and no records. The first one is the claims profile, for statements backed by
+evidence, in [profiles/claims/](../profiles/claims/README.md). It is packaged as
+`@osdlc/corpus-profile-claims` and is not on npm yet. Its design is in
+[the plan](ecosystem-plan.md).
 
 - A corpus names its profiles in the root file under `extends:`, each under a short prefix. The
   prefix is always required, so adding a second profile later breaks nothing. An unknown prefix is
@@ -946,12 +948,11 @@ published. Record folders landed as a second minor bump, so the first version on
 
 The evidence work comes first:
 
-- An example claims corpus in this repo, at `profiles/claims/example/`. It is a valid level-2
-  corpus with the VA-Spec types `documents`, `study-results`, `methods` and `statements`, and a few
-  records that show the whole chain. A README maps each type to VA-Spec. CI checks it with the
-  published validator, and people copy it with
-  `npx degit osdlc/markdown/profiles/claims/example <dir>`. It is in progress in a separate pull
-  request.
+- The claims profile in this repo, at `profiles/claims/`. Its corpus holds the VA-Spec types
+  `documents`, `study-results`, `methods` and `statements`, and no records. It is packaged as
+  `@osdlc/corpus-profile-claims`. An example corpus beside it extends it and holds a few records
+  that show the whole chain. A README maps each type to VA-Spec. CI checks both with this repo's
+  validator.
 - harness-reference copies those types, switches to the npm package and renames its root file to
   `corpus-schema.md`. Its capture command then writes study results.
 - The evidence project keeps its records in the same format, checked by the validator.
@@ -960,9 +961,9 @@ Then the spec grows:
 
 - `x-warn`: a schema can mark a rule as a warning instead of an error.
 - The Obsidian dialect.
-- Profiles: the validator reads `extends:` and `x-extends`. Next the claims types ship as a
-  versioned npm package, `@osdlc/corpus-profile-claims`, and corpora name it instead of holding
-  copies. Name overrides and an acceptance-testing profile build on it.
+- Profiles: the validator reads `extends:` and `x-extends`, and the claims types are packaged as
+  `@osdlc/corpus-profile-claims`. Next the package is published, and corpora name it instead of
+  holding copies. Name overrides and an acceptance-testing profile build on it.
 - Corpus inheritance and `corpus-schema sync` are built. Next come `refines` and `waives`, then a
   real org principles corpus as the first case.
 
@@ -1053,8 +1054,8 @@ Extend a corpus that holds them. Name it under `extends:`, then build local type
 
 You can also copy the type folders. A type folder holds its own schema, so it arrives complete. A
 `$ref` from one type's schema to another type's schema does not resolve, so each copy must stand
-alone. Copies can drift apart. For the claims types, the example corpus in this repo is meant to be
-copied with `npx degit` until the claims profile is published as a package.
+alone. Copies can drift apart. For the claims types, extend `@osdlc/corpus-profile-claims` instead
+of copying them.
 
 ### Is there a Rust version?
 

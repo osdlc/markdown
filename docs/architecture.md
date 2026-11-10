@@ -101,13 +101,13 @@ Shared sets of types.
 - The first one is the claims profile. It follows VA-Spec, GA4GH's Variant Annotation spec, which is
   a JSON Schema model for claims backed by evidence. Its types are Statement, Study Result, Method
   and Document. A statement holds its evidence lines, and Contribution is a field on records. It
-  starts as an example corpus in this repo, `profiles/claims/example/`, with a README that maps each type to VA-Spec. The plan's
-  task 4 builds it, and it is in progress. Until profiles work, a corpus copies the type folders
-  from the example. Later the profile is published from this repo as
-  `@osdlc/corpus-profile-claims`.
-- A corpus names its profiles in the root file. The reserved `extends` key maps a short prefix to a
-  parent corpus and its version. A type says which type it builds on with `x-extends`, for example
-  `x-extends: claims/StudyResult`. The prefix is always required, so adding a second profile later
+  lives in this repo at `profiles/claims/`: the types in `profiles/claims/corpus/`, an example
+  corpus that extends them, and a README that maps each type to VA-Spec. It is packaged as
+  `@osdlc/corpus-profile-claims`, to be published from this repo.
+- A corpus names its profiles in the root file. The `extends` key maps a short prefix to a parent
+  corpus: a package name or a relative path. The package's version comes from `package.json` and
+  the lockfile. A type says which type it builds on with `x-extends`, for example
+  `x-extends: claims/study-results`. The prefix is always required, so adding a second profile later
   breaks nothing, and an unknown prefix is an error.
 - dev's model-schema already does much of this. It calls a profile a "pack": a folder of YAML that
   declares kinds and compiles to JSON Schema. A pack can name packs it `requires`, a record can
