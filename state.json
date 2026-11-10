@@ -1,12 +1,233 @@
 {
   "schema": 1,
   "pr": 13,
-  "head": null,
-  "base": null,
-  "round": 0,
+  "head": "b3a80966a7783a8f48794572c06740a849ec912e",
+  "base": "be952149c7dda2229ec15c09597d5c5cbf790b80",
+  "round": 1,
   "claim": {
     "owner": "Mac.local:claude-r7m2qx",
     "at": "2026-11-10T02:47:27.639Z"
   },
-  "findings": []
+  "findings": [
+    {
+      "id": "r1-1",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 319,
+      "title": "Twin pair with no shared state emits an edge with states []",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-2",
+      "round": 1,
+      "path": ".github/workflows/planning.yml",
+      "line": 40,
+      "title": "Converter checks no longer run in CI",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-3",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 359,
+      "title": "No test for the converter's problem checks",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-4",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 77,
+      "title": "A bad frontmatter block throws instead of joining problems",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-5",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 13,
+      "title": "Option parsing crashes on a missing value and ignores --out=dir",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-6",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 149,
+      "title": "Hard-coded docs/planning/tasks in messages; source paths wrong under --corpus",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-7",
+      "round": 1,
+      "path": "docs/planning/corpus-schema.md",
+      "line": 8,
+      "title": "'ecosystem plan' link points at the planning README",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-8",
+      "round": 1,
+      "path": "docs/planning/decisions/decisions.schema.md",
+      "line": 9,
+      "title": "Decision number and file name are not checked against each other",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-9",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 49,
+      "title": "Record walk and link resolution re-implement @osdlc/corpus-schema",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-10",
+      "round": 1,
+      "path": "tools/explorer/scripts/README.md",
+      "line": 13,
+      "title": "List of converter checks is incomplete and will drift",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-11",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 33,
+      "title": "Decorative section banners",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-12",
+      "round": 1,
+      "path": "docs/ecosystem-plan.md",
+      "line": 316,
+      "title": "Decision status list duplicates the records",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-13",
+      "round": 1,
+      "path": "docs/planning/README.md",
+      "line": 23,
+      "title": "'D1 to D12' pins a count",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-14",
+      "round": 1,
+      "path": "docs/ecosystem-plan.md",
+      "line": 42,
+      "title": "Task kinds and milestone status rule written in several places",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-15",
+      "round": 1,
+      "path": "docs/planning/README.md",
+      "line": 17,
+      "title": "Task field list omits required detail",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-16",
+      "round": 1,
+      "path": "docs/planning/tasks/9 Extends.md",
+      "line": 13,
+      "title": "'In the milestone, step N' now reads against the wrong list",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-17",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 165,
+      "title": "Self-wait check duplicates the cycle check",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-18",
+      "round": 1,
+      "path": "tools/explorer/scripts/build-data.mjs",
+      "line": 283,
+      "title": "Inline comparator re-implements byKey",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-19",
+      "round": 1,
+      "path": "docs/ecosystem-plan.md",
+      "line": 33,
+      "title": "Explorer named as present in tools/explorer",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-20",
+      "round": 1,
+      "path": null,
+      "line": null,
+      "title": "diagrams.yml still triggers on docs/ecosystem-plan.md",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    }
+  ]
 }
