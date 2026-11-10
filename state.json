@@ -15,7 +15,7 @@
       "path": "packages/ts/corpus-schema/src/inherit.ts",
       "line": 34,
       "title": "createRequire throws for a relative corpus root, so validateCorpus/syncCorpus('.') with a package parent throws",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562783",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -26,7 +26,7 @@
       "path": "packages/ts/corpus-schema/src/validate.ts",
       "line": 784,
       "title": "A link through _inherited/<p>/_inherited/<q>/ validates clean when p has no copy of q, leaving a dead link on disk",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562791",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -37,7 +37,7 @@
       "path": "packages/ts/corpus-schema/src/sync.ts",
       "line": 58,
       "title": "sync writes and exits 0 despite root-file errors (formats, id, second root file), against its documented contract",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562800",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -48,7 +48,7 @@
       "path": "packages/ts/corpus-schema/src/sync.ts",
       "line": 38,
       "title": "A symlink under _inherited/ makes sync write and delete outside _inherited/",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562809",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -59,7 +59,7 @@
       "path": "packages/ts/corpus-schema/src/inherit.ts",
       "line": 59,
       "title": "A package with no package.json is rejected with the message (Error)",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562813",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -70,7 +70,7 @@
       "path": "packages/ts/corpus-schema/src/validate.ts",
       "line": 777,
       "title": "New undefined return for an unloaded parent makes the x-ref check add a misleading second error; comment at 842 now incomplete",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562818",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -78,10 +78,10 @@
     {
       "id": "r1-7",
       "round": 1,
-      "path": null,
-      "line": null,
+      "path": "packages/ts/corpus-schema/src/validate.ts",
+      "line": 777,
       "title": "docs/architecture.md still describes extends/x-extends as proposed and shows source forms the validator rejects",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#pullrequestreview-5836041176",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -89,10 +89,10 @@
     {
       "id": "r1-8",
       "round": 1,
-      "path": null,
-      "line": null,
+      "path": "profiles/claims/README.md",
+      "line": 6,
       "title": "profiles/claims/README.md, the plan and build.py task 9 still say extends/x-extends are not built",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#pullrequestreview-5836041176",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -103,7 +103,7 @@
       "path": "packages/ts/corpus-schema/src/sync.ts",
       "line": 28,
       "title": "why() duplicates whyFailed() in validate.ts",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562822",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -114,7 +114,7 @@
       "path": "packages/ts/corpus-schema/src/cli.ts",
       "line": 66,
       "title": "parentRoots fully loads and checks every ancestor just to order the sync",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562826",
       "status": "open",
       "reason": null,
       "fixedIn": null
@@ -125,7 +125,7 @@
       "path": "packages/ts/corpus-schema/src/validate.ts",
       "line": 873,
       "title": "checkCopy rebuilds the per-prefix array for every file (quadratic)",
-      "comment": null,
+      "comment": "https://github.com/osdlc/markdown/pull/12#discussion_r4520562828",
       "status": "open",
       "reason": null,
       "fixedIn": null
