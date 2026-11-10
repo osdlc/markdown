@@ -4,9 +4,10 @@
 # its one expected error, and the packed package must work when a corpus names
 # it by its package name.
 #
-# The validator is this repository's packages/ts/corpus-schema, built by the
-# local corpus-schema action, because the example extends the profile and the
-# published 0.2.x does not read `extends`.
+# The validator is this repository's packages/ts/corpus-schema, built by
+# tools/build-corpus-schema.sh, because the example extends the profile and the
+# published 0.2.x does not read `extends`. Other workflows that need this
+# validator run the same script.
 #
 # Every action is pinned to a commit SHA; the comment names its release.
 name: examples
@@ -16,14 +17,16 @@ on:
     paths:
       - "profiles/**"
       - "packages/ts/corpus-schema/**"
-      - ".github/actions/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
       - ".github/workflows/examples.yml"
   push:
     branches: [main]
     paths:
       - "profiles/**"
       - "packages/ts/corpus-schema/**"
-      - ".github/actions/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
       - ".github/workflows/examples.yml"
 
 permissions:
@@ -42,14 +45,18 @@ jobs:
         with:
           node-version: "24"
 
-      - uses: ./.github/actions/corpus-schema
+      - name: Build corpus-schema
+        run: |
+          corepack enable
+          sh tools/build-corpus-schema.sh
 
       # The validator prints warnings on stderr and still exits 0, so the
       # step keeps stderr and fails on any warning line.
       - name: Validate the claims profile and its example
         run: |
           set +e
-          corpus-schema validate profiles/claims/corpus profiles/claims/example 2> "$RUNNER_TEMP/stderr.txt"
+          node packages/ts/corpus-schema/bin/corpus-schema.js validate \
+            profiles/claims/corpus profiles/claims/example 2> "$RUNNER_TEMP/stderr.txt"
           status=$?
           set -e
           cat "$RUNNER_TEMP/stderr.txt" >&2
