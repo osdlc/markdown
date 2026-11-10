@@ -1,12 +1,134 @@
 {
   "schema": 1,
   "pr": 12,
-  "head": null,
-  "base": null,
-  "round": 0,
+  "head": "4acbc28cd27f4e5ea4536def3c444b6d6ed0fbcc",
+  "base": "a05eb0c99349973792b5cca5a4907d6851d0f486",
+  "round": 1,
   "claim": {
     "owner": "Mac.local:claude-r7m2qk",
     "at": "2026-11-10T02:38:04.816Z"
   },
-  "findings": []
+  "findings": [
+    {
+      "id": "r1-1",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/inherit.ts",
+      "line": 34,
+      "title": "createRequire throws for a relative corpus root, so validateCorpus/syncCorpus('.') with a package parent throws",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-2",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/validate.ts",
+      "line": 784,
+      "title": "A link through _inherited/<p>/_inherited/<q>/ validates clean when p has no copy of q, leaving a dead link on disk",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-3",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/sync.ts",
+      "line": 58,
+      "title": "sync writes and exits 0 despite root-file errors (formats, id, second root file), against its documented contract",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-4",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/sync.ts",
+      "line": 38,
+      "title": "A symlink under _inherited/ makes sync write and delete outside _inherited/",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-5",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/inherit.ts",
+      "line": 59,
+      "title": "A package with no package.json is rejected with the message (Error)",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-6",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/validate.ts",
+      "line": 777,
+      "title": "New undefined return for an unloaded parent makes the x-ref check add a misleading second error; comment at 842 now incomplete",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-7",
+      "round": 1,
+      "path": null,
+      "line": null,
+      "title": "docs/architecture.md still describes extends/x-extends as proposed and shows source forms the validator rejects",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-8",
+      "round": 1,
+      "path": null,
+      "line": null,
+      "title": "profiles/claims/README.md, the plan and build.py task 9 still say extends/x-extends are not built",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-9",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/sync.ts",
+      "line": 28,
+      "title": "why() duplicates whyFailed() in validate.ts",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-10",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/cli.ts",
+      "line": 66,
+      "title": "parentRoots fully loads and checks every ancestor just to order the sync",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    },
+    {
+      "id": "r1-11",
+      "round": 1,
+      "path": "packages/ts/corpus-schema/src/validate.ts",
+      "line": 873,
+      "title": "checkCopy rebuilds the per-prefix array for every file (quadratic)",
+      "comment": null,
+      "status": "open",
+      "reason": null,
+      "fixedIn": null
+    }
+  ]
 }
