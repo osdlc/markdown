@@ -13,6 +13,12 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "smoke": "pnpm -r --if-present run smoke",
     "lint": "pnpm -r --if-present run lint",
-    "format:check": "pnpm -r --if-present run format:check"
+    "format:check": "pnpm -r --if-present run format:check",
+    "version-packages": "changeset version && conformance-suites write --reference ts"
+  },
+  "devDependencies": {
+    "@changesets/cli": "catalog:",
+    "@osdlc/conformance-suites": "^0.1.0",
+    "@osdlc/package-checks": "^0.1.0"
   }
 }

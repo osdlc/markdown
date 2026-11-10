@@ -1,0 +1,3 @@
+{
+  "shared": ["^\\.github/workflows/packages-ci\\.yml$"]
+}
