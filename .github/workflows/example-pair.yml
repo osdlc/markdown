@@ -6,11 +6,6 @@
 # `extends`. fernlog installs the claims profile from profiles/claims/ with
 # its own lockfile; it is not in the repository's workspace.
 #
-# Both corpora must validate with no errors and no warnings. The validator
-# fails when fernlog's _inherited/ copy does not match its parents. A sync must
-# then change nothing, and examples/test.sh checks that the validator catches
-# a stale copy and a link to the wrong type.
-#
 # Every action is pinned to a commit SHA; the comment names its release.
 name: example-pair
 
@@ -59,26 +54,20 @@ jobs:
         working-directory: examples/fernlog
         run: pnpm install --ignore-workspace --frozen-lockfile
 
-      # The validator prints warnings on stderr and still exits 0, so the
-      # step keeps stderr and fails on any warning line.
       - name: Validate both corpora
-        run: |
-          set +e
-          node packages/ts/corpus-schema/bin/corpus-schema.js validate examples 2> "$RUNNER_TEMP/stderr.txt"
-          status=$?
-          set -e
-          cat "$RUNNER_TEMP/stderr.txt" >&2
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
-          if grep -q '^warning:' "$RUNNER_TEMP/stderr.txt"; then
-            echo "::error::the example corpora must validate with no warnings"
-            exit 1
-          fi
+        run: sh tools/validate-strict.sh examples
 
+      # validate skips a parent's copy that nothing links into, such as
+      # _inherited/claims/, but sync still writes it. intent-to-add makes a
+      # new file show in the diff.
       - name: The committed _inherited/ copy is current
         run: |
           node packages/ts/corpus-schema/bin/corpus-schema.js sync examples
-          git diff --exit-code -- examples
-          test -z "$(git status --porcelain -- examples)"
+          git add --intent-to-add -- examples
+          if ! git diff --exit-code -- examples; then
+            echo "::error::examples/fernlog/_inherited/ is stale; run corpus-schema sync examples and commit"
+            exit 1
+          fi
 
       - name: Check that the validator catches a stale copy and a wrong link
         run: sh examples/test.sh
