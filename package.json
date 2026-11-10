@@ -2,7 +2,7 @@
   "name": "osdlc-markdown",
   "private": true,
   "type": "module",
-  "description": "Workspace root for the libraries published to npm from this repository's packages/ts/ directory.",
+  "description": "Workspace root for the packages published to npm from this repository's packages/ts/ and profiles/ directories.",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=22"
