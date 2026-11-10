@@ -14,7 +14,7 @@
     "smoke": "pnpm -r --if-present run smoke",
     "lint": "pnpm -r --if-present run lint",
     "format:check": "pnpm -r --if-present run format:check",
-    "version-packages": "changeset version && conformance-suites write --reference ts"
+    "version-packages": "changeset version && pnpm install --lockfile-only && conformance-suites write --reference ts"
   },
   "devDependencies": {
     "@changesets/cli": "catalog:",

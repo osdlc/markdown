@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   packages:
-    uses: osdlc/osdlc/.github/workflows/ts-packages-ci.yml@ecf430c446bcd95f7f0e9176d2a67383cd67ea68 # TODO: pin to osdlc main after osdlc/osdlc#749 merges
+    uses: osdlc/osdlc/.github/workflows/ts-packages-ci.yml@aaa35db118c6dcffb3b3c742c67162ef2cce5ba0 # osdlc/osdlc main
     with:
       os: '["ubuntu-latest", "macos-latest"]'
       node: '["22", "24"]'
