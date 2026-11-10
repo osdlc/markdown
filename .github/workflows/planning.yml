@@ -1,19 +1,26 @@
-# Checks the plan's records in docs/planning/ with the corpus-schema validator. The corpus must
-# validate with no errors and no warnings.
+# Checks the plan's records in docs/planning/ and the explorer built from them.
 #
-# Every action is pinned to a commit SHA; the comment names its release. The validator is taken
-# from npm by the range ^0.2.0, so the records are checked against the latest 0.2.x release.
+# validate: the corpus must pass corpus-schema with no errors and no warnings. The validator comes
+# from npm by the range ^0.2.0, not from packages/ts/corpus-schema: the workspace cannot install
+# in CI until its lockfile lands, so the repo's own copy is not built here.
+#
+# explorer: installs tools/explorer, rebuilds data/*.json from the records and fails when the
+# committed JSON differs, then typechecks, tests and builds the explorer.
+#
+# Every action is pinned to a commit SHA; the comment names its release.
 name: planning
 
 on:
   pull_request:
     paths:
       - "docs/planning/**"
+      - "tools/explorer/**"
       - ".github/workflows/planning.yml"
   push:
     branches: [main]
     paths:
       - "docs/planning/**"
+      - "tools/explorer/**"
       - ".github/workflows/planning.yml"
 
 permissions:
@@ -46,3 +53,35 @@ jobs:
             echo "::error::docs/planning must validate with no warnings"
             exit 1
           fi
+
+  explorer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/explorer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      # corepack provides the pnpm that package.json's packageManager names.
+      # The explorer has its own lockfile and is not in the repo's workspace.
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --ignore-workspace --frozen-lockfile
+
+      - name: The committed data matches the records
+        run: |
+          pnpm build-data
+          git diff --exit-code -- data
+          test -z "$(git status --porcelain -- data)"
+
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
