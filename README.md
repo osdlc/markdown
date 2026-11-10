@@ -28,3 +28,5 @@ one at a time.
 - [The claims profile](profiles/claims/): record types for claims and their evidence, as a corpus
   that other corpora extend. It is packaged as `@osdlc/corpus-profile-claims`, and an example
   corpus shows it at work.
+- [Example corpora](examples/README.md): an org principles corpus, and a project corpus that
+  extends it and the claims profile, with a committed `_inherited/` copy that CI keeps current.
