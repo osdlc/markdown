@@ -209,7 +209,7 @@ TASKS = {
     28: ("Refine, waive", "local vs inherited", "todo"),
     29: ("Sync", "_inherited copy", "todo"),
     30: ("Org principles", "first real case", "todo"),
-    23: ("Claims profile", "after 9, 21, 31", "todo"),
+    23: ("Claims profile", "npm package", "doing"),
     33: ("Spec details", "YAML, format, codes", "todo"),
     34: ("Ids and move", "slug ids, move verb", "todo"),
     31: ("Nested x-ref", "any depth; after 3, 4", "todo"),
