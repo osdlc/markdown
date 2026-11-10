@@ -28,5 +28,7 @@ one at a time.
   architecture.py after you change it. After you change build.py, run both.
 - [The claims profile](profiles/claims/): the first draft of the claims profile, record types for
   claims and their evidence, with an example corpus to copy.
+- [The planning profile](profiles/planning/README.md): record types for a plan, namely tasks,
+  milestones and decisions. The plan's records build on them.
 - [The ecosystem explorer](tools/explorer/README.md): an interactive view of the components and the
   work, built from the records.

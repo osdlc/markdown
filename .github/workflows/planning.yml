@@ -1,11 +1,15 @@
-# Checks the plan's records in docs/planning/ and the explorer built from them.
+# Checks the plan's records in docs/planning/, the planning profile they extend in
+# profiles/planning/, and the explorer built from them.
 #
-# validate: the corpus must pass corpus-schema with no errors and no warnings. The validator comes
-# from npm by the range ^0.2.0, not from packages/ts/corpus-schema: the workspace cannot install
-# in CI until its lockfile lands, so the repo's own copy is not built here.
+# Both jobs build the validator from packages/ts/corpus-schema with tools/build-corpus-schema.sh,
+# not take it from npm: the plan uses `extends` and `x-extends`, which 0.2.0 does not know.
 #
-# explorer: installs tools/explorer, rebuilds data/*.json from the records and fails when the
-# committed JSON differs, then typechecks, tests and builds the explorer.
+# validate: the corpus must pass corpus-schema with no errors and no warnings. Validating it also
+# validates the profile, as its parent.
+#
+# explorer: installs tools/explorer, whose @osdlc/corpus-schema is a link: to the built package,
+# rebuilds data/*.json from the records and fails when the committed JSON differs, then
+# typechecks, tests and builds the explorer.
 #
 # Every action is pinned to a commit SHA; the comment names its release.
 name: planning
@@ -14,13 +18,21 @@ on:
   pull_request:
     paths:
       - "docs/planning/**"
+      - "profiles/planning/**"
       - "tools/explorer/**"
+      - "packages/ts/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
       - ".github/workflows/planning.yml"
   push:
     branches: [main]
     paths:
       - "docs/planning/**"
+      - "profiles/planning/**"
       - "tools/explorer/**"
+      - "packages/ts/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
       - ".github/workflows/planning.yml"
 
 permissions:
@@ -39,12 +51,18 @@ jobs:
         with:
           node-version: "24"
 
+      # corepack provides the pnpm that package.json's packageManager names.
+      - name: Build corpus-schema
+        run: |
+          corepack enable
+          sh tools/build-corpus-schema.sh
+
       # The validator prints warnings on stderr and still exits 0, so the
       # step keeps stderr and fails on any warning line.
       - name: Validate the plan's records
         run: |
           set +e
-          npx --yes @osdlc/corpus-schema@^0.2.0 validate docs/planning 2> "$RUNNER_TEMP/stderr.txt"
+          node packages/ts/corpus-schema/bin/corpus-schema.js validate docs/planning 2> "$RUNNER_TEMP/stderr.txt"
           status=$?
           set -e
           cat "$RUNNER_TEMP/stderr.txt" >&2
@@ -69,12 +87,14 @@ jobs:
         with:
           node-version: "24"
 
-      # corepack provides the pnpm that package.json's packageManager names.
-      # The explorer has its own lockfile and is not in the repo's workspace.
-      - name: Install
+      - name: Build corpus-schema
         run: |
           corepack enable
-          pnpm install --ignore-workspace --frozen-lockfile
+          sh ../build-corpus-schema.sh
+
+      # The explorer has its own lockfile and is not in the repo's workspace.
+      - name: Install
+        run: pnpm install --ignore-workspace --frozen-lockfile
 
       - name: The committed data matches the records
         run: |
