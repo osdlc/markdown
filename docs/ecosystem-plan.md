@@ -56,23 +56,22 @@ before the rest of the plan. It is tasks 1 to 5, 22 and 26, in the first columns
   It has the VA-Spec types (decision D8): `documents`, `study-results`, `methods` and `statements`.
   Each type has a schema. A few example records show the whole chain. A statement is a claim
   together with the evidence lines that support or dispute it. A README at
-  `profiles/claims/README.md` maps each type to VA-Spec and says what we leave out. CI checks the
-  example with `@osdlc/corpus-schema` from npm. People copy it with
-  `npx degit osdlc/markdown/profiles/claims/example <dir>`. We don't need an npm package for that
-  yet. In progress, in a separate pull request.
+  `profiles/claims/README.md` maps each type to VA-Spec and says what we leave out. The types now
+  live in `profiles/claims/corpus/`, and the example extends them by path. CI checks the example
+  with this repo's validator. In progress, in a separate pull request.
 - **26. harness-reference adopts the claims types.** harness-reference copies the type folders from
-  the example and moves its records over. `references` becomes `documents`, `evidence` becomes
+  `profiles/claims/corpus/` and moves its records over. `references` becomes `documents`, `evidence` becomes
   `study-results`, and the `harness` field goes away. After 4 and 8.
 - **22. Capture writes study results.** harness-reference has a capture command. It will write
   VA-Spec study results, each with a contribution (who, when and in what role). After 26.
-- **5. The project writes records.** It copies the types from the example and starts keeping its
+- **5. The project writes records.** It copies the claims types and starts keeping its
   evidence as records, checked by the validator. After 3, 4 and 22.
 
 ### How the types reach other corpora
 
 The claims types will be shared in three steps, as the tools improve.
 
-1. Now: a corpus copies the type folders from the example.
+1. Now: a corpus copies the type folders from `profiles/claims/corpus/`.
 2. Task 9: the validator learns `extends:` and `x-extends`.
 3. Task 23: the types ship as an npm package, `@osdlc/corpus-profile-claims`. A corpus names it in
    its root file under `extends:` and marks each type with `x-extends`, so it holds no copies.
@@ -309,21 +308,21 @@ The numbers match the task graph at the top. "After" says what must come first.
   - Contribution (who, when, what role) is a field on records, not a type of its own.
   - `profiles/claims/README.md` maps each type to VA-Spec and says what we leave out and why. Check
     it against VA-Spec's published schemas.
-  - CI validates the example with `@osdlc/corpus-schema` from npm.
-  - People copy it with `npx degit osdlc/markdown/profiles/claims/example <dir>`. No npm package is
-    needed yet.
+  - CI validates the example with this repo's validator.
+  - The types now live in `profiles/claims/corpus/`, and the example extends them by the path
+    `../corpus`.
 
   - Until task 31, a statement's evidence lines are plain relative links with a pattern check, not
     `x-ref`.
 
   In progress, in a separate pull request.
-- **26. harness-reference adopts the claims types.** Copy the type folders from the example and move
+- **26. harness-reference adopts the claims types.** Copy the type folders from the profile and move
   harness-reference's records over: `references` becomes `documents` (they live today in
   [osdlc/skillwright#74](https://github.com/osdlc/skillwright/pull/74)), `evidence` becomes
   `study-results`, and the `harness` field is dropped. After 4 and 8.
 - **22. Capture writes study results.** harness-reference's capture command writes VA-Spec study
   results, with a contribution. After 26.
-- **5. The evidence project writes records.** It copies the types from the example. After 3, 4 and
+- **5. The evidence project writes records.** It copies the claims types. After 3, 4 and
   22.
 - **6. x-warn**: a schema can mark a rule as a warning instead of an error. After 3.
 - **7. The Obsidian dialect**: wikilinks without a warning, able to reach beyond the corpus, and
