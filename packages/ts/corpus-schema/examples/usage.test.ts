@@ -58,6 +58,38 @@ describe('reading a corpus', () => {
     expect(check(join(dir, 'Data'))).toEqual(['reading-list: books/Emma.md: author: required'])
   })
 
+  test('the README example runs from a relative folder, with a package parent', async () => {
+    put('Data/node_modules/acme-books/package.json', '{"name":"acme-books","corpus":"corpus"}')
+    put(
+      'Data/node_modules/acme-books/corpus/corpus-schema.md',
+      '---\ncorpus-schema: 0\nlevel: 2\n---\n',
+    )
+    put(
+      'Data/node_modules/acme-books/corpus/books/books.schema.yaml',
+      'type: object\nrequired: [author]\n',
+    )
+    put(
+      'Data/shelf/corpus-schema.md',
+      '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  lib: acme-books\n---\n',
+    )
+    put('Data/shelf/novels/novels.schema.yaml', 'x-extends: lib/books\n')
+    put('Data/shelf/novels/Emma.md', '---\ntitle: Emma\n---\n')
+
+    const readme = readFileSync(join(import.meta.dirname, '../README.md'), 'utf8')
+    const block = [...readme.matchAll(/```ts\n([\s\S]*?)```/g)].map((m) => m[1] as string)[0]
+    put('readme.ts', block as string)
+    const { check } = (await import(join(dir, 'readme.ts'))) as {
+      check: (folder: string) => string[]
+    }
+    const cwd = process.cwd()
+    process.chdir(dir)
+    try {
+      expect(check('Data')).toEqual(['shelf: novels/Emma.md: author: required'])
+    } finally {
+      process.chdir(cwd)
+    }
+  })
+
   test('findCorpora finds nested corpora; a corpus with no types has an empty report', () => {
     put('c/corpus-schema.md', '---\ncorpus-schema: 0\n---\n')
     put('c/inner/corpus-schema.yaml', 'corpus-schema: 0\nid: inner-db\n')

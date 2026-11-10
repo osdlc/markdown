@@ -15,6 +15,12 @@ export const ROOT_FILES = ['corpus-schema.md', 'corpus-schema.yaml', 'corpus-sch
 
 const PACKAGE_NAME = /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
 
+/** `s` on one line, so each problem stays one line. */
+export const oneLine = (s: string): string => s.replace(/\s*\r?\n\s*/g, ' ').trim()
+/** Why a file or folder could not be read or written: its error code, such as EACCES, or the message. */
+export const whyFailed = (e: unknown): string =>
+  (e as NodeJS.ErrnoException).code ?? oneLine((e as Error).message)
+
 export const skipped = (name: string): boolean => name.startsWith('.') || name === 'node_modules'
 export const entries = (abs: string): Dirent[] => readdirSync(abs, { withFileTypes: true })
 // Exact names: existsSync ignores case on macOS and Windows.
@@ -31,7 +37,8 @@ const isDir = (abs: string): boolean => {
 
 /** The folder a package named `name` is installed in, found as Node finds it from `root`. */
 function findPackage(root: string, name: string): string | undefined {
-  const paths = createRequire(join(root, 'package.json')).resolve.paths(name) ?? []
+  // createRequire takes only an absolute path.
+  const paths = createRequire(join(resolve(root), 'package.json')).resolve.paths(name) ?? []
   return paths.map((p) => join(p, name)).find((dir) => isDir(dir))
 }
 
@@ -56,7 +63,9 @@ export function resolveSource(root: string, source: string): { dir: string } | {
       corpus = (JSON.parse(readFileSync(join(pkg, 'package.json'), 'utf8')) as { corpus?: unknown })
         .corpus
     } catch (e) {
-      return { problem: `package ${source}: cannot read its package.json (${(e as Error).name})` }
+      // A package with no package.json has no corpus field.
+      if ((e as NodeJS.ErrnoException).code !== 'ENOENT')
+        return { problem: `package ${source}: cannot read its package.json (${whyFailed(e)})` }
     }
     if (corpus !== undefined && (typeof corpus !== 'string' || corpus === ''))
       return { problem: `package ${source}: its "corpus" field must be a folder path` }

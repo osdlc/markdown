@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, test } from 'vitest'
 
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -380,5 +388,96 @@ describe('syncCorpus', () => {
     const r = syncCorpus(join(dir, 'c'))
     assert.deepEqual(r.errors, ['corpus-schema.yaml: extends.gone: ../gone: no such folder'])
     assert.equal(existsSync(join(dir, 'c/_inherited')), false)
+  })
+})
+
+describe('review fixes', () => {
+  test('a relative corpus root resolves a package parent, for validate and sync', () => {
+    put('c/node_modules/acme-org/package.json', '{"name":"acme-org"}')
+    org('c/node_modules/acme-org')
+    root('c', { org: 'acme-org' })
+    put('c/notes/notes.schema.yaml', 'type: object\n')
+    put('c/notes/N.md', 'See [it](../_inherited/org/principles/Be%20Kind.md).\n')
+    const cwd = process.cwd()
+    process.chdir(dir)
+    try {
+      assert.deepEqual(syncCorpus('c').errors, [])
+      assert.deepEqual(validateCorpus('c').errors, [])
+      process.chdir(join(dir, 'c'))
+      assert.deepEqual(validateCorpus('.').errors, [])
+    } finally {
+      process.chdir(cwd)
+    }
+  })
+
+  test('a package with no package.json is its own corpus root; an unreadable one is an error', () => {
+    org('c/node_modules/bare')
+    mkdirSync(join(dir, 'c/node_modules/odd/package.json'), { recursive: true })
+    root('c', { bare: 'bare', odd: 'odd' })
+    assert.deepEqual(errors(), [
+      'corpus-schema.yaml: extends.odd: package odd: cannot read its package.json (EISDIR)',
+    ])
+  })
+
+  test('a link two levels into _inherited/ needs the middle parent to hold its copy', () => {
+    root('g')
+    put('g/things/things.schema.yaml', 'type: object\n')
+    put('g/things/X.md', '---\n---\n')
+    root('p', { g: '../g' })
+    root('c', { p: '../p' })
+    put('c/notes/notes.schema.yaml', 'type: object\n')
+    put('c/notes/N.md', 'See [X](../_inherited/p/_inherited/g/things/X.md).\n')
+    assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [])
+    assert.deepEqual(errors(), [
+      'notes/N.md: body: ../_inherited/p/_inherited/g/things/X.md: p holds no copy of it; run corpus-schema sync in p',
+    ])
+    assert.deepEqual(syncCorpus(join(dir, 'p')).errors, [])
+    assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [])
+    assert.deepEqual(errors(), [])
+  })
+
+  test('any root-file error stops sync', () => {
+    org()
+    root('c', { org: '../org' }, 'formats: [txt]\nid: 5\n')
+    const r = syncCorpus(join(dir, 'c'))
+    assert.deepEqual(r.errors.sort(), [
+      'corpus-schema.yaml: formats: must list one or more of md, yaml, json, once each',
+      'corpus-schema.yaml: id: must be a non-empty string',
+    ])
+    assert.equal(existsSync(join(dir, 'c/_inherited')), false)
+  })
+
+  test('sync does not write or remove through a symbolic link', () => {
+    org()
+    root('c', { org: '../org' })
+    put('outside/empty/deeper/.keep', '')
+    rmSync(join(dir, 'outside/empty/deeper/.keep'))
+    mkdirSync(join(dir, 'c/_inherited'), { recursive: true })
+    symlinkSync(join(dir, 'outside'), join(dir, 'c/_inherited/org'))
+    symlinkSync(join(dir, 'outside'), join(dir, 'c/_inherited/old'))
+    const r = syncCorpus(join(dir, 'c'))
+    assert.deepEqual(r.errors, [
+      '_inherited/org: (symlink): sync does not write through a symbolic link; remove it',
+    ])
+    assert.deepEqual(r.written, [])
+    assert.equal(existsSync(join(dir, 'outside/corpus-schema.yaml')), false)
+    assert.equal(existsSync(join(dir, 'outside/empty/deeper')), true)
+
+    rmSync(join(dir, 'c/_inherited'), { recursive: true })
+    symlinkSync(join(dir, 'outside'), join(dir, 'c/_inherited'))
+    assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [
+      '_inherited: (symlink): sync does not write through a symbolic link; remove it',
+    ])
+    assert.equal(existsSync(join(dir, 'outside/empty/deeper')), true)
+  })
+
+  test('an x-ref into a parent that did not load adds no second error', () => {
+    root('c', { gone: '../gone' })
+    put(
+      'c/notes/notes.schema.yaml',
+      'type: object\nproperties:\n  see: { type: string, x-ref: gone/things }\n',
+    )
+    put('c/notes/N.md', '---\nsee: "[X](../_inherited/gone/things/X.md)"\n---\n')
+    assert.deepEqual(errors(), ['corpus-schema.yaml: extends.gone: ../gone: no such folder'])
   })
 })

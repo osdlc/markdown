@@ -131,6 +131,11 @@ corpus syncs after the corpora it extends, so a chain of corpora in one reposito
 run. It prints `wrote:` and `removed:` for each file it changes, and `synced: <name>: <counts>`.
 Run it again and it changes nothing.
 
+`sync` owns `_inherited/` outright. It removes every file there that no parent holds, so in a
+corpus with no `extends` it empties the folder. It does not write through a symbolic link there;
+it reports one instead. With any error in the root file or its `extends`, it writes nothing in that
+corpus.
+
 | Exit code | Meaning                                                                                  |
 | --------- | ---------------------------------------------------------------------------------------- |
 | `0`       | Every corpus is valid, or synced. Warnings may have been printed.                        |

@@ -1,5 +1,5 @@
 ---
-'@osdlc/corpus-schema': minor
+"@osdlc/corpus-schema": minor
 ---
 
 A corpus can extend other corpora. The root file's new `extends` key maps a prefix to a parent: an
@@ -16,3 +16,6 @@ into `_inherited/<prefix>/` and remove stale files. Links into `_inherited/` res
 installed parent. `validate` checks that the copy matches the installed parent and says to run
 `sync` when it does not. `validate` never writes the copy. `_inherited/` holds no local types or
 records, and `findCorpora` does not search it.
+
+A report's `name` is now the base name of the resolved folder, so `validateCorpus('.')` reports the
+folder's name instead of `.`.

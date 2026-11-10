@@ -26,11 +26,13 @@ import {
   hasRootFile,
   INHERITED,
   listFiles,
+  oneLine,
   PREFIX,
   resolveSource,
   ROOT_FILES,
   sameBytes,
   skipped,
+  whyFailed,
 } from './inherit.ts'
 
 // ajv-formats is CommonJS: under Node's ESM loader the plugin is the `default` property.
@@ -135,12 +137,6 @@ export interface CorpusReport {
   /** The corpus-relative paths of the files `fix` rewrote. Empty without `fix`. */
   fixed: string[]
 }
-
-/** `s` on one line, so each problem stays one line. */
-const oneLine = (s: string): string => s.replace(/\s*\r?\n\s*/g, ' ').trim()
-/** Why a file or folder could not be read or written: its error code, such as EACCES, or the message. */
-const whyFailed = (e: unknown): string =>
-  (e as NodeJS.ErrnoException).code ?? oneLine((e as Error).message)
 
 /**
  * Every corpus root at or below `dir`, nested ones included: each folder that holds a root file.
@@ -337,11 +333,11 @@ export function load(root: string, loader: Loader = { done: new Map(), stack: []
     errors: problems,
     warnings: [],
   }
+  const walked = c.errors.length
   const top = readRoot(c)
-  if (top === undefined) {
-    c.fatal.push(...c.errors)
-    return c
-  }
+  // Every root-file error stops sync, as do the extends errors readParents adds.
+  c.fatal.push(...c.errors.slice(walked))
+  if (top === undefined) return c
   loader.stack.push(c)
   readParents(c, top.file, top.data, loader)
   loader.stack.pop()
@@ -715,10 +711,15 @@ function readRecords(
 
 /**
  * A file in the corpus, a problem, or undefined for a link not checked (a URL, or within the file).
- * A file under `_inherited/<prefix>/` sits in the parent `owner`, at `at` in it.
+ * A file under `_inherited/<prefix>/` sits in the parent `owner`, at `at` in it. `unloaded` names
+ * a declared parent that did not load: its `extends` entry is already an error, so the link is not
+ * checked.
  */
 type Resolution =
-  { file: string; owner?: Corpus; at?: string } | { problem: string; warn?: true } | undefined
+  | { file: string; owner?: Corpus; at?: string }
+  | { problem: string; warn?: true }
+  | { unloaded: string }
+  | undefined
 
 const BETWEEN_CORPORA = 'leaves the corpus; v0 does not define links between corpora'
 
@@ -775,13 +776,21 @@ function intoParent(c: Corpus, path: string, file: string, dest: string): Resolu
   const parent = c.parents.get(prefix)
   if (parent === undefined)
     return c.declared.has(prefix)
-      ? undefined
+      ? { unloaded: prefix }
       : {
           problem: `${dest}: ${INHERITED}/${prefix} is not a parent; extends declares no ${prefix}`,
         }
   const inner = rest.join('/')
-  if (inner === INHERITED || inner.startsWith(`${INHERITED}/`))
+  if (inner === INHERITED || inner.startsWith(`${INHERITED}/`)) {
+    // The link must also be live in the parent's own copy, which this corpus's copy repeats.
+    const below = inner.slice(INHERITED.length + 1)
+    const copied = (f: string): boolean => f === below || f.startsWith(`${below}/`)
+    if (below !== '' && !parent.inheritedFiles.some(copied))
+      return {
+        problem: `${dest}: ${prefix} holds no copy of it; run corpus-schema sync in ${prefix}`,
+      }
     return intoParent(parent, inner, file, dest)
+  }
   const key = inner.normalize('NFC')
   const at = inner === '' ? '.' : parent.filesByNfc.get(key)
   if (at !== undefined) return { file, owner: parent, at }
@@ -839,6 +848,7 @@ function checkLinks(c: Corpus): void {
             continue
           }
           const r = resolve(c, file, link)
+          if (r !== undefined && 'unloaded' in r) continue
           // A URL or a link to a heading in this file.
           if (r === undefined)
             c.errors.push(`${file}: ${ref.field}: must link to a ${ref.type} record file`)
@@ -870,7 +880,9 @@ function checkCopy(c: Corpus): void {
   for (const f of c.inheritedFiles) {
     const slash = f.indexOf('/')
     const prefix = slash < 0 ? f : f.slice(0, slash)
-    present.set(prefix, [...(present.get(prefix) ?? []), slash < 0 ? '' : f.slice(slash + 1)])
+    const list = present.get(prefix) ?? []
+    list.push(slash < 0 ? '' : f.slice(slash + 1))
+    present.set(prefix, list)
   }
   for (const prefix of [...new Set([...present.keys(), ...c.linked])].sort()) {
     const here = `${INHERITED}/${prefix}`

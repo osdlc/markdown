@@ -288,7 +288,7 @@ extends:
 - A package is found the way Node.js finds one from the corpus folder: in `node_modules/<name>/`
   in the corpus folder, then in each folder above it. The package's corpus root is the package
   folder, or the folder that the `"corpus"` field of its `package.json` names, relative to the
-  package folder.
+  package folder. A package folder with no `package.json` has no `"corpus"` field.
 - The spec does not depend on npm. It needs only that each source resolves to a folder. A tool
   MUST resolve both forms above, and MAY offer others.
 - The folder a source names MUST hold a root file. A source that does not resolve, or names a
@@ -359,6 +359,8 @@ v0 defines two verbs.
   `_inherited/`, and a second run changes nothing. A corpus syncs after the corpora it extends that
   sit below the same folder. When a corpus's root file or `extends` has an error, `sync` writes
   nothing in that corpus and exits non-zero.
+- `sync` owns `_inherited/`: in a corpus with no `extends` it empties it. It does not follow a
+  symbolic link in `_inherited/`, and reports one as an error.
 
 ### Writing records
 
