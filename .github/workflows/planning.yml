@@ -1,0 +1,48 @@
+# Checks the plan's records in docs/planning/ with the corpus-schema validator. The corpus must
+# validate with no errors and no warnings.
+#
+# Every action is pinned to a commit SHA; the comment names its release. The validator is taken
+# from npm by the range ^0.2.0, so the records are checked against the latest 0.2.x release.
+name: planning
+
+on:
+  pull_request:
+    paths:
+      - "docs/planning/**"
+      - ".github/workflows/planning.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/planning/**"
+      - ".github/workflows/planning.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      # The validator prints warnings on stderr and still exits 0, so the
+      # step keeps stderr and fails on any warning line.
+      - name: Validate the plan's records
+        run: |
+          set +e
+          npx --yes @osdlc/corpus-schema@^0.2.0 validate docs/planning 2> "$RUNNER_TEMP/stderr.txt"
+          status=$?
+          set -e
+          cat "$RUNNER_TEMP/stderr.txt" >&2
+          if [ "$status" -ne 0 ]; then exit "$status"; fi
+          if grep -q '^warning:' "$RUNNER_TEMP/stderr.txt"; then
+            echo "::error::docs/planning must validate with no warnings"
+            exit 1
+          fi
