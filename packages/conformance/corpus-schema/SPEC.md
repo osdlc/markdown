@@ -66,7 +66,9 @@ to the rest of osdlc.
     resolve. A validator SHOULD warn on a symbolic link in a type folder, since a record there is
     not checked;
   - a folder holding its own root file. That folder is a separate corpus, and the outer corpus
-    stops at it.
+    stops at it;
+  - the folder `_inherited` at the corpus root, which holds copies of the corpus's parents (see
+    Extends).
 - A corpus MUST NOT sit inside a type folder.
 
 The root file has a fixed name so that a tool finds every corpus in a vault by name alone, without
@@ -84,6 +86,7 @@ The data MUST be a mapping.
 | `id`            | no       | A stable handle for the corpus, such as `reading-list` or a UUID. |
 | `formats`       | no       | The record formats the corpus allows. Default `[md]`.             |
 | `level`         | no       | The corpus's level: `1` or `2`. See Levels.                       |
+| `extends`       | no       | The corpus's parents, by prefix. See Extends.                     |
 | `dialect`       | no       | Reserved. Not checked yet.                                        |
 | `profiles`      | no       | Reserved. Not checked yet.                                        |
 
@@ -94,9 +97,9 @@ The data MUST be a mapping.
 - A `level` other than `1` or `2` is an error.
 - `dialect` and `profiles` are kept for later versions. A `dialect` will name the Markdown a
   corpus's notes are written in. There will be a baseline that every tool supports, and named
-  dialects on top of it, such as `obsidian`. A profile will be a shared set of types that many
-  corpora can follow. v0 checks neither. A validator SHOULD say that it does not check them, and
-  MUST NOT treat them as unknown keys.
+  dialects on top of it, such as `obsidian`. `profiles` stays reserved and unused: `extends`
+  replaces it, and a profile is a parent corpus that holds types. v0 checks neither. A validator
+  SHOULD say that it does not check them, and MUST NOT treat them as unknown keys.
 - A validator SHOULD warn on any other key. Later versions add keys.
 
 ### Formats
@@ -216,9 +219,12 @@ them stops working anywhere else.
   same case. A validator MUST NOT fall back to matching by name, as Obsidian does: a broken path is
   always an error. A fragment (`#heading`) is not checked.
 - A path that starts with `/` is an error. Links in a corpus are relative.
+- A link into `_inherited/<prefix>/` is a link to a parent's file (see Extends). It stays in the
+  corpus.
 - A link that leaves the corpus, above its root, into a nested corpus or into a path the corpus
   excludes (a `.` component or `node_modules`), is a link between corpora. v0 does not define
   those. A validator SHOULD warn and MUST NOT report an error, except for `x-ref` (see References).
+- A wikilink does not reach `_inherited/`. Use a relative Markdown link.
 
 Wikilinks are accepted but not canonical: `[[target]]`, `[[target|text]]`, `[[target#heading]]`
 and `![[target]]`.
@@ -236,25 +242,108 @@ and `![[target]]`.
 ### References
 
 `x-ref` is a schema keyword that makes a field a typed link, like a foreign key. Its value names a
-type in the same corpus:
+type: a type in the same corpus, or `<prefix>/<type>` for a parent's type (see Extends):
 
 ```yaml
 successor: { type: string, x-ref: harnesses }
+cites: { type: string, x-ref: org/principles }
 ```
 
 - On a top-level property, the property's value MUST be a link, and it MUST resolve to a record of
-  the named type.
+  the named type, or of a type that extends it through `x-extends`, at any depth. A record of a
+  local type that extends `org/principles` is an `org/principles` record. So is a record of a
+  local type that extends a local type named in `x-ref`.
 - On the `items` of a top-level array property, each item MUST be such a link.
-- The named type MUST exist in the corpus.
-- An `x-ref` link that leaves the corpus is an error.
+- The named type MUST exist, in the corpus or in the parent its prefix names.
+- An `x-ref` link that leaves the corpus is an error. A link to a parent's record goes through
+  `_inherited/<prefix>/`.
 - v0 defines `x-ref` only in those two places. A validator MUST report it anywhere else.
 
-`x-ref` and `x-id-pattern` are corpus-schema's vocabulary. JSON Schema validators reject unknown
-keywords in strict mode, so a validator MUST register both.
+`x-ref`, `x-id-pattern` and `x-extends` are corpus-schema's vocabulary. JSON Schema validators
+reject unknown keywords in strict mode, so a validator MUST register all three.
+
+### Extends
+
+A corpus can build on other corpora, its parents. A parent may be a profile, a corpus of types
+that many corpora share, or a corpus with records, such as an organisation's principles.
+
+`extends` in the root file maps a prefix to a source:
+
+```yaml
+corpus-schema: 0
+level: 2
+extends:
+  claims: "@osdlc/corpus-profile-claims"   # a package name
+  org: "../org-principles"                 # a path from the corpus root
+```
+
+#### Resolving parents
+
+- `extends` needs `level: 2`. In a corpus that does not state level 2 it is an error, and the
+  corpus has no parents.
+- `extends` MUST be a mapping. Each key is a prefix: lowercase letters, digits and `-`. Each value
+  is a source, a string.
+- A source that starts with `./` or `../` is a path from the corpus root. Any other source is a
+  package name.
+- A package is found the way Node.js finds one from the corpus folder: in `node_modules/<name>/`
+  in the corpus folder, then in each folder above it. The package's corpus root is the package
+  folder, or the folder that the `"corpus"` field of its `package.json` names, relative to the
+  package folder.
+- The spec does not depend on npm. It needs only that each source resolves to a folder. A tool
+  MUST resolve both forms above, and MAY offer others.
+- The folder a source names MUST hold a root file. A source that does not resolve, or names a
+  folder with no root file, is an error.
+- Parents load transitively: each parent's own `extends` resolves from the parent's folder. A
+  cycle, where a corpus reaches itself through `extends`, is an error.
+- A folder reached twice, through two prefixes or two paths, is one parent, with one set of types.
+- A parent is validated as a corpus of its own. A parent with errors is an error of the corpus that
+  extends it, at its `extends.<prefix>` field.
+
+#### Inherited types
+
+- A parent's types are visible as `<prefix>/<type>`. A corpus sees only its own parents' types. To
+  name a grandparent's type, extend the grandparent too.
+- An inherited type is read-only. A corpus uses one through a local type folder.
+- `x-extends` at the root of a schema names the one type it builds on: a local type name, or
+  `<prefix>/<type>`. A record of the type MUST validate against its own schema and the schema of
+  every type up the chain, as if they were joined by `allOf`. This includes each type's
+  `x-id-pattern` and `x-ref` fields.
+- So a child can add rules or tighten them, never loosen them. A parent with
+  `additionalProperties: false` admits no new fields.
+- A schema that holds only `x-extends`, such as `x-extends: claims/statements`, uses the parent's
+  type as it is.
+- `x-extends` anywhere but the schema's root is an error. So are a name that matches no type, a
+  prefix that `extends` does not declare, and local types whose `x-extends` chain loops.
+- A prefix in a parent's schema names that parent's own parent. Each corpus's prefixes are its own.
+
+#### Inherited records
+
+- A parent's records are inherited records. They are read-only.
+- A local record whose type extends an inherited type MUST NOT share an id with a record of that
+  type, or of any type further up the chain that sits in another corpus. Ids compare as in Ids.
+
+#### The copy
+
+- `_inherited/<prefix>/` at the corpus root holds a read-only copy of the parent. The `sync` verb
+  writes it, and the corpus commits it, so relative links from local records to a parent's records
+  work in Obsidian and on GitHub.
+- The copy holds every file of the parent corpus, byte for byte, and the parent's own
+  `_inherited/`, so a chain carries through.
+- `_inherited/` is not part of the corpus's own files. A validator finds no type, record or nested
+  corpus in it, and does not check its links.
+- A link from a checked file to `_inherited/<prefix>/<path>` is a link to `<path>` in that parent.
+  It resolves in the installed parent, not in the copy. `_inherited/<prefix>/_inherited/<q>/<path>`
+  is a link into the parent's own parent `q`.
+- When `_inherited/<prefix>/` exists, or a checked file links into it, it MUST match the installed
+  parent: the same file paths, with the same bytes. A validator reports each file that differs, is
+  missing or is extra, with the field `(copy)`, and says to run `sync`. It MAY cap how many files
+  it lists.
+- A folder or file directly in `_inherited/` that names no parent is an error.
+- A corpus that uses a parent's types and never links to its records needs no copy.
 
 ### Verbs
 
-v0 defines one verb.
+v0 defines two verbs.
 
 - `validate <folder>` checks every corpus at or below the folder against this spec, and exits
   non-zero when it finds any error. It reports each problem on one line:
@@ -264,6 +353,12 @@ v0 defines one verb.
   read is an error of the corpus that holds it.
 - `validate --fix <folder>` first rewrites every wikilink it can resolve as a relative Markdown
   link, in the files a validator checks. It changes nothing else in those files.
+- `validate` never writes `_inherited/`.
+- `sync <folder>` writes `_inherited/` for every corpus at or below the folder. For each parent it
+  writes `_inherited/<prefix>/`, and it removes every other file there. It changes nothing outside
+  `_inherited/`, and a second run changes nothing. A corpus syncs after the corpora it extends that
+  sit below the same folder. When a corpus's root file or `extends` has an error, `sync` writes
+  nothing in that corpus and exits non-zero.
 
 ### Writing records
 
@@ -273,10 +368,12 @@ comments and the body. In v0 a write replaces the whole file, and the last write
 ## Enforcement
 
 [`@osdlc/corpus-schema`](../../ts/corpus-schema/README.md) is the reference validator. Its
-`validate` command checks a folder against every rule above that a validator checks:
+`validate` command checks a folder against every rule above that a validator checks, and its
+`sync` command writes the copies of a corpus's parents:
 
 ```sh
 corpus-schema validate <folder>
+corpus-schema sync <folder>
 ```
 
 The package's tests hold it to this spec. [`suite.json`](suite.json) and the corpora under
@@ -313,6 +410,22 @@ methods/
     ├── query.sql
     └── results/
         └── counts.csv
+```
+
+A corpus that extends another keeps a copy of it, written by `sync`:
+
+```text
+team-rules/
+├── corpus-schema.md                level: 2, extends: { org: ../org-principles }
+├── _inherited/
+│   └── org/                        a copy of ../org-principles
+│       ├── corpus-schema.md
+│       └── principles/
+│           ├── principles.schema.yaml
+│           └── Be Kind.md
+└── rules/
+    ├── rules.schema.yaml           x-extends: org/principles
+    └── Review Kindly.md            links to ../_inherited/org/principles/Be%20Kind.md
 ```
 
 `corpus-schema.md`:
@@ -387,15 +500,16 @@ records are allowed; and a bare path is not a link.
 
 v0 does not define these:
 
-- **Links between corpora**, and the `depends`, mount and distribution design behind them. Options
-  seen: corpora side by side with relative links and `depends`; a wikilink that names a declared
-  dependency (`[[harness-reference/harnesses/X]]`); none.
+- **Links between corpora** other than to a parent through `_inherited/`.
+- A local record that refines or waives an inherited record on purpose, such as a `refines` key.
+- A type that extends more than one type, and renaming an inherited type or prefix.
 - Schema versions and migrations.
 - Concurrent edits beyond last-writer-wins.
 - Obsidian's vault-wide property types, which clash when two corpora give one key different types.
 - `x-ref` inside nested objects.
+- Wikilinks into `_inherited/`.
 - Reserved names, such as Windows device names.
 - Stable error codes.
 - `move` and `rename` verbs that rewrite every link to a record.
 - Build targets, such as JSON, Astro, Nuxt and Obsidian Bases views.
-- Dialects and profiles. The root keys `dialect` and `profiles` are reserved for them.
+- Dialects. The root key `dialect` is reserved for them. `profiles` stays reserved, unused.

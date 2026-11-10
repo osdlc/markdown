@@ -47,6 +47,8 @@ test('the entry point exports these names', () => {
       'fold',
       'idProblem',
       'markdownLink',
+      'SyncReport',
+      'syncCorpus',
       'validateCorpus',
     ].sort(),
   )

@@ -1,1 +1,3 @@
 node_modules/
+# Conformance cases hold fixture packages in node_modules/.
+!packages/conformance/corpus-schema/corpora/**/node_modules/

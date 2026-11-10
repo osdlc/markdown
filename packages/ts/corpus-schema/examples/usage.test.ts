@@ -17,6 +17,8 @@ import {
   fold,
   idProblem,
   markdownLink,
+  type SyncReport,
+  syncCorpus,
   validateCorpus,
 } from '@osdlc/corpus-schema'
 
@@ -85,6 +87,27 @@ describe('reading a corpus', () => {
     const { errors } = validateCorpus(join(dir, 'c'))
     expect(errors).toHaveLength(1)
     expect(errors[0]).toMatch(/^corpus-schema\.md: /)
+  })
+})
+
+describe('extending a corpus', () => {
+  test('a corpus builds on a parent type, links to its records and syncs its copy', () => {
+    put('org/corpus-schema.md', '---\ncorpus-schema: 0\nlevel: 2\n---\n')
+    put('org/principles/principles.schema.yaml', 'type: object\nrequired: [statement]\n')
+    put('org/principles/Be Kind.md', '---\nstatement: Treat people with care.\n---\n')
+    put('team/corpus-schema.md', '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  org: ../org\n---\n')
+    put('team/rules/rules.schema.yaml', 'x-extends: org/principles\n')
+    put(
+      'team/rules/Review Kindly.md',
+      '---\nstatement: Review with care.\n---\nFollows [Be Kind](../_inherited/org/principles/Be%20Kind.md).\n',
+    )
+
+    expect(validateCorpus(join(dir, 'team')).errors).toEqual([
+      '_inherited/org: (copy): missing, and a file links into it; run corpus-schema sync',
+    ])
+    const sync: SyncReport = syncCorpus(join(dir, 'team'))
+    expect(sync.written).toContain('_inherited/org/principles/Be Kind.md')
+    expect(validateCorpus(join(dir, 'team')).errors).toEqual([])
   })
 })
 
