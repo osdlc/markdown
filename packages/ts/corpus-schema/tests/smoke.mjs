@@ -48,9 +48,12 @@ try {
   assert.equal(good.files.get('notes')?.get('A'), 'notes/A.md')
   assert.equal(validateCorpus(join(dir, 'bad')).errors.length, 1)
 
-  put('child/corpus-schema.md', '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  good: ../good\n---\n')
-  put('child/tasks/tasks.schema.yaml', 'x-extends: good/notes\n')
-  put('child/tasks/T.md', '---\nstatus: done\n---\nSee [A](../_inherited/good/notes/A.md).\n')
+  put(
+    'child/corpus-schema.md',
+    '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  base: ../good\nreferences:\n  good: ../good\n---\n',
+  )
+  put('child/tasks/tasks.schema.yaml', 'x-extends: base/notes\n')
+  put('child/tasks/T.md', '---\nstatus: done\n---\nSee [A](../_references/good/notes/A.md).\n')
   assert.deepEqual(syncCorpus(join(dir, 'child')).errors, [])
   assert.deepEqual(validateCorpus(join(dir, 'child')).errors, [])
 
