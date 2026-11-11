@@ -79,7 +79,10 @@ interface Type {
   refs: Ref[]
   /** Valid records by id. */
   records: Map<string, { file: string; data: Data }>
-  /** Every record file with a usable id, by folded id, for references by id. */
+  /**
+   * Every record file by folded id, for references by id. The first file wins when ids collide. A
+   * record whose id or data has errors is here too, so a reference to it adds no second error.
+   */
   ids: Map<string, string>
 }
 
@@ -685,9 +688,12 @@ function flattened(type: Type): Data {
   return flat
 }
 
-/** Whether a schema closes its root to fields it does not declare. */
-const closes = (schema: Data | undefined): boolean =>
-  schema?.['additionalProperties'] === false || schema?.['unevaluatedProperties'] === false
+/**
+ * Whether a schema closes its root to the fields its root `properties` and `patternProperties`
+ * declare. `unevaluatedProperties: false` also admits fields evaluated in `allOf` or a `$ref`,
+ * so it is not counted.
+ */
+const closes = (schema: Data | undefined): boolean => schema?.['additionalProperties'] === false
 
 /** How corpus `from` names `type`: its name, or `<prefix>/<name>` for a parent's type. */
 function typeLabel(type: Type, from: Corpus): string {
@@ -697,8 +703,9 @@ function typeLabel(type: Type, from: Corpus): string {
 }
 
 /**
- * Report each field `type` declares that a closed type up its chain does not admit: no record
- * could hold it, since the record must also pass that type's schema.
+ * Report each field `type` declares that a type up its chain closes with
+ * `additionalProperties: false`: no record could hold it, since the record must also pass that
+ * type's schema.
  */
 function closedAbove(type: Type): void {
   // The furthest closed type admits the fewest fields.

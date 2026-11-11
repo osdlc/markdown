@@ -296,6 +296,21 @@ describe('flattened x-extends', () => {
     ])
   })
 
+  test('a parent closed with unevaluatedProperties gets no schema error for a field it evaluates elsewhere', () => {
+    put(
+      'org/principles/principles.schema.yaml',
+      'type: object\nunevaluatedProperties: false\nproperties:\n  statement: { type: string }\nallOf:\n  - properties:\n      status: { enum: [draft, kept] }\n',
+    )
+    put(
+      'c/rules/rules.schema.yaml',
+      'x-extends: org/principles\nproperties:\n  status: { enum: [kept] }\n  team: { type: string }\n',
+    )
+    put('c/rules/Kept.md', '---\nstatement: s\nstatus: kept\n---\n')
+    put('c/rules/Team.md', '---\nstatement: s\nteam: a\n---\n')
+    // team is unevaluated in the parent, so the record fails there; the schema itself is not wrong.
+    assert.deepEqual(errors(), ['rules/Team.md: (data): must NOT have unevaluated properties'])
+  })
+
   test('a local chain flattens the same way', () => {
     put('c/base/base.schema.yaml', 'type: object\nproperties:\n  a: { type: string }\n')
     put('c/mid/mid.schema.yaml', 'x-extends: base\nproperties:\n  b: { type: string }\n')
