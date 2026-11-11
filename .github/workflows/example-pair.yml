@@ -57,8 +57,8 @@ jobs:
       - name: Validate both corpora
         run: sh tools/validate-strict.sh examples
 
-      # validate skips a parent's copy that nothing links into, such as
-      # _inherited/claims/, but sync still writes it. intent-to-add makes a
+      # validate does not ask for a parent's copy that nothing links into, such
+      # as _inherited/claims/, but sync still writes it. intent-to-add makes a
       # new file show in the diff.
       - name: The committed _inherited/ copy is current
         run: |
