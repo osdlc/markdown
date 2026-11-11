@@ -43,3 +43,9 @@ A case's parents sit inside its folder: a nested corpus for a path, and a packag
 own `node_modules/` for a package name. The root `.gitignore` keeps those `node_modules/` folders.
 The `_inherited/` copies were written with `corpus-schema sync`. `extends-copy-stale` edits its
 copy by hand, on purpose.
+
+`corpora/extends-flatten*` cover how `x-extends` merges a chain's fields before a closing keyword.
+`corpora/xref-*` cover `x-ref` lists of types and the `id` and `wikilink` forms of `x-ref-form`.
+
+The `strict` section runs `validate --strict`. Its `expect` adds `passes`, whether the corpus
+passes: it has no errors and no warnings. `corpora/strict-*` are its corpora.
