@@ -9,11 +9,11 @@ in its package.json), or a `./` or `../` path. Parents load transitively, and a 
 
 A schema's new `x-extends` key builds a type on a parent's type (`org/principles`) or a local type.
 The chain's fields are merged before a closing keyword applies: a type's
-`additionalProperties: false` or `unevaluatedProperties: false` admits the top-level fields of
-every type up its chain, so a closed child no longer has to list its parent's fields. A record
-still passes every schema up the chain, so a field the child declares again keeps the parent's
-rules. A parent that closes its fields admits no new ones, and a child that declares one gets an
-error at that field. `x-ref` can name a parent's type, and accepts records of types that extend
+`additionalProperties: false` or `unevaluatedProperties: false` admits the root-level
+`properties` and `patternProperties` of every type up its chain, so a closed child no longer has
+to list its parent's fields. A record still passes every schema up the chain, so a field the child
+declares again keeps the parent's rules. A parent with `additionalProperties: false` admits no new
+fields, and a child that declares one gets an error at that field. `x-ref` can name a parent's type, and accepts records of types that extend
 the named type. A local record must not take the id of an inherited record.
 
 `x-ref` can list several types, as in `x-ref: [tasks, decisions, milestones]`. A record of any of

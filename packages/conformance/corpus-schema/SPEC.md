@@ -354,10 +354,16 @@ extends:
 - So a child can add fields and tighten rules, never loosen them:
   - A field the child declares again keeps the parent's rules for it. A value MUST pass the
     parent's schema for the field and the child's.
-  - A closed parent, one with `additionalProperties: false` or `unevaluatedProperties: false` at
-    its root, admits no field beyond its own merged set. A type up whose chain such a parent sits
-    MUST NOT declare a top-level property outside that set, since no record could hold it. That is
-    an error at the property.
+  - A parent with `additionalProperties: false` at its root admits no field outside its own merged
+    set. A type up whose chain such a parent sits MUST NOT declare a top-level property outside
+    that set, since no record could hold it. That is an error at the property.
+  - A parent with `unevaluatedProperties: false` at its root is closed too, but it also admits the
+    fields its schema evaluates elsewhere, such as in `allOf` or through `$ref`. A validator does
+    not report a child's field against it. A record with a field the parent does not admit still
+    fails the parent's schema.
+- Only root-level `properties` and `patternProperties` join the merged set. A field a type
+  declares elsewhere, such as in `allOf`, `$ref` or `if`/`then`, does not. A closed child lists
+  such a field itself.
 
   ```yaml
   # org/principles/principles.schema.yaml: open
@@ -414,15 +420,16 @@ extends:
 v0 defines two verbs.
 
 - `validate <folder>` checks every corpus at or below the folder against this spec, and exits
-  non-zero when it finds any error.
-- `validate --strict <folder>` also exits non-zero when it reports any warning. It still reports
-  each warning as a warning. A corpus passes `--strict` when it has no errors and no warnings. It reports each problem on one line:
+  non-zero when it finds any error. It reports each problem on one line:
   `<file>: <field>: <message>`, with the file relative to the corpus root. A problem that is not
   in one field puts a word in parentheses in the field's place, such as `(data)` for data that
   does not parse or `(folder)` for a folder that cannot be read. A file or folder that cannot be
   read is an error of the corpus that holds it.
+- `validate --strict <folder>` also exits non-zero when it reports any warning. It still reports
+  each warning as a warning. A corpus passes `--strict` when it has no errors and no warnings.
 - `validate --fix <folder>` first rewrites every wikilink it can resolve as a relative Markdown
-  link, in the files a validator checks. It changes nothing else in those files.
+  link, in the files a validator checks, except in a field in the `id` or `wikilink` form (see
+  References). It changes nothing else in those files.
 - `validate` never writes `_inherited/`.
 - `sync <folder>` writes `_inherited/` for every corpus at or below the folder. For each parent it
   writes `_inherited/<prefix>/`, and it removes every other file there. It changes nothing outside
