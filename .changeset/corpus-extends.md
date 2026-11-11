@@ -14,9 +14,10 @@ A corpus can name other corpora in its root file, under three new keys, each for
   can be `x-ref` targets, but not built on. `references` works at level 1 and level 2. A type
   through further references is named by the path, such as `team/org/principles`.
 - `uses` lists parent types (`[sdlc/tasks, sdlc/decisions]`, or `sdlc/*`) that local folders hold
-  as they are: a folder named after the type, with no schema file, holds its records. A schema file
-  in such a folder, or two used types with one name, is an error. A folder with no schema file
-  that is not in `uses` and is named like a parent type warns.
+  as they are: a folder at the corpus root named after the type, with no schema file, holds its
+  records. A deeper folder gets no type from `uses`. A schema file in such a folder, or two used
+  types with one name, is an error. A root folder with no schema file that is not in `uses` and is
+  named like a parent type warns.
 
 A prefix sits in one key. Named corpora load transitively, and a cycle is an error. Each named
 corpus is validated by its own rules, and one with errors is an error of the corpus that names it.
@@ -31,11 +32,13 @@ has errors, a cycle included, and it replaces a path that turned from a folder i
 back. `_references/` holds no local types or records, and `findCorpora` does not search it.
 
 Corpora, types and records in packages have an identity: a package URL (purl), such as
-`pkg:npm/%40osdlc/corpus-profile-claims#statements`. A record reached through two chains of references
-is one record, taken through the shortest chain. Each corpus appears at one version across the
-whole graph, and two versions are an error. A schema's new `x-identity` key, when present, must be
-its type's unversioned identity. `CorpusReport` gains `identity` and `version`. The new
-experimental exports `npmPackageUrl`, `packageUrl` and `PackageUrl` build package URLs.
+`pkg:npm/%40osdlc/corpus-profile-claims#statements`. Types with one identity are one type, so two
+installed copies of one package at one version give one type for `x-ref`. A record reached through
+two chains of references is one record, taken through the shortest chain. Each corpus appears at
+one version across the whole graph, and two versions are an error. A schema's new `x-identity`
+key, when present, must be its type's unversioned identity. `CorpusReport` gains `identity` and
+`version`. The new experimental exports `npmPackageUrl`, `packageUrl` and `PackageUrl` build
+package URLs.
 
 A schema's new `x-extends` key builds a type on a parent's type (`org/principles`) or a local type.
 The chain's fields are merged before a closing keyword applies: a type's
@@ -51,10 +54,11 @@ them, or of a type that extends one, matches. The single name still works.
 
 The new `x-ref-form` keyword, beside `x-ref`, says how a value names its record: `link` (the
 default, a relative link), `id` (a bare id such as `T-0012`) or `wikilink` (`"[[N-0001]]"`). An id
-resolves among the matching records of the corpus and of every corpus it references, compared
-after NFC normalization and case folding. No match, or more than one, is an error. An `id` or
-`wikilink` field is not checked as a link, gets no wikilink warning, and `validate --fix` leaves it
-as it is.
+resolves among the matching records of the corpus and of every corpus it references, at any depth,
+compared after NFC normalization and case folding. A `wikilink` value, like any wikilink, reaches
+only the corpus and the corpora it references directly. No match, or more than one, is an error.
+An `id` or `wikilink` field is not checked as a link, gets no wikilink warning, and
+`validate --fix` leaves it as it is.
 
 With `x-id-pattern`, a record's id is the longest part of its name, ending before a `-`, that the
 pattern matches: `P-0002-be-kind.md` has the id `P-0002`. A name the pattern matches whole keeps it

@@ -21,14 +21,14 @@ describe('uses', () => {
   test('a folder named after a used type, with no schema file, holds its records', () => {
     root('c', { extends: { sdlc: '../sdlc' }, uses: ['sdlc/tasks', 'sdlc/decisions'] })
     put('c/tasks/T-1.md', '---\nstatus: open\n---\n')
-    put('c/work/decisions/D-1.md', '---\n---\n')
+    put('c/decisions/D-1.md', '---\n---\n')
     put(
       'c/notes/notes.schema.yaml',
       'type: object\nproperties:\n  task: { type: string, x-ref: sdlc/tasks }\n',
     )
     put('c/notes/N.md', '---\ntask: "[T-1](../tasks/T-1.md)"\n---\n')
     const r = report()
-    assert.deepEqual(r.errors, ['work/decisions/D-1.md: status: required'])
+    assert.deepEqual(r.errors, ['decisions/D-1.md: status: required'])
     assert.deepEqual([...(r.records.get('tasks')?.keys() ?? [])], ['T-1'])
   })
 
@@ -78,6 +78,17 @@ describe('uses', () => {
     assert.deepEqual(errors(), [
       'corpus-schema.yaml: uses: must be <prefix>/<type>, <prefix>/*, or a list of them',
     ])
+  })
+
+  test('only a folder at the corpus root takes a used type; a deeper one is narrative', () => {
+    root('c', { extends: { sdlc: '../sdlc' }, uses: 'sdlc/*' })
+    put('c/guides/tasks/X.md', '---\n---\n')
+    put('c/guides/decisions/decisions.schema.yaml', 'x-extends: sdlc/decisions\n')
+    put('c/guides/decisions/D-1.md', '---\nstatus: kept\n---\n')
+    const r = report()
+    assert.deepEqual(r.errors, [])
+    assert.deepEqual(r.warnings, [])
+    assert.deepEqual([...r.records.keys()], ['decisions'])
   })
 
   test('a folder inside a type folder stays a plain folder of that type', () => {
