@@ -28,7 +28,7 @@ const cli = (...args: string[]): { status: number | null; stdout: string; stderr
   return { status: r.status, stdout: r.stdout, stderr: r.stderr }
 }
 const USAGE =
-  'usage: corpus-schema validate [--fix] <folder>...\n       corpus-schema sync [<folder>...]\n'
+  'usage: corpus-schema validate [--fix] [--strict] <folder>...\n       corpus-schema sync [<folder>...]\n'
 const corpus = (rel: string, id: string): void => {
   put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nid: ${id}\nformats: [md, yaml, json]\n`)
   put(`${rel}/notes/notes.schema.json`, '{}')
@@ -127,11 +127,34 @@ describe('corpus-schema validate', () => {
       ['validate', '--fix'],
       ['validate', '.', '--bogus'],
       ['sync', '--fix'],
+      ['sync', '--strict'],
     ]) {
       const r = cli(...args)
       assert.equal(r.status, 2, args.join(' '))
       assert.equal(r.stderr, USAGE)
     }
+  })
+
+  test('--strict fails a corpus with warnings, and passes one with none', () => {
+    corpus('clean', 'a')
+    corpus('warns', 'b')
+    put('warns/notes/B.md', 'See [[A]].\n')
+    const plain = cli('validate', '.')
+    assert.equal(plain.status, 0, plain.stderr)
+    const r = cli('validate', '--strict', '.')
+    assert.equal(r.status, 1)
+    assert.equal(r.stdout, 'ok: clean: 1 notes\n')
+    assert.match(r.stderr, /^warning: notes\/B\.md: body: \[\[A\]\] is a wikilink/m)
+    assert.match(r.stderr, /^warns: 1 warning\(s\), and --strict fails on them$/m)
+    assert.equal(cli('validate', '--strict', 'clean').status, 0)
+  })
+
+  test('--strict counts two corpora sharing an id as a warning', () => {
+    corpus('one', 'shared')
+    corpus('two', 'shared')
+    const r = cli('validate', '--strict', '.')
+    assert.equal(r.status, 1)
+    assert.match(r.stderr, /^two: 1 warning\(s\), and --strict fails on them$/m)
   })
 
   test('--fix rewrites wikilinks in .json and .yaml records', () => {
