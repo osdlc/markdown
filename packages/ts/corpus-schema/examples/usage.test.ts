@@ -17,6 +17,9 @@ import {
   fold,
   idProblem,
   markdownLink,
+  npmPackageUrl,
+  type PackageUrl,
+  packageUrl,
   type SyncReport,
   syncCorpus,
   validateCorpus,
@@ -122,24 +125,43 @@ describe('reading a corpus', () => {
   })
 })
 
-describe('extending a corpus', () => {
-  test('a corpus builds on a parent type, links to its records and syncs its copy', () => {
-    put('org/corpus-schema.md', '---\ncorpus-schema: 0\nlevel: 2\n---\n')
-    put('org/principles/principles.schema.yaml', 'type: object\nrequired: [statement]\n')
+describe('extends, references and uses', () => {
+  test('a corpus builds on a profile type, links to a referenced record and syncs its copy', () => {
+    put('profile/corpus-schema.md', '---\ncorpus-schema: 0\nlevel: 2\n---\n')
+    put('profile/principles/principles.schema.yaml', 'type: object\nrequired: [statement]\n')
+    put(
+      'org/corpus-schema.md',
+      '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  p: ../profile\nuses: [p/principles]\n---\n',
+    )
     put('org/principles/Be Kind.md', '---\nstatement: Treat people with care.\n---\n')
-    put('team/corpus-schema.md', '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  org: ../org\n---\n')
-    put('team/rules/rules.schema.yaml', 'x-extends: org/principles\n')
+    put(
+      'team/corpus-schema.md',
+      '---\ncorpus-schema: 0\nlevel: 2\nextends:\n  p: ../profile\nreferences:\n  org: ../org\n---\n',
+    )
+    put('team/rules/rules.schema.yaml', 'x-extends: p/principles\n')
     put(
       'team/rules/Review Kindly.md',
-      '---\nstatement: Review with care.\n---\nFollows [Be Kind](../_inherited/org/principles/Be%20Kind.md).\n',
+      '---\nstatement: Review with care.\n---\nFollows [Be Kind](../_references/org/principles/Be%20Kind.md).\n',
     )
 
     expect(validateCorpus(join(dir, 'team')).errors).toEqual([
-      '_inherited/org: (copy): missing, and a file links into it; run corpus-schema sync',
+      '_references/org: (copy): missing, and a file links into it; run corpus-schema sync',
     ])
     const sync: SyncReport = syncCorpus(join(dir, 'team'))
-    expect(sync.written).toContain('_inherited/org/principles/Be Kind.md')
+    expect(sync.written).toContain('_references/org/principles/Be Kind.md')
     expect(validateCorpus(join(dir, 'team')).errors).toEqual([])
+  })
+
+  test('a packaged corpus, its types and its records have package URLs', () => {
+    put('pkg/package.json', '{"name":"@acme/org","version":"1.0.0","corpus":"corpus"}')
+    put('pkg/corpus/corpus-schema.md', '---\ncorpus-schema: 0\n---\n')
+    const { identity, version } = validateCorpus(join(dir, 'pkg/corpus'))
+    expect([identity, version]).toEqual(['pkg:npm/%40acme/org', '1.0.0'])
+    expect(npmPackageUrl('@acme/org', version, ['principles', 'Be Kind'])).toBe(
+      'pkg:npm/%40acme/org@1.0.0#principles/Be%20Kind',
+    )
+    const github: PackageUrl = { type: 'github', namespace: ['Acme'], name: 'org', version: 'v3' }
+    expect(packageUrl(github)).toBe('pkg:github/acme/org@v3')
   })
 })
 
