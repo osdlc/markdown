@@ -112,9 +112,10 @@ The second form is a git dependency. It suits a private corpus with no registry.
 
 A local type builds on a parent's type with `x-extends` at the root of its schema. The fields add up
 first: a type's `additionalProperties: false` or `unevaluatedProperties: false` admits its own
-fields and those of every type it extends. A record then passes every schema up the chain, so a
-child can add fields and tighten rules but not loosen them. A field the child declares again must
-still pass the parent's rules for it, and a parent that closes its fields admits no new ones. A
+fields and those of every type it extends, as their root-level `properties` and
+`patternProperties` declare them. A record then passes every schema up the chain, so a child can
+add fields and tighten rules but not loosen them. A field the child declares again must still pass
+the parent's rules for it, and a parent with `additionalProperties: false` admits no new ones. A
 schema that holds only `x-extends` uses the parent's type as it is:
 
 ```yaml
