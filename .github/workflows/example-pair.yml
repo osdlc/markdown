@@ -1,9 +1,9 @@
 # Checks the example pair under examples/: an org principles corpus, and the
-# fernlog project corpus that extends it and the claims profile.
+# fernlog project corpus that references it and extends the claims profile.
 #
 # The validator is this repository's packages/ts/corpus-schema, built by
 # tools/build-corpus-schema.sh, since the published 0.2.x does not read
-# `extends`. fernlog installs the claims profile from profiles/claims/ with
+# `extends` or `references`. fernlog installs the claims profile from profiles/claims/ with
 # its own lockfile; it is not in the repository's workspace.
 #
 # Every action is pinned to a commit SHA; the comment names its release.
@@ -50,22 +50,21 @@ jobs:
           corepack enable
           sh tools/build-corpus-schema.sh
 
-      - name: Install fernlog's parents
+      - name: Install the claims profile for fernlog
         working-directory: examples/fernlog
         run: pnpm install --ignore-workspace --frozen-lockfile
 
       - name: Validate both corpora
         run: sh tools/validate-strict.sh examples
 
-      # validate does not ask for a parent's copy that nothing links into, such
-      # as _inherited/claims/, but sync still writes it. intent-to-add makes a
-      # new file show in the diff.
-      - name: The committed _inherited/ copy is current
+      # validate does not ask for a copy that nothing links into, but sync
+      # still writes it. intent-to-add makes a new file show in the diff.
+      - name: The committed _references/ copy is current
         run: |
           node packages/ts/corpus-schema/bin/corpus-schema.js sync examples
           git add --intent-to-add -- examples
           if ! git diff --exit-code -- examples; then
-            echo "::error::examples/fernlog/_inherited/ is stale; run corpus-schema sync examples and commit"
+            echo "::error::examples/fernlog/_references/ is stale; run corpus-schema sync examples and commit"
             exit 1
           fi
 
