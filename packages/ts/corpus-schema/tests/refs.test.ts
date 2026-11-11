@@ -73,19 +73,20 @@ describe('x-ref-form: id', () => {
     ])
   })
 
-  test('an id resolves to a parent record, and to local records of types that extend the type', () => {
+  test('an id resolves to a referenced record, and to local records of types that extend the type', () => {
     root('org')
     put('org/tasks/tasks.schema.yaml', 'type: object\n')
     put('org/tasks/T-0100.md', '---\n---\n')
-    root('c', 'extends:\n  org: ../org\n')
-    put('c/tasks/tasks.schema.yaml', 'x-extends: org/tasks\n')
+    // One corpus under two prefixes is one corpus: base/tasks and org/tasks are one type.
+    root('c', 'extends:\n  base: ../org\nreferences:\n  org: ../org\n')
+    put('c/tasks/tasks.schema.yaml', 'x-extends: base/tasks\n')
     put('c/tasks/T-0001.md', '---\n---\n')
     put(
       'c/notes/notes.schema.yaml',
       'type: object\nproperties:\n  about: { type: array, items: { type: string, x-ref: org/tasks, x-ref-form: id } }\n',
     )
     put('c/notes/N.md', '---\nabout: [T-0100, T-0001]\n---\n')
-    // An id is not a link, so the corpus needs no copy of the parent.
+    // An id is not a link, so the corpus needs no copy of org.
     assert.deepEqual(errors(), [])
   })
 
@@ -139,18 +140,18 @@ describe('x-ref-form: wikilink', () => {
     assert.deepEqual(r.errors, [])
   })
 
-  test('a wikilink to a parent record needs the copy, which sync writes', () => {
+  test('a wikilink to a referenced record needs the copy, which sync writes', () => {
     root('org')
     put('org/tasks/tasks.schema.yaml', 'type: object\n')
     put('org/tasks/T-0100.md', '---\n---\n')
-    root('c', 'extends:\n  org: ../org\n')
+    root('c', 'references:\n  org: ../org\n')
     put(
       'c/notes/notes.schema.yaml',
       'type: object\nproperties:\n  about: { type: string, x-ref: org/tasks, x-ref-form: wikilink }\n',
     )
     put('c/notes/N.md', '---\nabout: "[[T-0100]]"\n---\n')
     assert.deepEqual(errors(), [
-      '_inherited/org: (copy): missing, and a file links into it; run corpus-schema sync',
+      '_references/org: (copy): missing, and a file links into it; run corpus-schema sync',
     ])
     assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [])
     assert.deepEqual(errors(), [])
