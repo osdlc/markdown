@@ -29,4 +29,5 @@ one at a time.
   that other corpora extend. It is packaged as `@osdlc/corpus-profile-claims`, and an example
   corpus shows it at work.
 - [Example corpora](examples/README.md): an org principles corpus, and a project corpus that
-  extends it and the claims profile, with a committed `_inherited/` copy that CI keeps current.
+  extends the claims profile and references the org corpus, with a committed `_references/` copy
+  of the org corpus that CI keeps current. The profile needs no copy, since it gives types only.
