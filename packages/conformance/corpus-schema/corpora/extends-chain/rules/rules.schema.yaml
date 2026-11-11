@@ -1,3 +1,1 @@
 x-extends: b/principles
-properties:
-  follows: { type: string, x-ref: b/principles }
