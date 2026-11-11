@@ -90,9 +90,10 @@ properties:
 
 An id matches as ids compare: after NFC normalization and case folding. A value may also give the
 whole file name without its extension. A `null` value refers to nothing; the schema says whether
-it is allowed. A body wikilink such as `[[P-0002]]` that matches no file names a record by id. It may name a record of a
-corpus this one references, as a link may. A field that refers by id is not checked as a link, gets no wikilink
-warning, and `validate --fix` leaves it as it is.
+it is allowed. An `id` value reaches records of referenced corpora at any depth. A wikilink, in a
+`wikilink` field or a body, reaches only this corpus and the corpora it references directly. A
+body wikilink such as `[[P-0002]]` that matches no file names a record by id. A field that refers
+by id is not checked as a link, gets no wikilink warning, and `validate --fix` leaves it as it is.
 
 ## Other corpora: extends, references and uses
 
@@ -150,11 +151,12 @@ properties:
   team: { type: string }
 ```
 
-A folder named after a type in `uses`, with no schema file, holds records of that type as it is:
-`tasks/T-0001.md` is an `sdlc/tasks` record. Such a folder must hold no schema file; to add fields,
+A folder at the corpus root named after a type in `uses`, with no schema file, holds records of
+that type as it is: `tasks/T-0001.md` is an `sdlc/tasks` record. A deeper folder, such as
+`notes/tasks/`, gets no type from `uses`. Such a folder must hold no schema file; to add fields,
 take the type out of `uses` and write `x-extends`. A folder with no schema file that is not in
-`uses` is plain narrative. It warns when it holds notes and its name is one or two letters from a
-parent's type, such as `task/` for `sdlc/tasks`.
+`uses` is plain narrative. At the root, it warns when it holds notes and its name is one or two
+letters from a parent's type, such as `task/` for `sdlc/tasks`.
 
 `x-ref: sdlc/tasks` matches records of local types that extend or use `sdlc/tasks`, and records of
 that type in referenced corpora. A type a referenced corpus reaches through its own references is
@@ -180,9 +182,10 @@ needs no copy.
 
 A corpus in a package has an identity: its package URL ([purl](https://github.com/package-url/purl-spec)),
 such as `pkg:npm/%40osdlc/corpus-profile-claims`. A type adds `#<type>` and a record
-`#<type>/<id>`. A record reached through two chains of references is one record. A corpus graph
-holds each corpus at one version, and two versions are an error. A schema may state its type's
-identity in `x-identity`, and then it must match.
+`#<type>/<id>`. Types with one identity are one type, so two installed copies of one package at
+one version give one type for `x-ref`. A record reached through two chains of references is one
+record. A corpus graph holds each corpus at one version, and two versions are an error. A schema
+may state its type's identity in `x-identity`, and then it must match.
 
 ## Command line
 
@@ -200,8 +203,8 @@ except in a field that refers by id. `--strict` fails a corpus that has warnings
 errors, so CI can hold a corpus to no warnings.
 
 `sync` writes the `_references/` copies of every corpus at or below each folder, by default `.`. A
-corpus syncs after the corpora it references, so a chain of corpora in one repository syncs in one
-run. It prints `wrote:` and `removed:` for each file it changes, and `synced: <name>: <counts>`.
+corpus syncs after the corpora it extends or references, so a chain of corpora in one repository
+syncs in one run. It prints `wrote:` and `removed:` for each file it changes, and `synced: <name>: <counts>`.
 Run it again and it changes nothing.
 
 `sync` owns `_references/` outright. It removes every file there that no referenced corpus holds,

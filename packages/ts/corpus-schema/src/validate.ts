@@ -383,6 +383,16 @@ const realOrSame = (path: string): string => {
   }
 }
 
+/**
+ * Whether `a` and `b` are one corpus: the same folder, or two folders of one package, which hold
+ * the same files, since a graph holds one version of each corpus.
+ */
+const sameCorpus = (a: Corpus, b: Corpus): boolean =>
+  a === b || (a.identity !== undefined && a.identity === b.identity)
+
+/** Whether `a` and `b` are one type: one name in one corpus, by identity. */
+const sameType = (a: Type, b: Type): boolean => a.name === b.name && sameCorpus(a.corpus, b.corpus)
+
 /** `type`, then each type it extends, nearest first. */
 function chain(type: Type): Type[] {
   const out: Type[] = []
@@ -632,7 +642,7 @@ function readUses(c: Corpus, rootFile: string, data: Data): Map<string, Used> {
     for (const type of found) {
       const other = used.get(type.name)
       if (other === undefined) used.set(type.name, { type, entry })
-      else if (other.type !== type && !clashes.has(type.name)) {
+      else if (!sameType(other.type, type) && !clashes.has(type.name)) {
         clashes.add(type.name)
         c.errors.push(
           `${at}: "${type.name}" is both ${other.entry} and ${entry}; build the folder's type with x-extends`,
@@ -696,8 +706,8 @@ function lookupType(
 }
 
 /**
- * Find the types: folders holding `<their name>.schema.{md,yaml,json}`, and folders with no schema
- * file named after a type `uses` names. Returns every schema file.
+ * Find the types: folders holding `<their name>.schema.{md,yaml,json}`, and folders at the corpus
+ * root with no schema file named after a type `uses` names. Returns every schema file.
  */
 function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<string> {
   // strictSchema only: a misspelled keyword is an error. The other strict options reject valid
@@ -728,15 +738,16 @@ function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<stri
     )
     const schemaFile = found[0]
     const inType = [...c.types.values()].some((t) => dir.startsWith(`${t.dir}/`))
+    // `uses` gives types to folders at the corpus root only.
+    const atRoot = !dir.includes('/')
+    const use = atRoot ? used.get(name) : undefined
     if (schemaFile === undefined) {
       // A folder inside a type folder is a plain folder of that type's records.
       if (inType) continue
-      const use = used.get(name)
       if (use !== undefined) useType(c, dir, use, typeDirs)
-      else if (holdsRecords.has(dir)) warnLikeParentType(c, dir)
+      else if (atRoot && holdsRecords.has(dir)) warnLikeParentType(c, dir)
       continue
     }
-    const use = used.get(name)
     if (use !== undefined)
       c.errors.push(
         `${schemaFile}: (schema): uses names ${use.entry}, so the folder holds no schema; to add fields, take ${name} out of uses and write x-extends here`,
@@ -923,8 +934,9 @@ function distance(a: string, b: string): number {
 }
 
 /**
- * Warn when a folder of record files with no schema file is named like a parent's type that
- * `uses` does not give it: the same name, or one or two letters off. Its files are narrative.
+ * Warn when a folder at the corpus root, holding record files and no schema file, is named like a
+ * parent's type that `uses` does not give it: the same name, or one or two letters off. Its files
+ * are narrative.
  */
 function warnLikeParentType(c: Corpus, dir: string): void {
   const name = basename(dir)
@@ -1022,8 +1034,8 @@ const closes = (schema: Data | undefined): boolean => schema?.['additionalProper
  * references, or the chain of prefixes through references, such as `b/c/<name>`.
  */
 function typeLabel(type: Type, from: Corpus): string {
-  if (type.corpus === from) return type.name
-  const prefix = [...from.parents].find(([, p]) => p === type.corpus)?.[0]
+  if (sameCorpus(type.corpus, from)) return type.name
+  const prefix = [...from.parents].find(([, p]) => sameCorpus(p, type.corpus))?.[0]
   if (prefix !== undefined) return `${prefix}/${type.name}`
   // Through references, by the shortest chain.
   const seen = new Set<Corpus>([from])
@@ -1031,7 +1043,7 @@ function typeLabel(type: Type, from: Corpus): string {
   for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
     const [k, path] = next
     for (const [p, ref] of k.references) {
-      if (ref === type.corpus) return [...path, p, type.name].join('/')
+      if (sameCorpus(ref, type.corpus)) return [...path, p, type.name].join('/')
       if (!seen.has(ref)) {
         seen.add(ref)
         queue.push([ref, [...path, p]])
@@ -1212,21 +1224,19 @@ function resolve(c: Corpus, from: string, link: Link): Resolution {
     if (found.length > 1) return { problem: `${wiki}: ambiguous, matches ${found.join(', ')}` }
     if (matchWikilink(link.target, c.nestedWikilinks).length > 0)
       return { problem: `${wiki}: ${BETWEEN_CORPORA}`, warn: true }
-    // A target with no path names a record by id, in this corpus or one it references.
+    // A target with no path names a record by id, in this corpus or one it references directly.
     const target = link.target.split('#')[0]?.trim() ?? ''
-    const byId = target === '' || target.includes('/') ? [] : recordsById(c, undefined, target)
+    if (target === '' || target.includes('/')) return { problem: `${wiki}: no file matches` }
+    const byId = recordsById(c, undefined, target, true)
     const record = byId[0]
     if (byId.length > 1)
       return { problem: `${wiki}: ambiguous, the id of ${byId.map((r) => r.label).join(', ')}` }
     if (record !== undefined)
-      return record.path.length === 0
+      return record.via === undefined
         ? { file: record.file }
-        : intoCopy(
-            c,
-            [...record.path.map((p) => `${REFERENCES}/${p}`), record.file].join('/'),
-            wiki,
-          )
-    return { problem: `${wiki}: no file matches` }
+        : intoCopy(c, `${REFERENCES}/${record.via}/${record.file}`, wiki)
+    const far = tooFar(c, undefined, target)
+    return { problem: `${wiki}: ${far ?? 'no file matches'}` }
   }
   const dest = link.target
   if (dest === '' || /^[a-z][a-z0-9+.-]*:/i.test(dest)) return undefined
@@ -1399,7 +1409,9 @@ function checkRef(
       return ref.form === 'id'
         ? 'must be the id of a record, such as "T-0012"'
         : 'must be a wikilink to a record id, such as "[[T-0012]]", quoted in YAML'
-    const found = recordsById(c, targets, id)
+    const found = recordsById(c, targets, id, ref.form === 'wikilink')
+    const far = found.length === 0 && ref.form === 'wikilink' ? tooFar(c, targets, id) : undefined
+    if (far !== undefined) return `"${id}" ${far}`
     if (found.length === 0) return `"${id}" is not the id of a record ${of}`
     if (found.length > 1)
       return `"${id}" matches more than one record: ${found.map((f) => f.label).join(', ')}`
@@ -1424,13 +1436,14 @@ function checkRef(
 
 /**
  * The records whose id folds to `id`'s, among the records of `targets` and of the types that
- * extend them, in `c` and every corpus it references, at any depth. A record is one record
- * however many copies reach it: its identity is its corpus's identity, its type and its id. Each
- * one is kept as found through the shortest chain of references, so a direct reference wins.
- * `via` is the first prefix of that chain, or undefined for a record of `c`. A referenced record
- * is labelled with the chain, such as `org/principles/Be Kind.md`.
+ * extend them, in `c` and every corpus it references, at any depth, or only those it references
+ * directly when `direct`, as a wikilink reaches. A record is one record however many copies reach
+ * it: its identity is its corpus's identity, its type and its id. Each one is kept as found
+ * through the shortest chain of references, so a direct reference wins. `via` is the first prefix
+ * of that chain, or undefined for a record of `c`. A referenced record is labelled with the chain,
+ * such as `org/principles/Be Kind.md`.
  */
-function recordsById(c: Corpus, targets: Type[] | undefined, id: string): ById[] {
+function recordsById(c: Corpus, targets: Type[] | undefined, id: string, direct = false): ById[] {
   const key = fold(id)
   const found = new Map<string, ById>()
   const seen = new Set<Corpus>([c])
@@ -1444,8 +1457,9 @@ function recordsById(c: Corpus, targets: Type[] | undefined, id: string): ById[]
       // One file of one corpus is one record, so its path stands for its type and id.
       const identity = `${k.identity ?? k.real}\0${file}`
       if ((targets === undefined || targets.some((t) => isA(type, t))) && !found.has(identity))
-        found.set(identity, { label: [...path, file].join('/'), via: path[0], path, file })
+        found.set(identity, { label: [...path, file].join('/'), via: path[0], file })
     }
+    if (direct && path.length > 0) continue
     for (const [prefix, ref] of k.references)
       if (!seen.has(ref)) {
         seen.add(ref)
@@ -1455,17 +1469,29 @@ function recordsById(c: Corpus, targets: Type[] | undefined, id: string): ById[]
   return [...found.values()]
 }
 
-/** A record found by id: its label, the first prefix and the chain of prefixes to it, its file. */
+/** A record found by id: its label, the first prefix of the chain to it, and its file. */
 interface ById {
   label: string
   via: string | undefined
-  path: string[]
   file: string
 }
 
-/** Whether a record of `type` counts as a record of `target`: it is that type or extends it. */
+/**
+ * Why a wikilink to `id` that names no record within reach fails, when it names a record of a
+ * corpus further away than a direct reference. Undefined otherwise.
+ */
+function tooFar(c: Corpus, targets: Type[] | undefined, id: string): string | undefined {
+  const far = recordsById(c, targets, id)
+  if (far.length === 0) return undefined
+  return `names ${far.map((r) => r.label).join(', ')}, beyond a direct reference; a wikilink reaches only this corpus and the corpora it references directly, and the id form reaches any depth`
+}
+
+/**
+ * Whether a record of `type` counts as a record of `target`: `target` is in its chain, by
+ * identity, so two installed copies of one package give one type.
+ */
 const isA = (type: Type | undefined, target: Type | undefined): boolean =>
-  type !== undefined && target !== undefined && chain(type).includes(target)
+  type !== undefined && target !== undefined && chain(type).some((t) => sameType(t, target))
 
 const COPY_LINES = 10
 
