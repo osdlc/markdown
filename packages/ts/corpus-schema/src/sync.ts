@@ -37,7 +37,7 @@ export interface SyncReport {
   removed: string[]
   /**
    * One line per error, in the form `validateCorpus` uses. With an error in the root file or its
-   * `extends`, or with `_inherited/` itself a symbolic link, nothing is written.
+   * `extends`, a parent with errors, or `_inherited/` itself a symbolic link, nothing is written.
    */
   errors: string[]
 }
@@ -45,6 +45,14 @@ export interface SyncReport {
 const isLink = (abs: string): boolean => {
   try {
     return lstatSync(abs).isSymbolicLink()
+  } catch {
+    return false
+  }
+}
+
+const isDir = (abs: string): boolean => {
+  try {
+    return lstatSync(abs).isDirectory()
   } catch {
     return false
   }
@@ -83,7 +91,7 @@ function pruneEmpty(abs: string): void {
  * `_inherited/` is written: a symbolic link in it is an error, and is not followed.
  *
  * Every problem is a line in the report's `errors`, never a throw. When the root file or its
- * `extends` has an error, nothing is written.
+ * `extends` has an error, or a parent has errors of its own, nothing is written.
  */
 export function syncCorpus(root: string): SyncReport {
   const c = load(root)
@@ -109,6 +117,9 @@ export function syncCorpus(root: string): SyncReport {
       report.errors.push(`${INHERITED}/${f}: (file): cannot remove (${whyFailed(e)})`)
     }
   }
+  // A parent that turned a folder into a file leaves that folder empty here, or holding only
+  // files a corpus skips, such as `.DS_Store`.
+  pruneEmpty(base)
   const links = new Set<string>()
   for (const [f, from] of [...wanted].sort(([a], [b]) => (a < b ? -1 : 1))) {
     const to = join(base, f)
@@ -120,6 +131,7 @@ export function syncCorpus(root: string): SyncReport {
     }
     if (sameBytes(from, to)) continue
     try {
+      if (isDir(to)) rmSync(to, { recursive: true })
       mkdirSync(dirname(to), { recursive: true })
       copyFileSync(from, to)
       report.written.push(`${INHERITED}/${f}`)

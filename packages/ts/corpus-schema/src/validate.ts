@@ -101,7 +101,7 @@ export interface Corpus {
   inheritedFiles: string[]
   /** The prefixes a checked file links into, through `_inherited/<prefix>/`. */
   linked: Set<string>
-  /** Errors that stop `sync`: no usable root file, or a parent that does not resolve. */
+  /** Errors that stop `sync`: in the root file, or a parent that does not resolve or has errors. */
   fatal: string[]
   errors: string[]
   warnings: string[]
@@ -417,8 +417,7 @@ function readRoot(c: Corpus): { file: string; data: Data; extensions: string[] }
 
 /**
  * Resolve and load each parent the root file's `extends` names. A parent that does not resolve,
- * or closes a cycle, is an error that stops `sync`. A parent with errors of its own is an error
- * here too.
+ * closes a cycle or has errors of its own is an error here that stops `sync`.
  */
 function readParents(c: Corpus, rootFile: string, data: Data, loader: Loader): void {
   const map = data['extends']
@@ -459,9 +458,10 @@ function readParents(c: Corpus, rootFile: string, data: Data, loader: Loader): v
       loader.done.set(r.dir, parent)
     }
     c.parents.set(prefix, parent)
+    // `sync` does not copy a parent with errors. In a cycle, each copy would hold the last one.
     const first = parent.errors[0]
     if (first !== undefined)
-      c.errors.push(`${at}: ${source} has ${parent.errors.length} error(s); the first: ${first}`)
+      fatal(`${at}: ${source} has ${parent.errors.length} error(s); the first: ${first}`)
   }
 }
 

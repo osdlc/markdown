@@ -357,8 +357,11 @@ v0 defines two verbs.
 - `sync <folder>` writes `_inherited/` for every corpus at or below the folder. For each parent it
   writes `_inherited/<prefix>/`, and it removes every other file there. It changes nothing outside
   `_inherited/`, and a second run changes nothing. A corpus syncs after the corpora it extends that
-  sit below the same folder. When a corpus's root file or `extends` has an error, `sync` writes
-  nothing in that corpus and exits non-zero.
+  sit below the same folder. When a corpus's root file or `extends` has an error, or a parent has
+  errors of its own, `sync` writes nothing in that corpus and exits non-zero. A cycle in `extends`
+  is such an error, so `sync` never copies a corpus into itself.
+- When the parent has turned a folder into a file, or a file into a folder, `sync` replaces the
+  stale path in the copy.
 - `sync` owns `_inherited/`: in a corpus with no `extends` it empties it. It does not follow a
   symbolic link in `_inherited/`, and reports one as an error.
 

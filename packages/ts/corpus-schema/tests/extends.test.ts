@@ -382,6 +382,51 @@ describe('syncCorpus', () => {
     assert.equal(existsSync(join(dir, 'c/_inherited')), false)
   })
 
+  test('writes nothing in a cycle of extends, run after run', () => {
+    root('a', { b: '../b' })
+    root('b', { a: '../a' })
+    for (let run = 0; run < 2; run++) {
+      for (const rel of ['a', 'b']) {
+        const r = syncCorpus(join(dir, rel))
+        assert.deepEqual(r.written, [])
+        assert.ok(has(r.errors, 'closes a cycle'), r.errors.join('\n'))
+      }
+      assert.equal(existsSync(join(dir, 'a/_inherited')), false)
+      assert.equal(existsSync(join(dir, 'b/_inherited')), false)
+    }
+  })
+
+  test('writes nothing when a parent has errors of its own', () => {
+    org()
+    put('org/principles/Bad.md', '---\nstatement: 3\n---\n')
+    root('c', { org: '../org' })
+    const r = syncCorpus(join(dir, 'c'))
+    assert.deepEqual(r.written, [])
+    assert.deepEqual(r.errors, [
+      'corpus-schema.yaml: extends.org: ../org has 1 error(s); the first: principles/Bad.md: statement: must be string',
+    ])
+    assert.equal(existsSync(join(dir, 'c/_inherited')), false)
+  })
+
+  test('replaces a folder the parent turned into a file, and a file it turned into a folder', () => {
+    org()
+    put('org/guide/part.md', 'A part.\n')
+    put('org/guide.md', 'A guide.\n')
+    root('c', { org: '../org' })
+    assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [])
+    put('c/_inherited/org/guide/.DS_Store', 'skipped by a corpus')
+    // guide/ becomes a file, and guide.md a folder.
+    rmSync(join(dir, 'org/guide'), { recursive: true })
+    put('org/guide', 'Now a file.\n')
+    rmSync(join(dir, 'org/guide.md'))
+    put('org/guide.md/part.md', 'Now a folder.\n')
+    const r = syncCorpus(join(dir, 'c'))
+    assert.deepEqual(r.errors, [])
+    assert.equal(read('c/_inherited/org/guide'), 'Now a file.\n')
+    assert.equal(read('c/_inherited/org/guide.md/part.md'), 'Now a folder.\n')
+    assert.deepEqual(errors(), [])
+  })
+
   test('writes nothing when a parent does not resolve', () => {
     org()
     root('c', { org: '../org', gone: '../gone' })
