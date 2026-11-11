@@ -1,0 +1,66 @@
+# Checks the sdlc profile under profiles/sdlc/ and the starter corpus under
+# corpora/sdlc-starter/ with the corpus-schema validator. Both are packed and
+# installed as npm ships them, and must validate with no errors and no
+# warnings. Broken copies of a starter record must fail with their one
+# expected error, and a corpus that extends both must validate.
+#
+# The validator is this repository's packages/ts/corpus-schema, built by
+# tools/build-corpus-schema.sh, because both corpora use `extends` and the
+# published 0.2.x does not read it.
+#
+# The profile is generated from packs outside this repository, so nothing here
+# checks it against them. Regenerating it is a manual step (see
+# profiles/sdlc/README.md).
+#
+# Every action is pinned to a commit SHA; the comment names its release.
+name: sdlc-profile
+
+on:
+  pull_request:
+    paths:
+      - "profiles/sdlc/**"
+      - "corpora/**"
+      - "packages/ts/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
+      - "tools/validator.sh"
+      - ".github/workflows/sdlc-profile.yml"
+  push:
+    branches: [main]
+    paths:
+      - "profiles/sdlc/**"
+      - "corpora/**"
+      - "packages/ts/corpus-schema/**"
+      - "pnpm-lock.yaml"
+      - "tools/build-corpus-schema.sh"
+      - "tools/validator.sh"
+      - ".github/workflows/sdlc-profile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Build corpus-schema
+        run: |
+          corepack enable
+          sh tools/build-corpus-schema.sh
+
+      # pnpm pack resolves the starter's workspace dependency on the profile
+      # only once the workspace is installed.
+      - name: Install the profile and the starter
+        run: pnpm install --frozen-lockfile --filter @osdlc/corpus-sdlc-starter
+
+      - name: Check the packed profile and starter
+        run: sh profiles/sdlc/tests/package.sh

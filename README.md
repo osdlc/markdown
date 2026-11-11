@@ -27,3 +27,6 @@ one at a time.
   Update them together with the plan.
 - [The claims profile](profiles/claims/): the first draft of the claims profile, record types for
   claims and their evidence, with an example corpus to copy.
+- [The sdlc profile](profiles/sdlc/): sdlc's planning record types, generated from its packs, and
+  the [sdlc starter](corpora/sdlc-starter/), a corpus of shared principles that a work repo
+  extends.
