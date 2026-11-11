@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, test } from 'vitest'
 
 import { npmPackageUrl, packageUrl } from '../src/identity.ts'
-import { scratch } from './corpora.ts'
+import { has, scratch } from './corpora.ts'
 
 const { put, root, report, errors, warnings } = scratch('identity')
 
@@ -67,6 +67,22 @@ describe('a corpus identity', () => {
     assert.deepEqual([r.identity, r.version], ['pkg:npm/q', undefined])
   })
 
+  test('is the same for one folder reached by a path and by a package, in either order', () => {
+    const pkg = (rel: string, name: string, version: string, ext = {}): void => {
+      put(`${rel}/package.json`, JSON.stringify({ name, version }))
+      root(rel, { extends: ext })
+    }
+    pkg('c/node_modules/org', 'org', '1.0.0')
+    pkg('c/node_modules/b', 'b', '1.0.0', { o: 'org' })
+    pkg('c/node_modules/x', 'x', '1.0.0', { o: 'org' })
+    pkg('c/node_modules/x/node_modules/org', 'org', '2.0.0')
+    const clash = 'pkg:npm/org is at 1.0.0 as'
+    root('c', { extends: { o: './node_modules/org', b: 'b', x: 'x' } })
+    assert.ok(has(errors(), clash), errors().join('\n'))
+    root('c', { extends: { b: 'b', o: './node_modules/org', x: 'x' } })
+    assert.ok(has(errors(), clash), errors().join('\n'))
+  })
+
   test('is none in no package, or when the nearest package.json names another folder', () => {
     root('c', { level: 1 })
     assert.equal(report().identity, undefined)
@@ -89,6 +105,14 @@ describe('x-identity', () => {
       'notes/notes.schema.yaml: properties.a: x-identity sits only at the schema root',
       "rules/rules.schema.yaml: x-identity: must be pkg:npm/%40acme/org#rules, the type's identity",
     ])
+  })
+
+  test("is the folder's package name, so an npm alias gives the real name", () => {
+    put('c/node_modules/foo/package.json', '{"name":"bar","version":"1.0.0"}')
+    root('c/node_modules/foo')
+    put('c/node_modules/foo/tasks/tasks.schema.yaml', schema('pkg:npm/bar#tasks'))
+    root('c', { extends: { f: 'foo' } })
+    assert.deepEqual([errors(), warnings()], [[], []])
   })
 
   test('is not checked in a corpus with no package', () => {

@@ -197,6 +197,16 @@
           }
         },
         {
+          "name": "a record file named for its record folder is one record",
+          "input": {
+            "corpus": "corpora/record-file-folder-name"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
           "name": "a folder in a type folder whose name starts with _ holds narrative",
           "input": {
             "corpus": "corpora/narrative-folder"
@@ -610,6 +620,28 @@
           "expect": {
             "errors": [
               "principles/principles.schema.yaml: x-identity"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a corpus's identity is its folder's package name, so an npm alias gives the real name",
+          "input": {
+            "corpus": "corpora/identity-alias"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "one folder reached by a path and by a package is one package, so its two versions clash",
+          "input": {
+            "corpus": "corpora/identity-two-routes"
+          },
+          "expect": {
+            "errors": [
+              "corpus-schema.yaml: (corpora)"
             ],
             "warnings": []
           }
