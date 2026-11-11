@@ -46,9 +46,9 @@ importers:
         version: 0.1.1(@types/node@26.6.6)
 
   corpora/sdlc-starter:
-    dependencies:
+    devDependencies:
       '@osdlc/corpus-profile-sdlc':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../profiles/sdlc
 
   packages/ts/corpus-schema:

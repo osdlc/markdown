@@ -2,11 +2,12 @@
 # corpora/sdlc-starter/ with the corpus-schema validator. Both are packed and
 # installed as npm ships them, and must validate with no errors and no
 # warnings. Broken copies of a starter record must fail with their one
-# expected error, and a corpus that extends both must validate.
+# expected error, and a corpus that extends the profile and references the
+# starter must validate.
 #
 # The validator is this repository's packages/ts/corpus-schema, built by
-# tools/build-corpus-schema.sh, because both corpora use `extends` and the
-# published 0.2.x does not read it.
+# tools/build-corpus-schema.sh, because the corpora use `extends`, `uses` and
+# `references`, and the published 0.2.x reads none of them.
 #
 # The profile is generated from packs outside this repository, so nothing here
 # checks it against them. Regenerating it is a manual step (see

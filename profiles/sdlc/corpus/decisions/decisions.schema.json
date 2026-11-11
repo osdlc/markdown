@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "intent.decision",
-  "x-id-pattern": "^(?:D-[0-9A-Z]{4})(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$",
+  "x-id-pattern": "^D-[0-9A-Z]{4}$",
+  "x-record-file": "README.md",
   "type": "object",
   "properties": {
     "type": {
@@ -160,7 +161,7 @@
     },
     "intent.DocWikilink": {
       "type": "string",
-      "pattern": "^\\x5B\\x5B[A-Za-z0-9][A-Za-z0-9._/-]*\\x5D\\x5D$"
+      "pattern": "^\\[\\[[A-Za-z0-9][A-Za-z0-9._/-]*\\]\\]$"
     },
     "intent.DateTime": {
       "type": "string",

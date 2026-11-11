@@ -29,4 +29,4 @@ one at a time.
   claims and their evidence, with an example corpus to copy.
 - [The sdlc profile](profiles/sdlc/): sdlc's planning record types, generated from its packs, and
   the [sdlc starter](corpora/sdlc-starter/), a corpus of shared principles that a work repo
-  extends.
+  references and cites.

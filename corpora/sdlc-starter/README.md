@@ -1,8 +1,9 @@
 # @osdlc/corpus-sdlc-starter
 
-The sdlc starter is a small knowledge base that a work repo inherits. It holds shared records, for
-now two draft principles, as a corpus-schema corpus. Its types come from the
-[sdlc profile](../../profiles/sdlc/), `@osdlc/corpus-profile-sdlc`.
+The sdlc starter is a small knowledge base that a work repo references and cites. It holds shared
+records, for now two draft principles, as a corpus-schema corpus. Its types come from the
+[sdlc profile](../../profiles/sdlc/), `@osdlc/corpus-profile-sdlc`, which it names under `extends`
+and takes through `uses: [sdlc/*]`.
 
 | Record                                                        | Title                                                               |
 | ------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -11,17 +12,17 @@ now two draft principles, as a corpus-schema corpus. Its types come from the
 
 Both are `open/draft` and marked `need_human_review: true`.
 
-## Extend it from a repo
+## Reference it from a repo
 
 Install the starter and the profile in the folder that holds your corpus, or in any folder above
-it:
+it. The profile is a peer dependency of the starter, so your project holds one version of it:
 
 ```sh
 pnpm add -D @osdlc/corpus-sdlc-starter @osdlc/corpus-profile-sdlc
 ```
 
-Name both in your corpus's root file. `extends` needs level 2. A corpus sees only its own parents'
-types, so it names the profile as well as the starter:
+Name both in your corpus's root file. The profile gives your corpus its types, under `extends`. The
+starter gives it records to cite, under `references`. `extends` and `uses` need level 2:
 
 ```yaml
 ---
@@ -29,21 +30,17 @@ corpus-schema: 0
 level: 2
 extends:
   sdlc: "@osdlc/corpus-profile-sdlc"
+references:
   osdlc: "@osdlc/corpus-sdlc-starter"
+uses: [sdlc/*]
 ---
 ```
 
-Give your `principles/` folder a schema file that builds on the starter's type, so your principles
-can cite the starter's. `principles/principles.schema.md`:
-
-```yaml
----
-x-extends: osdlc/principles
----
-```
+Your `principles/` folder needs no schema file: `uses` gives it the profile's type, which the
+starter's principles have too.
 
 Cite a starter principle by id, as a quoted wikilink: `related: ["[[P-0002]]"]`. The validator
-finds it among the starter's records. A wikilink to a parent's record is a link into the parent's
+finds it among the starter's records. A wikilink to a referenced corpus's record is a link into its
 copy, so write the copy and commit it:
 
 ```sh
@@ -51,8 +48,9 @@ npx @osdlc/corpus-schema sync docs/planning
 npx @osdlc/corpus-schema validate --strict docs/planning
 ```
 
-`sync` writes `_inherited/osdlc/` and `_inherited/sdlc/` beside your root file. Run it again after
-you update either package. Your own records must not reuse an id the starter holds.
+`sync` writes `_references/osdlc/` beside your root file. The profile gets no copy, since it gives
+types only. Run `sync` again after you update the starter. A record of yours may share an id with a
+starter record, but a reference by id that matches both is an error, so keep your ids apart.
 
 [profiles/sdlc/tests/downstream/](../../profiles/sdlc/tests/downstream/) is a corpus set up this
 way.
@@ -70,5 +68,5 @@ way.
 5. Check it: `sh profiles/sdlc/tests/package.sh` from the repository root.
 6. Add a changeset for `@osdlc/corpus-sdlc-starter`.
 
-A record is named by its id alone, `P-0003.md`, not `P-0003-slug.md`. corpus-schema takes a
-record's id from its file name, so `[[P-0003]]` finds only `P-0003.md`.
+The starter names each record by its id alone, `P-0003.md`. A name with a slug, such as
+`P-0003-a-slug.md`, works too: corpus-schema cuts the id out of the file name.

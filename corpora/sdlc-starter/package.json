@@ -1,7 +1,7 @@
 {
   "name": "@osdlc/corpus-sdlc-starter",
   "version": "0.0.0",
-  "description": "A starter knowledge base for an sdlc planning corpus: shared principles as corpus-schema records, typed by @osdlc/corpus-profile-sdlc. A repo names it under extends in its corpus's root file and inherits its records.",
+  "description": "A starter knowledge base for an sdlc planning corpus: shared principles as corpus-schema records, typed by @osdlc/corpus-profile-sdlc. A repo names it under references in its corpus's root file and cites its records by id.",
   "license": "MIT OR Apache-2.0",
   "author": "sksizer",
   "repository": {
@@ -28,7 +28,10 @@
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ],
-  "dependencies": {
+  "peerDependencies": {
     "@osdlc/corpus-profile-sdlc": "workspace:^"
+  },
+  "devDependencies": {
+    "@osdlc/corpus-profile-sdlc": "workspace:*"
   }
 }

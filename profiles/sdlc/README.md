@@ -6,7 +6,7 @@ check them with these types instead of writing its own.
 
 The profile is a corpus that holds types and no records. It ships as the npm package
 `@osdlc/corpus-profile-sdlc`. A corpus names it under `extends` in its root file, with the prefix
-`sdlc`, and builds its own types on the profile's types. The
+`sdlc`, and its folders take the profile's types through `uses`. The
 [corpus-schema spec](../../packages/conformance/corpus-schema/SPEC.md) defines both.
 
 ## Where the types come from
@@ -31,7 +31,7 @@ move to a public repo.
 
 ## The types
 
-| Folder          | `type:`      | File name     |
+| Folder          | `type:`      | Id            |
 | --------------- | ------------ | ------------- |
 | `principles/`   | `principle`  | `P-NNNN`      |
 | `standards/`    | `standard`   | `S-NNNN`      |
@@ -49,7 +49,13 @@ move to a public repo.
 | `notes/`        | `note`       | `N-NNNN`      |
 
 `N` is a digit or an upper-case letter. A file is named by its id, such as `P-0002.md`, or by its
-id and a slug, such as `P-0002-favor-deterministic.md`.
+id and a slug, such as `P-0002-favor-deterministic.md`. Each type's `x-id-pattern` is the id alone,
+and the validator cuts the id out of the file name with it: the longest part that matches, followed
+by `-` or the end of the name. A record's `id` field must equal that id.
+
+A decision may also be a folder of its own, `D-0001-a-slug/README.md`, with files of its own beside
+`README.md`. The decisions type's `x-record-file: README.md` makes `README.md` the record, with the
+folder's id. A `decisions/` folder whose name starts with `_` holds narrative, not records.
 
 Each schema checks the frontmatter: the fields, their types and enums, the lifecycle states, and
 the pack rules that JSON Schema can hold. A reference to another record, such as a principle's
@@ -75,7 +81,7 @@ You need a corpus-schema validator that reads `extends`, `x-ref-form` and lists 
 
 ## Use it
 
-Name the profile in your corpus's root file. `extends` needs level 2:
+Name the profile in your corpus's root file, and use its types. `extends` and `uses` need level 2:
 
 ```yaml
 ---
@@ -83,10 +89,13 @@ corpus-schema: 0
 level: 2
 extends:
   sdlc: "@osdlc/corpus-profile-sdlc"
+uses: [sdlc/*]
 ---
 ```
 
-Give each type folder a schema file that uses the profile's type. `tasks/tasks.schema.md`:
+Each folder at the corpus root named after a type, such as `tasks/`, takes the profile's type as it
+is, with no schema file. To add fields to a type, leave it out of `uses`, list the others, and give
+its folder a schema file that builds on the profile's type. `tasks/tasks.schema.md`:
 
 ```yaml
 ---
@@ -100,25 +109,25 @@ Then validate:
 npx @osdlc/corpus-schema validate --strict docs/planning
 ```
 
-For shared records as well as types, extend the [sdlc starter](../../corpora/sdlc-starter/)
-corpus.
+For shared records, reference the [sdlc starter](../../corpora/sdlc-starter/) corpus and cite its
+records.
 
 ## For corpus-schema 0.2
 
-`@osdlc/corpus-schema` 0.2.x reads no `extends`, no `x-ref-form` and no list in `x-ref`. A corpus
-that must validate with 0.2 copies a variant of the profile instead. Make it from a checkout of the
+`@osdlc/corpus-schema` 0.2.x reads no `extends`, no `uses`, no `x-ref-form`, no list in `x-ref`
+and no `x-record-file`, and it matches `x-id-pattern` against the whole file name. A corpus that
+must validate with 0.2 copies a variant of the profile instead. Make it from a checkout of the
 packs, as in Regenerate:
 
 ```sh
 cd packages/ts/pack-sdlc
-bunx model-schema corpus . --inline --links id --refs pattern --out <your corpus>
+bunx model-schema corpus . --inline --links id --target 0.2 --out <your corpus>
 ```
 
 The variant writes each reference by id, such as `depends_on: [T-0002]`, and has no `x-ref`. Its
-pattern still checks the id's shape and the target's prefix, but not that the record exists. That
-is what 0.2 needs loosened: it reads an `x-ref` value only as one link to a file of one type, so a
-bare id fails, and `[[T-0001]]` finds no file named `T-0001-slug.md`. File names, closed types and
-the pack rules work under 0.2 as they are.
+pattern still checks the id's shape and the target's prefix, but not that the record exists. Its
+`x-id-pattern` admits the id or the id and a slug, and it has no `x-record-file`, so a decision is
+one file. Closed types and the pack rules work under 0.2 as they are.
 
 Copy the variant's root file and type folders into your corpus, and copy them again to take a new
 version. Validate with `npx @osdlc/corpus-schema@0.2 validate <your corpus>`.
@@ -145,4 +154,5 @@ sh profiles/sdlc/tests/package.sh
 
 `tests/package.sh` packs this package and the starter, installs them in a temporary
 `node_modules/`, and validates the profile, the starter, broken copies of a starter record, and
-[tests/downstream/](tests/downstream/), a corpus that cites a starter principle by id.
+[tests/downstream/](tests/downstream/). That corpus extends the profile, references the starter
+and cites a starter principle as `[[P-0002]]`, after `sync` writes the starter's copy.

@@ -14,9 +14,11 @@
 # - a starter principle with an unknown state fails, a rule of the profile's type;
 # - a starter principle with two principle/<category> tags fails, a pack rule
 #   the profile carries as `contains`;
-# - downstream/, a corpus that cites a starter principle by id, validates with
-#   no warnings once sync has written its copy of the starter, and fails when
-#   it cites a principle the starter does not hold.
+# - downstream/, a corpus that references the starter and cites a starter
+#   principle as [[P-0002]], fails until sync writes its copy of the starter,
+#   then validates with no warnings. Its principle's file name carries a slug,
+#   and its decision is a record folder, D-0101-<slug>/README.md;
+# - downstream/ fails when it cites a principle the starter does not hold.
 #
 # The validator is this repository's corpus-schema, built first. Set
 # CORPUS_SCHEMA to run another one (see tools/validator.sh).
@@ -90,9 +92,11 @@ sed 's|^  - principle/technical$|  - principle/technical\
 check "$work/starter" 1 "principles/$(basename "$p2"): tags: must contain at least 1 and no more than 1 valid item(s)" \
   "the profile's principle/<category> rule applies"
 
-# A wikilink to a parent's record is a link into the parent's copy, which
-# sync writes.
+# A wikilink to a referenced corpus's record is a link into its copy,
+# _references/osdlc/, which sync writes.
 cp -R "$here/downstream" "$work/downstream"
+check "$work/downstream" 1 "_references/osdlc: (copy): missing" \
+  "a corpus that cites a starter principle needs the starter's copy"
 if [ -n "${CORPUS_SCHEMA:-}" ]; then
   $CORPUS_SCHEMA sync "$work/downstream" >/dev/null
 else
