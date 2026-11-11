@@ -171,21 +171,21 @@ describe('corpus-schema validate', () => {
 })
 
 describe('corpus-schema sync', () => {
-  const parent = (rel: string, parents = ''): void => {
-    put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nlevel: 2\n${parents}`)
+  const corpusAt = (rel: string, refs = ''): void => {
+    put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nlevel: 2\n${refs}`)
     put(`${rel}/notes/notes.schema.yaml`, 'type: object\n')
     put(`${rel}/notes/A.md`, `${rel}\n`)
   }
 
-  test('syncs every corpus below the folder, parents first, and a second run changes nothing', () => {
-    parent('z')
-    parent('y', 'extends:\n  z: ../z\n')
-    parent('x', 'extends:\n  y: ../y\n')
-    put('x/notes/B.md', 'See [A](../_inherited/y/_inherited/z/notes/A.md).\n')
+  test('syncs every corpus below the folder, referenced ones first, and a second run changes nothing', () => {
+    corpusAt('z')
+    corpusAt('y', 'references:\n  z: ../z\n')
+    corpusAt('x', 'references:\n  y: ../y\n')
+    put('x/notes/B.md', 'See [A](../_references/y/_references/z/notes/A.md).\n')
     const before = cli('validate', 'x')
     assert.equal(before.status, 1)
-    assert.match(before.stderr, /^_inherited\/y: \(copy\): missing/m)
-    assert.equal(existsSync(join(dir, 'x/_inherited')), false)
+    assert.match(before.stderr, /^_references\/y: \(copy\): missing/m)
+    assert.equal(existsSync(join(dir, 'x/_references')), false)
 
     // x is found first, but syncs after y, which syncs after z.
     const r = cli('sync')
@@ -196,7 +196,7 @@ describe('corpus-schema sync', () => {
       'y: 3 written, 0 removed',
       'x: 6 written, 0 removed',
     ])
-    assert.match(r.stdout, /^wrote: _inherited\/y\/_inherited\/z\/notes\/A\.md$/m)
+    assert.match(r.stdout, /^wrote: _references\/y\/_references\/z\/notes\/A\.md$/m)
     assert.equal(cli('validate', '.').status, 0)
 
     const again = cli('sync', '.')
@@ -204,19 +204,19 @@ describe('corpus-schema sync', () => {
     assert.doesNotMatch(again.stdout, /^(wrote|removed):/m)
   })
 
-  test('prints what it removes, and exits 1 when a parent does not resolve', () => {
-    parent('a')
-    put('a/_inherited/old/x.md', 'stale\n')
+  test('prints what it removes, and exits 1 when a reference does not resolve', () => {
+    corpusAt('a')
+    put('a/_references/old/x.md', 'stale\n')
     const r = cli('sync', 'a')
     assert.equal(r.status, 0, r.stderr)
-    assert.equal(r.stdout, 'removed: _inherited/old/x.md\nsynced: a: 0 written, 1 removed\n')
+    assert.equal(r.stdout, 'removed: _references/old/x.md\nsynced: a: 0 written, 1 removed\n')
 
-    parent('b', 'extends:\n  gone: "@acme/gone"\n')
+    corpusAt('b', 'references:\n  gone: "@acme/gone"\n')
     const bad = cli('sync', 'b')
     assert.equal(bad.status, 1)
     assert.equal(
       bad.stderr,
-      'corpus-schema.yaml: extends.gone: package @acme/gone is not installed\nb: 1 error(s)\n',
+      'corpus-schema.yaml: references.gone: package @acme/gone is not installed\nb: 1 error(s)\n',
     )
   })
 })
