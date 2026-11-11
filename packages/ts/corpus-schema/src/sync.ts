@@ -146,10 +146,11 @@ export function syncCorpus(root: string): SyncReport {
 }
 
 /**
- * The real paths of the corpora the corpus at `root` names in `references` that resolve. Reads
- * only the root file, to order a `sync` of several corpora.
+ * The real paths of the corpora the corpus at `root` names in `extends` or `references` that
+ * resolve. Reads only the root file, to order a `sync` of several corpora: a parent is checked as
+ * the corpus loads, so its copy must be fresh too.
  */
-export function referencedRoots(root: string): string[] {
+export function namedRoots(root: string): string[] {
   let data: Data
   try {
     const names = readdirSync(root)
@@ -159,10 +160,12 @@ export function referencedRoots(root: string): string[] {
   } catch {
     return []
   }
-  const map = data['references']
-  if (map === null || typeof map !== 'object') return []
-  return Object.values(map).flatMap((source) => {
-    const r = typeof source === 'string' ? resolveSource(root, source) : undefined
-    return r !== undefined && 'dir' in r ? [r.dir] : []
+  return (['extends', 'references'] as const).flatMap((key) => {
+    const map = data[key]
+    if (map === null || typeof map !== 'object') return []
+    return Object.values(map).flatMap((source) => {
+      const r = typeof source === 'string' ? resolveSource(root, source) : undefined
+      return r !== undefined && 'dir' in r ? [r.dir] : []
+    })
   })
 }

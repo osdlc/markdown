@@ -595,9 +595,9 @@ v0 defines two verbs.
 - `sync <folder>` writes `_references/` for every corpus at or below the folder. For each corpus in
   `references` it writes `_references/<prefix>/`, and it removes every other file there. It copies
   nothing for `extends`. It changes nothing outside `_references/`, and a second run changes
-  nothing. A corpus syncs after the corpora it references that sit below the same folder. When a
-  corpus's root file has an error, or a corpus it names does not resolve or has errors of its own,
-  `sync` writes nothing in that corpus and exits non-zero. A cycle is such an error, so `sync`
+  nothing. A corpus syncs after the corpora it extends or references that sit below the same
+  folder. When a corpus's root file has an error, or a corpus it names does not resolve or has
+  errors of its own, `sync` writes nothing in that corpus and exits non-zero. A cycle is such an error, so `sync`
   never copies a corpus into itself.
 - When a referenced corpus has turned a folder into a file, or a file into a folder, `sync`
   replaces the stale path in the copy.

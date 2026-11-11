@@ -204,6 +204,24 @@ describe('corpus-schema sync', () => {
     assert.doesNotMatch(again.stdout, /^(wrote|removed):/m)
   })
 
+  test('a corpus syncs after a parent it extends, so a parent with a stale copy is fixed first', () => {
+    corpusAt('base')
+    corpusAt('org', 'references:\n  base: ../base\n')
+    put('org/notes/B.md', 'See [A](../_references/base/notes/A.md).\n')
+    put('aa/corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends:\n  org: ../org\n')
+    assert.equal(cli('sync', 'org').status, 0)
+    put('base/notes/A.md', 'base, changed\n')
+
+    // aa is found before org, but syncs after it.
+    const r = cli('sync')
+    assert.equal(r.status, 0, r.stderr)
+    const synced = [...r.stdout.matchAll(/^synced: (.*)$/gm)].map((m) => m[1]?.split(':')[0])
+    assert.deepEqual(synced, ['base', 'org', 'aa'])
+    const again = cli('sync', '.')
+    assert.equal(again.status, 0, again.stderr)
+    assert.doesNotMatch(again.stdout, /^(wrote|removed):/m)
+  })
+
   test('prints what it removes, and exits 1 when a reference does not resolve', () => {
     corpusAt('a')
     put('a/_references/old/x.md', 'stale\n')
