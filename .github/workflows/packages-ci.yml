@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   packages:
-    uses: osdlc/osdlc/.github/workflows/ts-packages-ci.yml@c4886b067f4ddb65503b78306bd25a879c8593b5 # osdlc/osdlc main, #749
+    uses: osdlc/osdlc/.github/workflows/ts-packages-ci.yml@aaa35db118c6dcffb3b3c742c67162ef2cce5ba0 # osdlc/osdlc main
     with:
       os: '["ubuntu-latest", "macos-latest"]'
       node: '["22", "24"]'

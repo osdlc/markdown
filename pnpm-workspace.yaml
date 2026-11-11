@@ -1,5 +1,6 @@
 packages:
   - 'packages/ts/*'
+  - 'profiles/*'
 
 # Versions shared across the workspace. A package or the root names one as
 # `"catalog:"`, so a bump is one edit here. `pnpm pack` and `pnpm publish`

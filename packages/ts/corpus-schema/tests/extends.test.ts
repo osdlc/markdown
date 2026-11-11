@@ -190,7 +190,7 @@ describe('x-extends', () => {
     put('c/rules/Bad.md', '---\nsee: "[Other](../notes/Other.md)"\n---\n')
     assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [])
     assert.deepEqual(errors().sort(), [
-      'rules/Bad.md: see: notes/Other.md is not a principles record',
+      'rules/Bad.md: see: notes/Other.md is not a record of type org/principles',
       'rules/lower.md: id: "lower" does not match x-id-pattern ^[A-Z]',
     ])
   })
@@ -222,6 +222,91 @@ describe('x-extends', () => {
     put('d/sub/sub.schema.yaml', 'x-extends: base\n')
     put('d/sub/S.md', '---\n---\n')
     assert.deepEqual(errors('d'), ['sub/S.md: n: required'])
+  })
+})
+
+describe('flattened x-extends', () => {
+  beforeEach(() => {
+    org()
+    root('c', { org: '../org' })
+  })
+
+  test('a closed child admits the fields of every type up its chain', () => {
+    for (const closing of ['additionalProperties', 'unevaluatedProperties']) {
+      put(
+        'c/rules/rules.schema.yaml',
+        `x-extends: org/principles\nproperties:\n  team: { type: string }\n`,
+      )
+      put(
+        'c/team/team.schema.yaml',
+        `x-extends: rules\n${closing}: false\nproperties:\n  lead: { type: string }\n`,
+      )
+      put('c/team/T.md', '---\nstatement: s\nteam: a\nlead: b\n---\n')
+      assert.deepEqual(errors(), [], closing)
+      put('c/team/T.md', '---\nstatement: s\nother: c\n---\n')
+      assert.equal(errors().length, 1, closing)
+      assert.match(errors()[0] ?? '', /^team\/T\.md: /)
+    }
+  })
+
+  test("a closed child admits a parent's patternProperties", () => {
+    put(
+      'org/principles/principles.schema.yaml',
+      'type: object\nproperties:\n  statement: { type: string }\npatternProperties:\n  "^x-": { type: string }\n',
+    )
+    put('c/rules/rules.schema.yaml', 'x-extends: org/principles\nadditionalProperties: false\n')
+    put('c/rules/R.md', '---\nstatement: s\nx-note: n\n---\n')
+    assert.deepEqual(errors(), [])
+    put('c/rules/R.md', '---\nstatement: s\nx-note: 3\n---\n')
+    assert.deepEqual(errors(), ['rules/R.md: x-note: must be string'])
+  })
+
+  test("a field declared again must still pass the parent's schema for it", () => {
+    put(
+      'org/principles/principles.schema.yaml',
+      'type: object\nproperties:\n  statement: { type: string }\n  status: { enum: [draft, kept] }\n',
+    )
+    put(
+      'c/rules/rules.schema.yaml',
+      'x-extends: org/principles\nadditionalProperties: false\nproperties:\n  status: { type: string, enum: [kept, gone] }\n',
+    )
+    put('c/rules/Kept.md', '---\nstatement: s\nstatus: kept\n---\n')
+    put('c/rules/Draft.md', '---\nstatement: s\nstatus: draft\n---\n')
+    put('c/rules/Gone.md', '---\nstatement: s\nstatus: gone\n---\n')
+    assert.deepEqual(errors().sort(), [
+      'rules/Draft.md: status: must be equal to one of the allowed values',
+      'rules/Gone.md: status: must be equal to one of the allowed values',
+    ])
+  })
+
+  test('a closed parent admits no new field: the field is a schema error, and a record with it fails', () => {
+    put(
+      'org/principles/principles.schema.yaml',
+      'type: object\nadditionalProperties: false\nproperties:\n  statement: { type: string }\n',
+    )
+    put(
+      'c/rules/rules.schema.yaml',
+      'x-extends: org/principles\nproperties:\n  statement: { minLength: 1 }\n  team: { type: string }\n',
+    )
+    put('c/rules/R.md', '---\nstatement: s\n---\n')
+    put('c/rules/T.md', '---\nstatement: s\nteam: a\n---\n')
+    assert.deepEqual(errors().sort(), [
+      'rules/T.md: team: unknown field',
+      'rules/rules.schema.yaml: properties.team: org/principles closes its fields, so no record can hold this one',
+    ])
+  })
+
+  test('a local chain flattens the same way', () => {
+    put('c/base/base.schema.yaml', 'type: object\nproperties:\n  a: { type: string }\n')
+    put('c/mid/mid.schema.yaml', 'x-extends: base\nproperties:\n  b: { type: string }\n')
+    put('c/leaf/leaf.schema.yaml', 'x-extends: mid\nadditionalProperties: false\nrequired: [a]\n')
+    put('c/leaf/L.md', '---\na: x\nb: y\n---\n')
+    assert.deepEqual(errors(), [])
+    put('c/leaf/L.md', '---\na: 1\nb: y\nc: z\n---\n')
+    assert.deepEqual(errors().sort(), [
+      'leaf/L.md: a: must be string',
+      'leaf/L.md: c: unknown field',
+    ])
   })
 })
 
@@ -269,7 +354,7 @@ describe('x-ref across corpora', () => {
     assert.ok(
       has(
         e,
-        'guides/I.md: follows: must link to a org/principles record in this corpus or a parent',
+        'guides/I.md: follows: must link to a record of type org/principles in this corpus or a parent',
       ),
     )
   })
@@ -380,6 +465,51 @@ describe('syncCorpus', () => {
     root('c')
     assert.equal(syncCorpus(join(dir, 'c')).removed.length, 2)
     assert.equal(existsSync(join(dir, 'c/_inherited')), false)
+  })
+
+  test('writes nothing in a cycle of extends, run after run', () => {
+    root('a', { b: '../b' })
+    root('b', { a: '../a' })
+    for (let run = 0; run < 2; run++) {
+      for (const rel of ['a', 'b']) {
+        const r = syncCorpus(join(dir, rel))
+        assert.deepEqual(r.written, [])
+        assert.ok(has(r.errors, 'closes a cycle'), r.errors.join('\n'))
+      }
+      assert.equal(existsSync(join(dir, 'a/_inherited')), false)
+      assert.equal(existsSync(join(dir, 'b/_inherited')), false)
+    }
+  })
+
+  test('writes nothing when a parent has errors of its own', () => {
+    org()
+    put('org/principles/Bad.md', '---\nstatement: 3\n---\n')
+    root('c', { org: '../org' })
+    const r = syncCorpus(join(dir, 'c'))
+    assert.deepEqual(r.written, [])
+    assert.deepEqual(r.errors, [
+      'corpus-schema.yaml: extends.org: ../org has 1 error(s); the first: principles/Bad.md: statement: must be string',
+    ])
+    assert.equal(existsSync(join(dir, 'c/_inherited')), false)
+  })
+
+  test('replaces a folder the parent turned into a file, and a file it turned into a folder', () => {
+    org()
+    put('org/guide/part.md', 'A part.\n')
+    put('org/guide.md', 'A guide.\n')
+    root('c', { org: '../org' })
+    assert.deepEqual(syncCorpus(join(dir, 'c')).errors, [])
+    put('c/_inherited/org/guide/.DS_Store', 'skipped by a corpus')
+    // guide/ becomes a file, and guide.md a folder.
+    rmSync(join(dir, 'org/guide'), { recursive: true })
+    put('org/guide', 'Now a file.\n')
+    rmSync(join(dir, 'org/guide.md'))
+    put('org/guide.md/part.md', 'Now a folder.\n')
+    const r = syncCorpus(join(dir, 'c'))
+    assert.deepEqual(r.errors, [])
+    assert.equal(read('c/_inherited/org/guide'), 'Now a file.\n')
+    assert.equal(read('c/_inherited/org/guide.md/part.md'), 'Now a folder.\n')
+    assert.deepEqual(errors(), [])
   })
 
   test('writes nothing when a parent does not resolve', () => {

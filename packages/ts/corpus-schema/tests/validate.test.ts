@@ -473,9 +473,9 @@ describe('x-ref', () => {
     put('notes/Note B.md', note('partner: "[Survey](Survey/Survey.md)"\n'))
     assert.deepEqual(errors(), [])
     put('notes/Note B.md', note('partner: "[Survey](Survey/)"\n'))
-    assert.ok(has(errors(), 'partner: notes/Survey is not a notes record'))
+    assert.ok(has(errors(), 'partner: notes/Survey is not a record of type notes'))
     put('notes/Note B.md', note('partner: "[run](Survey/run.py)"\n'))
-    assert.ok(has(errors(), 'partner: notes/Survey/run.py is not a notes record'))
+    assert.ok(has(errors(), 'partner: notes/Survey/run.py is not a record of type notes'))
   })
 
   test('a link to a record of the type passes', () => {
@@ -491,14 +491,18 @@ describe('x-ref', () => {
   test('a link that leaves the corpus fails', () => {
     put('more/inner/corpus-schema.yaml', 'corpus-schema: 0\n')
     put('notes/Note B.md', note('partner: "[Y](../../Y.md)"\n'))
-    assert.ok(has(errors(), 'notes/Note B.md: partner: must link to a notes record in this corpus'))
+    assert.ok(
+      has(errors(), 'notes/Note B.md: partner: must link to a record of type notes in this corpus'),
+    )
     put('notes/Note B.md', note('partner: "[Y](../more/inner/Y.md)"\n'))
-    assert.ok(has(errors(), 'notes/Note B.md: partner: must link to a notes record in this corpus'))
+    assert.ok(
+      has(errors(), 'notes/Note B.md: partner: must link to a record of type notes in this corpus'),
+    )
   })
 
   test('a link to a record of another type fails', () => {
     put('notes/Note B.md', note('partner: "[T](../tags/T.yaml)"\n'))
-    assert.ok(has(errors(), 'partner: tags/T.yaml is not a notes record'))
+    assert.ok(has(errors(), 'partner: tags/T.yaml is not a record of type notes'))
     put('notes/Note B.md', note('tag: "[T](../tags/T.yaml)"\n'))
     assert.deepEqual(errors(), [])
   })
@@ -519,9 +523,13 @@ describe('x-ref', () => {
 
   test('a URL or a link to a heading is not a record file', () => {
     put('notes/Note B.md', note('partner: "[A](https://example.com/A.md)"\n'))
-    assert.ok(has(errors(), 'notes/Note B.md: partner: must link to a notes record file'))
+    assert.ok(
+      has(errors(), 'notes/Note B.md: partner: must link to the file of a record of type notes'),
+    )
     put('notes/Note B.md', note('partner: "[A](#heading)"\n'))
-    assert.ok(has(errors(), 'notes/Note B.md: partner: must link to a notes record file'))
+    assert.ok(
+      has(errors(), 'notes/Note B.md: partner: must link to the file of a record of type notes'),
+    )
   })
 
   test('a wikilink resolves, with a warning', () => {

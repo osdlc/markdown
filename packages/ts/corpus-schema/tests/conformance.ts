@@ -14,12 +14,14 @@ export const FAMILY_DIR = join(import.meta.dirname, '../../../conformance/corpus
 export const SUITE_PATH = join(import.meta.dirname, '../../../conformance/corpus-schema/suite.json')
 
 /** The sections this package runs. */
-export const SECTIONS = ['validate']
+export const SECTIONS = ['validate', 'strict']
 
 /** The `<file>: <field>` prefixes of the errors and warnings, each sorted and once. */
 export interface Outcome {
   errors: string[]
   warnings: string[]
+  /** In the strict section only: whether `validate --strict` passes the corpus. */
+  passes?: boolean
 }
 
 export interface Case {
@@ -42,8 +44,12 @@ export const readSuite = (): Suite => JSON.parse(readFileSync(SUITE_PATH, 'utf8'
 const prefix = (line: string): string => line.split(': ', 2).join(': ')
 const prefixes = (lines: string[]): string[] => [...new Set(lines.map(prefix))].sort()
 
-/** Validate one case's corpus. */
-export function run(input: Case['input']): Outcome {
+/** Validate one case's corpus, as the section says. */
+export function run(section: string, input: Case['input']): Outcome {
   const report = validateCorpus(join(FAMILY_DIR, input.corpus))
-  return { errors: prefixes(report.errors), warnings: prefixes(report.warnings) }
+  const outcome: Outcome = { errors: prefixes(report.errors), warnings: prefixes(report.warnings) }
+  // `--strict` fails on a warning as on an error.
+  if (section === 'strict')
+    outcome.passes = report.errors.length === 0 && report.warnings.length === 0
+  return outcome
 }
