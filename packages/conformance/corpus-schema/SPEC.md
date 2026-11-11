@@ -266,13 +266,19 @@ them stops working anywhere else.
 Wikilinks are accepted but not canonical: `[[target]]`, `[[target|text]]`, `[[target#heading]]`
 and `![[target]]`.
 
-- A wikilink resolves by path suffix within the corpus and the copies of the corpora it references
-  directly, as `_references/<prefix>/<path>`, compared after NFC normalization and case folding. A
-  match in a copy is a link into it (see The copy). A copy's own `_references/` is not searched. `[[Claude Code]]`, `[[harnesses/Claude Code]]` and `[[harnesses/Claude Code.md]]` all
-  match `harnesses/Claude Code.md`. The extension of a record MAY be left out.
+- A wikilink reaches the corpus's own files and those of the corpora it references directly,
+  through their copies in `_references/<prefix>/`. It does not reach a corpus further away, such as
+  a corpus that a referenced corpus references. This holds for a wikilink in a body or a string,
+  and for a value in the `wikilink` form (see Typed references). A record further away is named in
+  the `id` form, which reaches any depth.
+- A wikilink resolves by path suffix among the files it reaches, as `_references/<prefix>/<path>`
+  for a copy, compared after NFC normalization and case folding. A match in a copy is a link into
+  it (see The copy). `[[Claude Code]]`, `[[harnesses/Claude Code]]` and
+  `[[harnesses/Claude Code.md]]` all match `harnesses/Claude Code.md`. The extension of a record
+  MAY be left out.
 - A wikilink whose target matches no file, and holds no `/`, names a record by id: the record of
-  any type, in the corpus or a corpus it references, whose id or whole file name folds to the
-  target, as the `id` form of Typed references resolves. `[[P-0002]]` names
+  any type, among the records it reaches, whose id or whole file name folds to the target, as the
+  `id` form of Typed references resolves. `[[P-0002]]` names
   `principles/P-0002-favor-deterministic.md`. A record of a referenced corpus is a link into its
   copy. Obsidian does not resolve such a wikilink by itself; `validate --fix` rewrites it as a
   relative link.
@@ -308,10 +314,10 @@ about: { type: string, x-ref: notes, x-ref-form: wikilink }
 - A list MUST hold one or more names, each a string. Every name MUST name a type that exists, in
   the corpus or in the corpus its prefixes name. A validator does not check the values of a field
   whose `x-ref` names no type: that is already an error in the schema.
-- A reference matches a record of a named type, or of a type that extends one through
-  `x-extends`, at any depth. A record of a local type that extends `org/principles` is an
+- A reference matches a record of a named type, or of a type whose chain holds it, through
+  `x-extends` or `uses`, at any depth. A record of a local type that extends `org/principles` is an
   `org/principles` record. So is a record of a local type that extends a local type named in
-  `x-ref`.
+  `x-ref`. Types compare by identity (see Identity).
 
 `x-ref-form`, beside `x-ref`, says how a value names its record. It is one of three forms. With no
 `x-ref-form`, the form is `link`.
@@ -324,12 +330,13 @@ about: { type: string, x-ref: notes, x-ref-form: wikilink }
 
 - For `link`, an `x-ref` link that leaves the corpus is an error. A link to a referenced corpus's
   record goes through `_references/<prefix>/`.
-- For `id` and `wikilink`, the id resolves among the matching records of the corpus and of every
-  corpus it references, at any depth. A parent gives no records. Ids compare as in Ids, after NFC normalization and case
-  folding, so `t-0012` names `T-0012.md`. A record's folder and extension do not matter. A value
-  may also name the record by its whole file name without the extension, or its record folder's
-  name, where that is longer than its id. An id
-  that names no matching record is an error. An id that names more than one, such as two records
+- For `id`, the id resolves among the matching records of the corpus and of every corpus it
+  references, at any depth. For `wikilink`, it resolves among the matching records a wikilink
+  reaches (see Links). A parent gives no records. Ids compare as in Ids, after NFC normalization
+  and case folding, so `t-0012` names `T-0012.md`. A record's folder and extension do not matter.
+  A value may also name the record by its whole file name without the extension, or its record
+  folder's name, where that is longer than its id. An id that names no matching record is an
+  error. An id that names more than one, such as two records
   of two listed types, is an error. Records with one identity are one record, however many chains
   reach them (see Identity).
 - A `wikilink` value holds an id, not a path: `[[tasks/T-0012]]`, a heading (`#`) or a block (`^`)
@@ -339,9 +346,8 @@ about: { type: string, x-ref: notes, x-ref-form: wikilink }
 - A field in the `id` or `wikilink` form holds no link. The Links rules do not apply to its values,
   a validator does not warn on its wikilinks, and `validate --fix` does not rewrite them.
 - A `wikilink` value that names a referenced corpus's record is a link into its copy, since a tool
-  such as Obsidian resolves it there. It needs `_references/<prefix>/` (see The copy), where
-  `<prefix>` is the first prefix of the shortest chain the record is reached through. An `id` value
-  needs no copy.
+  such as Obsidian resolves it there. It needs `_references/<prefix>/` (see The copy). An `id`
+  value needs no copy.
 - `x-ref-form` anywhere but beside an `x-ref`, or with another value, is an error.
 
 `x-ref`, `x-ref-form`, `x-id-pattern`, `x-extends`, `x-identity` and `x-record-file` are
@@ -471,22 +477,25 @@ its own. A corpus sees a grandparent's types only by extending the grandparent t
 entry or a list of entries. Each entry is `<prefix>/<type>`, naming one type of a parent, or
 `<prefix>/*`, naming every type of the parent.
 
-- A folder named after a used type, by its type name, with no schema file, is a type folder of a
-  local type of that name that uses the parent's type as it is. Its files are records of it, as in
-  Records. The local type's chain is the parent's type and the parent type's chain.
-- A folder named after a used type that also holds a schema file is an error. To add fields, take
-  the type out of `uses` and write `x-extends` in the schema.
+- `uses` applies to folders at the corpus root only. A folder below the root gets no type from
+  `uses`, whatever its name: it is a type folder only by a schema file of its own (see Types).
+- A folder at the corpus root named after a used type, by its type name, with no schema file, is a
+  type folder of a local type of that name that uses the parent's type as it is. Its files are
+  records of it, as in Records. The local type's chain is the parent's type and the parent type's
+  chain.
+- A folder at the corpus root named after a used type that also holds a schema file is an error.
+  To add fields, take the type out of `uses` and write `x-extends` in the schema.
 - Two used types with the same name, such as `sdlc/tasks` and `other/tasks`, are an error, and
   neither is used. Build the folder's type with `x-extends` instead.
 - A used type with no folder of its name is fine: the corpus has no records of it yet.
 - An entry that names no parent, a prefix in `references` rather than `extends`, or a type the
   parent does not have, is an error at `uses`.
 - A folder with no schema file that `uses` does not name stays a plain folder. Inside a type
-  folder it holds that type's records; elsewhere its files are narrative. When such a folder holds
-  record files (`.md`, `.yaml`, `.json`) and its name is one a parent's type has, or close to it
-  (an edit distance of one for a name of four letters or more, or of two for eight or more, after
-  case folding), a validator SHOULD warn, since a typo or a missing `uses` entry leaves records
-  unchecked. `validate --strict` fails on that warning, as on any.
+  folder it holds that type's records; elsewhere its files are narrative. When such a folder sits
+  at the corpus root, holds record files (`.md`, `.yaml`, `.json`), and has a name that a parent's
+  type has, or close to it (an edit distance of one for a name of four letters or more, or of two
+  for eight or more, after case folding), a validator SHOULD warn, since a typo or a missing
+  `uses` entry leaves records unchecked. `validate --strict` fails on that warning, as on any.
 
 #### References
 
@@ -517,10 +526,13 @@ results of queries, builds and exports, can be told apart or merged. Identity us
   the corpus folder. The identity uses that `name`, so it does not depend on how the corpus is
   reached: by a package source, an npm alias or a `./` path, it is the same package. Any other
   corpus has a local identity only: it is itself, by its folder, and it has no purl.
-- **Collapse by identity.** Two records with the same identity are one record. A reference by id
-  that finds one record through two chains of references is not ambiguous. It resolves to the copy
-  reached through the shortest chain, so a direct reference wins. Two records with different
-  identities are two matches, even with the same id.
+- **Collapse by identity.** Types with the same identity are one type, and two records with the
+  same identity are one record. So two installed copies of one package at one version, such as a
+  profile that a corpus extends and that a corpus it references installs again inside its own
+  folder, give one type: an `x-ref` to the type matches records of types built on either copy. A
+  reference by id that finds one record through two chains of references is not ambiguous. It
+  resolves to the copy reached through the shortest chain, so a direct reference wins. Two records
+  with different identities are two matches, even with the same id.
 - **One version per corpus.** Across the whole graph of a corpus, every corpus it extends or
   references at any depth, each corpus identity appears at exactly one version. A second version
   is an error, which names both versions and the chain of prefixes that brings in each. Storage
@@ -583,9 +595,9 @@ v0 defines two verbs.
 - `sync <folder>` writes `_references/` for every corpus at or below the folder. For each corpus in
   `references` it writes `_references/<prefix>/`, and it removes every other file there. It copies
   nothing for `extends`. It changes nothing outside `_references/`, and a second run changes
-  nothing. A corpus syncs after the corpora it references that sit below the same folder. When a
-  corpus's root file has an error, or a corpus it names does not resolve or has errors of its own,
-  `sync` writes nothing in that corpus and exits non-zero. A cycle is such an error, so `sync`
+  nothing. A corpus syncs after the corpora it extends or references that sit below the same
+  folder. When a corpus's root file has an error, or a corpus it names does not resolve or has
+  errors of its own, `sync` writes nothing in that corpus and exits non-zero. A cycle is such an error, so `sync`
   never copies a corpus into itself.
 - When a referenced corpus has turned a folder into a file, or a file into a folder, `sync`
   replaces the stale path in the copy.

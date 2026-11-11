@@ -265,6 +265,19 @@
           }
         },
         {
+          "name": "a wikilink reaches records of direct references only, and the id form reaches a reference of a reference",
+          "input": {
+            "corpus": "corpora/wikilink-transitive"
+          },
+          "expect": {
+            "errors": [
+              "notes/Wikilink.md: about",
+              "notes/Wikilink.md: body"
+            ],
+            "warnings": []
+          }
+        },
+        {
           "name": "extends resolves a parent by a relative path, and a local type builds on the parent's type",
           "input": {
             "corpus": "corpora/extends-path"
@@ -557,13 +570,23 @@
           }
         },
         {
+          "name": "two installed copies of one package at one version are one corpus, so their types are one type for x-ref",
+          "input": {
+            "corpus": "corpora/references-identity-copies"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
           "name": "uses makes a folder with no schema file hold records of a parent's type",
           "input": {
             "corpus": "corpora/uses"
           },
           "expect": {
             "errors": [
-              "work/decisions/D-0002.md: status"
+              "decisions/D-0002.md: status"
             ],
             "warnings": []
           }
@@ -572,6 +595,16 @@
           "name": "uses <prefix>/* uses every type of the parent, and a folder that does not exist is fine",
           "input": {
             "corpus": "corpora/uses-wildcard"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "uses gives types to folders at the corpus root only; a deeper folder named like a used type is narrative",
+          "input": {
+            "corpus": "corpora/uses-nested"
           },
           "expect": {
             "errors": [],

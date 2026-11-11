@@ -43,6 +43,23 @@ describe('references', () => {
     ])
   })
 
+  test('a wikilink reaches records of direct references only; the id form reaches any depth', () => {
+    org('g')
+    root('p', { references: { g: '../g' } })
+    root('c', { references: { p: '../p' } })
+    put(
+      'c/notes/notes.schema.yaml',
+      'type: object\nproperties:\n  see: { type: string, x-ref: p/g/principles, x-ref-form: id }\n  about: { type: string, x-ref: p/g/principles, x-ref-form: wikilink }\n',
+    )
+    put('c/notes/N.md', '---\nsee: Be Kind\nabout: "[[Be Kind]]"\n---\n\nSee [[Be Kind]].\n')
+    const far =
+      'names p/g/principles/Be Kind.md, beyond a direct reference; a wikilink reaches only this corpus and the corpora it references directly, and the id form reaches any depth'
+    assert.deepEqual(errors().sort(), [
+      `notes/N.md: about: "Be Kind" ${far}`,
+      `notes/N.md: body: [[Be Kind]]: ${far}`,
+    ])
+  })
+
   test('nested references extend the path, for reading only', () => {
     org('g')
     root('p', { references: { g: '../g' } })
@@ -151,6 +168,28 @@ describe('identity', () => {
     put('c/node_modules/b/package.json', '{"name":"b","version":"1.0.0"}')
     root('c', { references: { b: 'b', t: 'tasks' } })
     notes('t/tasks')
+    assert.deepEqual(errors(), [])
+  })
+
+  test('two copies of one package at one version give one type, for x-ref', () => {
+    // A profile, installed at the top and again inside the corpus that c references.
+    const profile = (rel: string): void => {
+      put(`${rel}/package.json`, '{"name":"profile","version":"1.0.0"}')
+      root(rel)
+      put(`${rel}/principles/principles.schema.yaml`, 'type: object\n')
+    }
+    profile('c/node_modules/profile')
+    profile('c/node_modules/starter/node_modules/profile')
+    root('c/node_modules/starter', { extends: { p: 'profile' } })
+    put('c/node_modules/starter/package.json', '{"name":"starter","version":"1.0.0"}')
+    put('c/node_modules/starter/principles/principles.schema.yaml', 'x-extends: p/principles\n')
+    put('c/node_modules/starter/principles/P-1.md', '---\n---\n')
+    root('c', { extends: { p: 'profile' }, references: { st: 'starter' } })
+    put(
+      'c/notes/notes.schema.yaml',
+      'type: object\nproperties:\n  cites: { type: string, x-ref: p/principles, x-ref-form: id }\n',
+    )
+    put('c/notes/N.md', '---\ncites: P-1\n---\n')
     assert.deepEqual(errors(), [])
   })
 
