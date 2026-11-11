@@ -1,4 +1,0 @@
-x-extends: a/statements
-required: [owner]
-properties:
-  owner: { type: string }

@@ -38,14 +38,17 @@ parse.
 query and a CSV beside it, a folder with no record file, a record folder inside another, and a
 record file in a format the corpus does not allow.
 
-`corpora/extends-*` cover `extends`, `x-extends`, cross-corpus `x-ref` and the `_inherited/` copy.
-A case's parents sit inside its folder: a nested corpus for a path, and a package under the case's
-own `node_modules/` for a package name. The root `.gitignore` keeps those `node_modules/` folders.
-The `_inherited/` copies were written with `corpus-schema sync`. `extends-copy-stale` edits its
-copy by hand, on purpose.
+`corpora/extends-*` cover `extends` and `x-extends`, `corpora/references-*` cover `references`,
+cross-corpus `x-ref`, the `_references/` copy and identity across corpora, and `corpora/uses*`
+cover `uses`. `corpora/identity-*` cover `x-identity`: each case folder is a package, with its own
+`package.json`. A case's other corpora sit inside its folder: a nested corpus for a path, and a
+package under the case's own `node_modules/` for a package name. The root `.gitignore` keeps
+those `node_modules/` folders. The `_references/` copies were written with `corpus-schema sync`.
+`references-copy-stale` edits its copy by hand, on purpose.
 
 `corpora/extends-flatten*` cover how `x-extends` merges a chain's fields before a closing keyword.
 `corpora/xref-*` cover `x-ref` lists of types and the `id` and `wikilink` forms of `x-ref-form`.
 
 The `strict` section runs `validate --strict`. Its `expect` adds `passes`, whether the corpus
-passes: it has no errors and no warnings. `corpora/strict-*` are its corpora.
+passes: it has no errors and no warnings. `corpora/strict-*` are its corpora, and so is
+`corpora/uses-like-type`, whose only problem is a warning.
