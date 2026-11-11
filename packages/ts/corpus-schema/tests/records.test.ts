@@ -121,6 +121,14 @@ describe('x-record-file', () => {
     assert.equal(r.records.get('principles')?.size, 2)
   })
 
+  test('a record file named for its folder is one record', () => {
+    principles('x-record-file: P-0002.md\n')
+    put('c/principles/P-0002/P-0002.md', '---\n---\n')
+    const r = report()
+    assert.deepEqual(r.errors, [])
+    assert.equal(r.files.get('principles')?.get('P-0002'), 'principles/P-0002/P-0002.md')
+  })
+
   test('a record folder holds one record file', () => {
     principles('x-record-file: README.md\n')
     put('c/principles/P-0002/README.md', '---\n---\n')

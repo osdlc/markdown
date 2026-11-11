@@ -107,7 +107,7 @@ export interface Corpus {
   root: string
   /** The corpus folder's real path, which identifies it among the corpora one validation loads. */
   real: string
-  /** The package the corpus is, or null for a corpus with a local identity only. */
+  /** The package the corpus is (rootPackage), or null for a corpus with a local identity only. */
   package: PackageId | null
   /**
    * The corpus's identity, its unversioned package URL, or undefined for a local corpus. A
@@ -393,14 +393,10 @@ function chain(type: Type): Type[] {
 /**
  * Read the root file, the corpora it names, the types and their records, checking everything but
  * links. Each corpus named in `extends` or `references` is loaded and checked in full, once per
- * `loader`. `pkg` is the package the corpus is: by default the one whose package.json names
- * `root` (rootPackage), and null for a local corpus.
+ * `loader`.
  */
-export function load(
-  root: string,
-  loader: Loader = { done: new Map(), stack: [] },
-  pkg: PackageId | null = rootPackage(root),
-): Corpus {
+export function load(root: string, loader: Loader = { done: new Map(), stack: [] }): Corpus {
+  const pkg = rootPackage(root)
   const { files, dirs, nested, nestedFiles, symlinks, problems } = walk(root)
   const c: Corpus = {
     root,
@@ -542,6 +538,8 @@ function readSources(
   }
   if (key === 'extends' && c.level !== 2) {
     c.errors.push(`${rootFile}: extends: needs level: 2 in the root file`)
+    // Declared, so a type that names one of them adds no second error.
+    for (const prefix of Object.keys(map)) c.declared.add(prefix)
     return
   }
   const into = key === 'extends' ? c.parents : c.references
@@ -573,8 +571,7 @@ function readSources(
     }
     let named = loader.done.get(r.dir)
     if (named === undefined) {
-      // A corpus reached by a path has a local identity only.
-      named = load(r.dir, loader, r.package ?? null)
+      named = load(r.dir, loader)
       check(named)
       loader.done.set(r.dir, named)
     }
@@ -1084,7 +1081,8 @@ function recordFolders(c: Corpus, type: Type, dirs: string[]): Map<string, strin
     if (!dir.startsWith(`${type.dir}/`) || inNarrative(type.dir, `${dir}/x`)) continue
     const name = basename(dir)
     const files = RECORD_EXTENSIONS.map((ext) => `${dir}/${name}${ext}`)
-    if (declared !== undefined) files.push(`${dir}/${declared}`)
+    if (declared !== undefined && !files.includes(`${dir}/${declared}`))
+      files.push(`${dir}/${declared}`)
     const held = files.filter((f) => c.files.has(f))
     const file = held[0]
     if (file === undefined) continue

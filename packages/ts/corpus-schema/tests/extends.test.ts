@@ -73,6 +73,7 @@ describe('extends', () => {
     assert.ok(has(errors(), 'extends.a: must be a package name or a ./ or ../ path'))
     org()
     root('c', { level: null, extends: { org: '../org' } })
+    put('c/rules/rules.schema.yaml', 'type: object\nx-extends: org/principles\n')
     assert.deepEqual(errors(), ['corpus-schema.yaml: extends: needs level: 2 in the root file'])
   })
 
