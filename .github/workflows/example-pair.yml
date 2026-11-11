@@ -17,6 +17,8 @@ on:
       - "packages/ts/corpus-schema/**"
       - "pnpm-lock.yaml"
       - "tools/build-corpus-schema.sh"
+      - "tools/validator.sh"
+      - "tools/validate-strict.sh"
       - ".github/workflows/example-pair.yml"
   push:
     branches: [main]
@@ -26,6 +28,8 @@ on:
       - "packages/ts/corpus-schema/**"
       - "pnpm-lock.yaml"
       - "tools/build-corpus-schema.sh"
+      - "tools/validator.sh"
+      - "tools/validate-strict.sh"
       - ".github/workflows/example-pair.yml"
 
 permissions:
