@@ -9,8 +9,8 @@
 # warnings.
 #
 # explorer: installs tools/explorer, whose @osdlc/corpus-schema is a link: to the built package,
-# rebuilds data/*.json from the records and fails when the committed JSON differs, then
-# typechecks, tests and builds the explorer.
+# rebuilds data/*.json and the checklist in docs/planning/BEELINE.md from the records and fails when
+# the committed files differ, then typechecks, tests and builds the explorer.
 #
 # Every action is pinned to a commit SHA; the comment names its release.
 name: planning
@@ -94,11 +94,11 @@ jobs:
       - name: Install
         run: pnpm install --ignore-workspace --frozen-lockfile
 
-      - name: The committed data matches the records
+      - name: The committed data and checklist match the records
         run: |
           pnpm build-data
-          git diff --exit-code -- data
-          test -z "$(git status --porcelain -- data)"
+          git diff --exit-code -- data ../../docs/planning/BEELINE.md
+          test -z "$(git status --porcelain -- data ../../docs/planning/BEELINE.md)"
 
       - run: pnpm typecheck
       - run: pnpm test
