@@ -12,7 +12,7 @@
 import { existsSync, realpathSync, statSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
-import { referencedRoots, syncCorpus } from './sync.ts'
+import { namedRoots, syncCorpus } from './sync.ts'
 import { findCorpora, validateCorpus } from './validate.ts'
 
 const USAGE =
@@ -61,14 +61,15 @@ for (const dir of dirs) {
 const where = (root: string): string => relative(process.cwd(), root) || '.'
 
 if (verb === 'sync') {
-  // A corpus syncs after the corpora found here that it references, so it copies their fresh copies.
+  // A corpus syncs after the corpora found here that it extends or references, so it reads their
+  // fresh copies.
   const byReal = new Map([...roots].map((r) => [realpathSync(r), r]))
   const seen = new Set<string>()
   const order: string[] = []
   const visit = (real: string): void => {
     if (seen.has(real)) return
     seen.add(real)
-    for (const p of referencedRoots(byReal.get(real) as string)) if (byReal.has(p)) visit(p)
+    for (const p of namedRoots(byReal.get(real) as string)) if (byReal.has(p)) visit(p)
     order.push(real)
   }
   for (const real of byReal.keys()) visit(real)

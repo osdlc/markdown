@@ -203,8 +203,8 @@ except in a field that refers by id. `--strict` fails a corpus that has warnings
 errors, so CI can hold a corpus to no warnings.
 
 `sync` writes the `_references/` copies of every corpus at or below each folder, by default `.`. A
-corpus syncs after the corpora it references, so a chain of corpora in one repository syncs in one
-run. It prints `wrote:` and `removed:` for each file it changes, and `synced: <name>: <counts>`.
+corpus syncs after the corpora it extends or references, so a chain of corpora in one repository
+syncs in one run. It prints `wrote:` and `removed:` for each file it changes, and `synced: <name>: <counts>`.
 Run it again and it changes nothing.
 
 `sync` owns `_references/` outright. It removes every file there that no referenced corpus holds,
