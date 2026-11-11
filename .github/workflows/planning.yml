@@ -24,6 +24,8 @@ on:
       - "packages/ts/corpus-schema/**"
       - "pnpm-lock.yaml"
       - "tools/build-corpus-schema.sh"
+      - "tools/validate-strict.sh"
+      - "tools/validator.sh"
       - "package.json"
       - "pnpm-workspace.yaml"
       - ".github/workflows/planning.yml"
@@ -36,6 +38,8 @@ on:
       - "packages/ts/corpus-schema/**"
       - "pnpm-lock.yaml"
       - "tools/build-corpus-schema.sh"
+      - "tools/validate-strict.sh"
+      - "tools/validator.sh"
       - "package.json"
       - "pnpm-workspace.yaml"
       - ".github/workflows/planning.yml"
@@ -62,20 +66,9 @@ jobs:
           corepack enable
           sh tools/build-corpus-schema.sh
 
-      # The validator prints warnings on stderr and still exits 0, so the
-      # step keeps stderr and fails on any warning line.
+      # Fails on a warning as well as on an error.
       - name: Validate the plan's records
-        run: |
-          set +e
-          node packages/ts/corpus-schema/bin/corpus-schema.js validate docs/planning profiles/planning 2> "$RUNNER_TEMP/stderr.txt"
-          status=$?
-          set -e
-          cat "$RUNNER_TEMP/stderr.txt" >&2
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
-          if grep -q '^warning:' "$RUNNER_TEMP/stderr.txt"; then
-            echo "::error::docs/planning and profiles/planning must validate with no warnings"
-            exit 1
-          fi
+        run: sh tools/validate-strict.sh docs/planning profiles/planning
 
   explorer:
     runs-on: ubuntu-latest
