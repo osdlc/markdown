@@ -56,6 +56,15 @@ after NFC normalization and case folding. No match, or more than one, is an erro
 `wikilink` field is not checked as a link, gets no wikilink warning, and `validate --fix` leaves it
 as it is.
 
+With `x-id-pattern`, a record's id is the longest part of its name, ending before a `-`, that the
+pattern matches: `P-0002-be-kind.md` has the id `P-0002`. A name the pattern matches whole keeps it
+as its id. A record's data may hold `id`, which must then be the record's id. A reference by id may
+also give the whole file name. The new `x-record-file` schema keyword, such as `README.md`, makes a
+folder holding that file a record folder, named by its folder. A folder in a type folder whose name
+starts with `_` holds narrative. A wikilink that matches no file names a record by id. A `null`
+`x-ref` value refers to nothing. Links in a schema are checked only in `title`, `description` and
+`$comment`, so a `pattern` or `enum` value holding `[[` is not read as a wikilink.
+
 The new `validate --strict` flag fails a corpus that has warnings, as if they were errors.
 
 `x-ref` messages name the type as "a record of type org/principles", in place of "a org/principles

@@ -58,6 +58,16 @@ are not checked. The record links to them with relative links, such as
 one is an error. A folder with no record named after it, such as `harnesses/google/`, is a plain
 folder of records.
 
+A type's schema can say more about its records:
+
+- `x-id-pattern` narrows the ids. The id is then the longest part of the name, ending before a
+  `-`, that the pattern matches, so with `^P-[0-9]{4}$` the file `P-0002-be-kind.md` has the id
+  `P-0002`. A record's data may hold `id`, and then it must be the record's id.
+- `x-record-file: README.md` makes a folder holding `README.md` a record folder too, named by its
+  folder: `decisions/D-0001-split/README.md` has the id `D-0001`. The type folder's own
+  `README.md` documents the type.
+- A folder whose name starts with `_`, such as `_attachments/`, holds narrative, not records.
+
 ## References
 
 `x-ref` in a schema makes a field a typed reference to records. It names a type, or lists several,
@@ -78,7 +88,9 @@ properties:
 | `id`             | `T-0012`                          | by id, among the records of the type        |
 | `wikilink`       | `"[[N-0001]]"`                    | by id, as `id` does; quote it in YAML       |
 
-An id matches as ids compare: after NFC normalization and case folding. It may name a record of a
+An id matches as ids compare: after NFC normalization and case folding. A value may also give the
+whole file name without its extension. A `null` value refers to nothing; the schema says whether
+it is allowed. A body wikilink such as `[[P-0002]]` that matches no file names a record by id. It may name a record of a
 corpus this one references, as a link may. A field that refers by id is not checked as a link, gets no wikilink
 warning, and `validate --fix` leaves it as it is.
 

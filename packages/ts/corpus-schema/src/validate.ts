@@ -97,6 +97,10 @@ interface Type {
    * record whose id or data has errors is here too, so a reference to it adds no second error.
    */
   ids: Map<string, string>
+  /** Every record file by its folded file stem, or folder name, where that is not its id. */
+  stems: Map<string, string>
+  /** The schema's `x-record-file`, as written, when it is a valid file name. */
+  recordFile: string | undefined
 }
 
 export interface Corpus {
@@ -127,6 +131,8 @@ export interface Corpus {
   types: Map<string, Type>
   /** The type of each record file. */
   recordType: Map<string, Type>
+  /** Every schema file, a rejected type's included. Only their prose keywords hold links. */
+  schemaFiles: Set<string>
   /** Files whose links are checked: the root file, schema files and records, with their data. */
   checked: Map<string, { text: string; data: Data | undefined }>
   /** The prefixes `extends` and `references` declare. */
@@ -337,6 +343,38 @@ function places(keyword: string, node: unknown, path: string[] = []): string[][]
 
 const stem = (file: string): string => basename(file, extname(file))
 
+/** A file name with no path, such as README.md. */
+const RECORD_FILE = /^[^/\\]+\.[a-z]+$/
+
+/** The `x-record-file` of `type`, or of the nearest type up its chain that has one. */
+const recordFileOf = (type: Type): string | undefined =>
+  chain(type).find((t) => t.recordFile !== undefined)?.recordFile
+
+/** Whether `path`, in the type folder `dir`, sits in a narrative folder: one whose name starts `_`. */
+const inNarrative = (dir: string, path: string): boolean =>
+  path
+    .slice(dir.length + 1)
+    .split('/')
+    .slice(0, -1)
+    .some((part) => part.startsWith('_'))
+
+/**
+ * A record's id, from `name`, its file stem or record-folder name. With no `x-id-pattern` up the
+ * chain it is `name`. Otherwise it is the longest of `name` and the parts of `name` that end just
+ * before a `-` that every pattern matches, so `P-0002-be-kind` with `^P-[0-9]{4}$` has the id
+ * `P-0002`. Undefined when none matches.
+ */
+function idOf(types: Type[], name: string): string | undefined {
+  const patterns = types.flatMap((t) => (t.idPattern === undefined ? [] : [t.idPattern]))
+  if (patterns.length === 0) return name
+  const ends = [name.length, ...[...name.matchAll(/-/g)].map((m) => m.index).reverse()]
+  for (const end of ends) {
+    const id = name.slice(0, end)
+    if (id !== '' && patterns.every((p) => p.test(id))) return id
+  }
+  return undefined
+}
+
 const realOrSame = (path: string): string => {
   try {
     return realpathSync(path)
@@ -381,6 +419,7 @@ export function load(
     types: new Map(),
     recordType: new Map(),
     checked: new Map(),
+    schemaFiles: new Set(),
     declared: new Set(),
     parents: new Map(),
     references: new Map(),
@@ -409,6 +448,7 @@ export function load(
   // Every root-file error stops sync, as does a named corpus that does not resolve or has errors.
   c.fatal.push(...c.errors.slice(walked))
   const schemaFiles = readTypes(c, dirs, used)
+  c.schemaFiles = schemaFiles
   for (const link of symlinks)
     if ([...c.types.values()].some((t) => link.startsWith(`${t.dir}/`)))
       c.warnings.push(`${link}: (symlink): not followed, so not checked`)
@@ -675,7 +715,7 @@ function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<stri
     strictRequired: false,
   })
   addFormats(ajv)
-  for (const keyword of ['x-id-pattern', 'x-extends', 'x-identity'])
+  for (const keyword of ['x-id-pattern', 'x-extends', 'x-identity', 'x-record-file'])
     ajv.addKeyword({ keyword, schemaType: 'string' })
   // readTypes checks these values itself, for clearer messages.
   for (const keyword of ['x-ref', 'x-ref-form']) ajv.addKeyword({ keyword })
@@ -737,6 +777,8 @@ function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<stri
       refs: [],
       records: new Map(),
       ids: new Map(),
+      stems: new Map(),
+      recordFile: undefined,
     }
     c.types.set(name, type)
     const schema = readChecked(c, schemaFile)
@@ -759,6 +801,19 @@ function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<stri
       if (place.length > 0)
         c.errors.push(`${schemaFile}: ${place.join('.')}: x-identity sits only at the schema root`)
     checkIdentity(c, schemaFile, name, schema['x-identity'])
+    for (const place of places('x-record-file', schema))
+      if (place.length > 0)
+        c.errors.push(
+          `${schemaFile}: ${place.join('.')}: x-record-file sits only at the schema root`,
+        )
+    const recordFile = schema['x-record-file']
+    if (typeof recordFile === 'string')
+      if (RECORD_FILE.test(recordFile) && RECORD_EXTENSIONS.includes(extname(recordFile)))
+        type.recordFile = recordFile
+      else
+        c.errors.push(
+          `${schemaFile}: x-record-file: must be a file name with a .md, .yaml or .json extension, such as README.md`,
+        )
     for (const place of places('x-ref', schema)) {
       const [first, field, third] = place
       const items = third === 'items'
@@ -848,6 +903,8 @@ function useType(c: Corpus, dir: string, use: Used, typeDirs: Map<string, string
     refs: [],
     records: new Map(),
     ids: new Map(),
+    stems: new Map(),
+    recordFile: undefined,
   })
 }
 
@@ -1020,17 +1077,30 @@ function closedAbove(type: Type): void {
  * after the folder, such as `methods/Survey/Survey.md`. A record folder inside another one is an
  * error, and its files belong to the outer record.
  */
-function recordFolders(c: Corpus, type: Type, dirs: string[]): string[] {
-  const found: string[] = []
+function recordFolders(c: Corpus, type: Type, dirs: string[]): Map<string, string> {
+  const found = new Map<string, string>()
+  const declared = recordFileOf(type)
   for (const dir of dirs) {
-    if (!dir.startsWith(`${type.dir}/`)) continue
+    if (!dir.startsWith(`${type.dir}/`) || inNarrative(type.dir, `${dir}/x`)) continue
     const name = basename(dir)
-    if (!RECORD_EXTENSIONS.some((ext) => c.files.has(`${dir}/${name}${ext}`))) continue
+    const files = RECORD_EXTENSIONS.map((ext) => `${dir}/${name}${ext}`)
+    if (declared !== undefined) files.push(`${dir}/${declared}`)
+    const held = files.filter((f) => c.files.has(f))
+    const file = held[0]
+    if (file === undefined) continue
     // `dirs` is sorted, so an outer folder comes before the folders inside it.
-    const outer = found.find((f) => dir.startsWith(`${f}/`))
-    if (outer === undefined) found.push(dir)
-    else
-      c.errors.push(`${dir}: (folder): a record folder must not sit inside record folder ${outer}`)
+    const outer = [...found.keys()].find((f) => dir.startsWith(`${f}/`))
+    if (outer !== undefined) {
+      // A folder holding only the x-record-file, such as a README, is the outer record's.
+      if (held.some((f) => f !== `${dir}/${declared}`))
+        c.errors.push(
+          `${dir}: (folder): a record folder must not sit inside record folder ${outer}`,
+        )
+      continue
+    }
+    found.set(dir, file)
+    for (const f of held.slice(1))
+      c.errors.push(`${f}: (file): a record folder holds one record file, and ${file} is one`)
   }
   return found
 }
@@ -1051,12 +1121,14 @@ function readRecords(
     const ids = type.ids
     const folders = recordFolders(c, type, dirs)
     const types = chain(type)
+    const declared = recordFileOf(type)
     for (const file of files) {
       if (!file.startsWith(`${type.dir}/`) || schemaFiles.has(file)) continue
-      const folder = folders.find((f) => file.startsWith(`${f}/`))
-      const owned =
-        folder !== undefined && (posix.dirname(file) !== folder || stem(file) !== basename(folder))
-      if (owned) continue
+      if (inNarrative(type.dir, file)) continue
+      // The type folder's own record-file name documents the type.
+      if (declared !== undefined && file === `${type.dir}/${declared}`) continue
+      const folder = [...folders.keys()].find((f) => file.startsWith(`${f}/`))
+      if (folder !== undefined && folders.get(folder) !== file) continue
       const ext = extname(file)
       const lower = ext.toLowerCase()
       if (lower === '.yml') {
@@ -1073,18 +1145,34 @@ function readRecords(
         continue
       }
       c.recordType.set(file, type)
-      const id = stem(file)
-      const problem = idProblem(id)
+      const name = folder === undefined ? stem(file) : basename(folder)
+      const derived = idOf(types, name)
+      const id = derived ?? name
+      let problem = idProblem(id)
       if (problem !== undefined) c.errors.push(`${file}: id: "${id}" ${problem}`)
-      for (const t of types)
-        if (problem === undefined && t.idPattern !== undefined && !t.idPattern.test(id))
-          c.errors.push(`${file}: id: "${id}" does not match x-id-pattern ${t.idPattern.source}`)
+      else if (derived === undefined) {
+        problem = 'matches no x-id-pattern'
+        for (const t of types)
+          if (t.idPattern !== undefined && !t.idPattern.test(id))
+            c.errors.push(`${file}: id: "${id}" does not match x-id-pattern ${t.idPattern.source}`)
+      }
       const other = ids.get(fold(id))
       if (other !== undefined) c.errors.push(`${file}: id: "${id}" is also ${other}`)
       else ids.set(fold(id), file)
+      if (fold(name) !== fold(id) && !type.stems.has(fold(name))) type.stems.set(fold(name), file)
 
       const data = readChecked(c, file)
       if (data === undefined) continue
+      const stated = data['id']
+      let wrongId = false
+      if (
+        stated !== undefined &&
+        problem === undefined &&
+        (typeof stated !== 'string' || fold(stated) !== fold(id))
+      ) {
+        wrongId = true
+        c.errors.push(`${file}: id: must be the record's id, "${id}"`)
+      }
       const failures = new Set<string>()
       for (const t of types)
         if (t.validate !== undefined && !t.validate(data))
@@ -1092,7 +1180,7 @@ function readRecords(
           for (const e of t.validate.errors ?? [])
             if (e.keyword !== 'if') failures.add(`${file}: ${describe(e)}`)
       c.errors.push(...failures)
-      if (failures.size === 0 && problem === undefined && other === undefined)
+      if (failures.size === 0 && problem === undefined && other === undefined && !wrongId)
         type.records.set(id, { file, data })
     }
   }
@@ -1126,6 +1214,20 @@ function resolve(c: Corpus, from: string, link: Link): Resolution {
     if (found.length > 1) return { problem: `${wiki}: ambiguous, matches ${found.join(', ')}` }
     if (matchWikilink(link.target, c.nestedWikilinks).length > 0)
       return { problem: `${wiki}: ${BETWEEN_CORPORA}`, warn: true }
+    // A target with no path names a record by id, in this corpus or one it references.
+    const target = link.target.split('#')[0]?.trim() ?? ''
+    const byId = target === '' || target.includes('/') ? [] : recordsById(c, undefined, target)
+    const record = byId[0]
+    if (byId.length > 1)
+      return { problem: `${wiki}: ambiguous, the id of ${byId.map((r) => r.label).join(', ')}` }
+    if (record !== undefined)
+      return record.path.length === 0
+        ? { file: record.file }
+        : intoCopy(
+            c,
+            [...record.path.map((p) => `${REFERENCES}/${p}`), record.file].join('/'),
+            wiki,
+          )
     return { problem: `${wiki}: no file matches` }
   }
   const dest = link.target
@@ -1211,6 +1313,19 @@ function eachString(
       eachString(v, field === '' ? k : `${field}.${k}`, visit)
 }
 
+/** The keywords whose strings are prose in a schema, and may hold links. */
+const PROSE = new Set(['title', 'description', '$comment'])
+
+/** Calls `visit` with each string under a prose keyword in `node`, and its dotted path. */
+function eachProse(node: unknown, field: string, visit: (field: string, s: string) => void): void {
+  if (node === null || typeof node !== 'object') return
+  for (const [k, v] of Object.entries(node)) {
+    const at = field === '' ? k : `${field}.${k}`
+    if (PROSE.has(k) && typeof v === 'string') visit(at, v)
+    else eachProse(v, at, visit)
+  }
+}
+
 /** The top-level fields of `file`'s type chain that hold references by id, not links. */
 function idFields(c: Corpus, file: string): Set<string> {
   const type = c.recordType.get(file)
@@ -1233,22 +1348,29 @@ function checkLinks(c: Corpus): void {
     if (extname(file) === '.md')
       for (const link of extractLinks(split(text).body))
         report(file, 'body', resolve(c, file, link), link)
+    const visit = (field: string, s: string): void => {
+      for (const link of extractLinks(s)) report(file, field, resolve(c, file, link), link)
+    }
+    // A schema's links sit only in its prose: a pattern or an enum value is not text.
+    if (c.schemaFiles.has(file)) {
+      eachProse(data ?? {}, '', visit)
+      continue
+    }
     // A field that refers by id holds no link: checkRef checks its values.
     const byId = idFields(c, file)
     for (const [key, value] of Object.entries(data ?? {}))
-      if (!byId.has(key))
-        eachString(value, key, (field, s) => {
-          for (const link of extractLinks(s)) report(file, field, resolve(c, file, link), link)
-        })
+      if (!byId.has(key)) eachString(value, key, visit)
   }
 
   for (const type of c.types.values())
     for (const { file, data } of type.records.values())
       for (const ref of chain(type).flatMap((t) => t.refs)) {
         const value = data[ref.field]
-        if (value === undefined || ref.targets === undefined) continue
+        // null refers to nothing; the schema says whether it is allowed.
+        if (value === undefined || value === null || ref.targets === undefined) continue
         const values = ref.items && Array.isArray(value) ? value : [value]
         for (const v of values) {
+          if (v === null) continue
           const problem = checkRef(c, file, ref, ref.targets, v)
           if (problem !== undefined) c.errors.push(`${file}: ${ref.field}: ${problem}`)
         }
@@ -1310,23 +1432,21 @@ function checkRef(
  * `via` is the first prefix of that chain, or undefined for a record of `c`. A referenced record
  * is labelled with the chain, such as `org/principles/Be Kind.md`.
  */
-function recordsById(
-  c: Corpus,
-  targets: Type[],
-  id: string,
-): { label: string; via: string | undefined }[] {
+function recordsById(c: Corpus, targets: Type[] | undefined, id: string): ById[] {
   const key = fold(id)
-  const found = new Map<string, { label: string; via: string | undefined }>()
+  const found = new Map<string, ById>()
   const seen = new Set<Corpus>([c])
   // Breadth first, so the first copy of a record found has the shortest chain.
   const queue: [Corpus, string[]][] = [[c, []]]
   for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
     const [k, path] = next
     for (const type of k.types.values()) {
-      const file = type.ids.get(key)
-      const identity = `${k.identity ?? k.real}\0${type.name}\0${key}`
-      if (file !== undefined && targets.some((t) => isA(type, t)) && !found.has(identity))
-        found.set(identity, { label: [...path, file].join('/'), via: path[0] })
+      const file = type.ids.get(key) ?? type.stems.get(key)
+      if (file === undefined) continue
+      // One file of one corpus is one record, so its path stands for its type and id.
+      const identity = `${k.identity ?? k.real}\0${file}`
+      if ((targets === undefined || targets.some((t) => isA(type, t))) && !found.has(identity))
+        found.set(identity, { label: [...path, file].join('/'), via: path[0], path, file })
     }
     for (const [prefix, ref] of k.references)
       if (!seen.has(ref)) {
@@ -1335,6 +1455,14 @@ function recordsById(
       }
   }
   return [...found.values()]
+}
+
+/** A record found by id: its label, the first prefix and the chain of prefixes to it, its file. */
+interface ById {
+  label: string
+  via: string | undefined
+  path: string[]
+  file: string
 }
 
 /** Whether a record of `type` counts as a record of `target`: it is that type or extends it. */

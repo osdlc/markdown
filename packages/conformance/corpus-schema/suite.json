@@ -150,6 +150,111 @@
           }
         },
         {
+          "name": "with x-id-pattern, a record's id is the longest part of its stem that matches, and the data's id agrees",
+          "input": {
+            "corpus": "corpora/ids-prefix"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a stem with no matching part, two files with one id, and a data id that disagrees are errors",
+          "input": {
+            "corpus": "corpora/ids-prefix-broken"
+          },
+          "expect": {
+            "errors": [
+              "principles/P-0002-b.md: id",
+              "principles/P-0003-x.md: id",
+              "principles/Q-0001-wrong.md: id"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "x-record-file makes a folder holding that file a record folder, named by its folder",
+          "input": {
+            "corpus": "corpora/record-file"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a record folder holds one record file, and x-record-file must be a file name",
+          "input": {
+            "corpus": "corpora/record-file-broken"
+          },
+          "expect": {
+            "errors": [
+              "decisions/D-0001/README.md: (file)",
+              "notes/notes.schema.yaml: x-record-file"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a folder in a type folder whose name starts with _ holds narrative",
+          "input": {
+            "corpus": "corpora/narrative-folder"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a null x-ref value refers to nothing, and the schema says whether it is allowed",
+          "input": {
+            "corpus": "corpora/xref-null"
+          },
+          "expect": {
+            "errors": [
+              "tasks/T-0002.md: blocks"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a schema's links sit only in its prose keywords, not in pattern or enum",
+          "input": {
+            "corpus": "corpora/schema-prose"
+          },
+          "expect": {
+            "errors": [
+              "notes/notes.schema.yaml: description"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a wikilink that matches no file names a record by id",
+          "input": {
+            "corpus": "corpora/wikilink-id"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": [
+              "notes/N.md: body"
+            ]
+          }
+        },
+        {
+          "name": "a wikilink id that two records share is ambiguous",
+          "input": {
+            "corpus": "corpora/wikilink-id-ambiguous"
+          },
+          "expect": {
+            "errors": [
+              "notes/N.md: body"
+            ],
+            "warnings": []
+          }
+        },
+        {
           "name": "extends resolves a parent by a relative path, and a local type builds on the parent's type",
           "input": {
             "corpus": "corpora/extends-path"
