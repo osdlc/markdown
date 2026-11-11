@@ -48,10 +48,9 @@ export interface PackageId {
   version: string | undefined
 }
 
-/** A source's folder, and for a package source the package. */
+/** The folder a source names. */
 export interface Resolved {
   dir: string
-  package?: PackageId
 }
 
 /**
@@ -62,7 +61,6 @@ export interface Resolved {
  */
 export function resolveSource(root: string, source: string): Resolved | { problem: string } {
   let dir: string
-  let pkgInfo: PackageId | undefined
   if (source.startsWith('./') || source.startsWith('../')) {
     dir = resolve(root, source)
     if (!isDir(dir)) return { problem: `${source}: no such folder` }
@@ -72,14 +70,9 @@ export function resolveSource(root: string, source: string): Resolved | { proble
     const pkg = findPackage(root, source)
     if (pkg === undefined) return { problem: `package ${source} is not installed` }
     let corpus: unknown
-    let version: unknown
     try {
-      const json = JSON.parse(readFileSync(join(pkg, 'package.json'), 'utf8')) as {
-        corpus?: unknown
-        version?: unknown
-      }
-      corpus = json.corpus
-      version = json.version
+      corpus = (JSON.parse(readFileSync(join(pkg, 'package.json'), 'utf8')) as { corpus?: unknown })
+        .corpus
     } catch (e) {
       // A package with no package.json has no corpus field.
       if ((e as NodeJS.ErrnoException).code !== 'ENOENT')
@@ -88,7 +81,6 @@ export function resolveSource(root: string, source: string): Resolved | { proble
     if (corpus !== undefined && (typeof corpus !== 'string' || corpus === ''))
       return { problem: `package ${source}: its "corpus" field must be a folder path` }
     dir = corpus === undefined ? pkg : resolve(pkg, corpus)
-    pkgInfo = { name: source, version: typeof version === 'string' ? version : undefined }
     if (!isDir(dir)) return { problem: `package ${source}: its "corpus" folder does not exist` }
   }
   dir = realpathSync(dir)
@@ -99,13 +91,13 @@ export function resolveSource(root: string, source: string): Resolved | { proble
     return { problem: `${source}: cannot read folder` }
   }
   if (!hasRootFile(names)) return { problem: `${source}: holds no corpus-schema root file` }
-  return pkgInfo === undefined ? { dir } : { dir, package: pkgInfo }
+  return { dir }
 }
 
 /**
- * The package that holds the corpus at `root` as its corpus, or null: the nearest package.json at
- * or above `root`, when it has a name and its `corpus` field, or its own folder when it has none,
- * is `root`.
+ * The package the corpus at `root` is, or null: the nearest package.json at or above `root`, when
+ * it has a name and its `corpus` field, or its own folder when it has none, is `root`. It does not
+ * matter how the corpus was reached, so an npm alias still gives the package's own name.
  */
 export function rootPackage(root: string): PackageId | null {
   let real: string

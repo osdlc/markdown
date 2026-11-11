@@ -176,6 +176,10 @@ a method that the record describes.
   type that `uses` a parent type or builds on it gets the parent's. Any other value is an error.
 - The type folder's own file of that name, such as `decisions/README.md`, documents the type. It
   is narrative, not a record.
+- With `x-record-file`, every folder in the type folder that holds that file is a record folder,
+  and every other file under it belongs to the record. A folder such as `decisions/archive/` with a
+  `README.md` beside `D-0001.md` is one record, `archive`, and `D-0001.md` is not a record. Keep
+  other records out of a folder that holds the record file.
 - A record folder holds one record file. A folder that holds two, such as `<folder>.md` and the
   `x-record-file`, is an error at the second.
 - This holds whatever the corpus's `formats` lists. A record file in a format the corpus does not
@@ -508,11 +512,11 @@ results of queries, builds and exports, can be told apart or merged. Identity us
   `pkg:npm/%40osdlc/corpus-profile-sdlc#tasks`, or `...@0.3.0#tasks`.
 - **Record identity** adds the record id: `pkg:npm/%40osdlc/corpus-sdlc-starter@0.1.0#principles/P-0002`.
   Each subpath segment is percent-encoded alone, as purl says.
-- **Which corpora are packages.** A corpus reached through a package source is that package. The
-  corpus being validated is a package when the nearest `package.json` at or above its folder has a
-  `name`, and its `"corpus"` field, or its own folder when it has none, is the corpus folder. A
-  corpus reached by a `./` or `../` path, and a corpus in no package, has a local identity only: it
-  is itself, by its folder, and it has no purl.
+- **Which corpora are packages.** A corpus is a package when the nearest `package.json` at or
+  above its folder has a `name`, and its `"corpus"` field, or its own folder when it has none, is
+  the corpus folder. The identity uses that `name`, so it does not depend on how the corpus is
+  reached: by a package source, an npm alias or a `./` path, it is the same package. Any other
+  corpus has a local identity only: it is itself, by its folder, and it has no purl.
 - **Collapse by identity.** Two records with the same identity are one record. A reference by id
   that finds one record through two chains of references is not ambiguous. It resolves to the copy
   reached through the shortest chain, so a direct reference wins. Two records with different
