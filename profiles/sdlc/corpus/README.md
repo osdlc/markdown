@@ -26,7 +26,7 @@ It holds the types of the sdlc and intent packs, and extends nothing.
 Each `<folder>/<folder>.schema.json` is the kind's JSON Schema 2020-12, as the pack emits it, with:
 
 - `x-id-pattern`: a file name is the id, or `<id>-<slug>`.
-- A ref is `x-ref`, naming its target's type, beside its pattern. `x-ref-form` says how it names the record: each kind's `document.links`. A ref to several kinds lists their types. `x-ref-form` and a list in `x-ref` are new in corpus-schema and in no release yet: 0.2 reads neither.
+- A ref is `x-ref`, naming its target's type, beside its pattern. `x-ref-form` says how it names the record: each kind's `document.links`. A ref to several kinds lists their types. corpus-schema 0.2 reads neither `x-ref-form` nor a list in `x-ref`: for 0.2, build with `--refs pattern`.
 - `additionalProperties: false` when the kind is strict. A key of a pack the schema does not know, `<pack>.<prop>`, still passes, as in the pack.
 - the pack's rules, as far as JSON Schema holds them: `if`/`then`, and `contains`. A rule there sees a value as written, before defaults.
 
