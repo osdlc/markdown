@@ -52,9 +52,17 @@ Releases use [Changesets](https://changesets.dev), the same way as osdlc/osdlc.
 - On a push to main, `.github/workflows/packages-publish.yml` runs the full CI, then calls the
   shared `ts-packages-release.yml` workflow from osdlc/osdlc. With changesets pending, it opens a
   Version Packages pull request as the osdlc-release GitHub App. The workflow fills it by running
-  `pnpm run version-packages`, which bumps the versions and rewrites the conformance suites, since
-  each suite records its reference's version. When that pull request merges, the push publishes
-  the versions that are not on npm yet.
+  `pnpm run version-packages`. It bumps the versions, then refreshes `pnpm-lock.yaml`, since
+  `changeset version` rewrites the ranges packages use for each other and CI installs with
+  `--frozen-lockfile`. Last, it rewrites the conformance suites, since each suite records its
+  reference's version. When that pull request merges, the push publishes the versions that are
+  not on npm yet.
+- The release job passes the App key, `RELEASE_PLZ_APP_PRIVATE_KEY`, by name. The shared workflow
+  requires it, and a reusable workflow reads an environment secret the caller does not pass as an
+  empty string.
+- The shared workflows are pinned to a commit on osdlc/osdlc's main branch. Never pin a pull
+  request branch's commit: GitHub cannot start a workflow whose pinned commit is only on a branch
+  that was deleted.
 - npm auth is trusted publishing (OIDC) only, with provenance. Each package's trusted publisher on
   npmjs.com names repository `osdlc/markdown` and workflow `packages-publish.yml`, with no
   environment. Keep the workflow's file name.
