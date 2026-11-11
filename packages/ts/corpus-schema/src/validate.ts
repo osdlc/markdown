@@ -562,6 +562,10 @@ function readUses(c: Corpus, rootFile: string, data: Data): Map<string, Used> {
   const used = new Map<string, Used>()
   const value = data['uses']
   if (value === undefined) return used
+  if (c.level !== 2) {
+    c.errors.push(`${rootFile}: uses: needs level: 2 in the root file`)
+    return used
+  }
   const entries = typeof value === 'string' ? [value] : value
   if (!Array.isArray(entries) || entries.some((e) => typeof e !== 'string')) {
     c.errors.push(`${rootFile}: uses: must be <prefix>/<type>, <prefix>/*, or a list of them`)

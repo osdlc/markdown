@@ -72,6 +72,8 @@ describe('uses', () => {
       'corpus-schema.yaml: uses: "sdlc/missing" names "sdlc/missing", but sdlc has no such type',
       'corpus-schema.yaml: uses: "nope/*" names unknown prefix "nope"; neither extends nor references declares it',
     ])
+    root('c', { level: 1, uses: 'sdlc/*' })
+    assert.deepEqual(errors(), ['corpus-schema.yaml: uses: needs level: 2 in the root file'])
     root('c', { extends: { sdlc: '../sdlc' }, extra: 'uses: 3\n' })
     assert.deepEqual(errors(), [
       'corpus-schema.yaml: uses: must be <prefix>/<type>, <prefix>/*, or a list of them',

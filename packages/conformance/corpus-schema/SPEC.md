@@ -355,7 +355,7 @@ has no root file, so it names no corpora, and no corpus can name it.
 - Each named corpus is validated by its own rules, as a corpus of its own. A named corpus with
   errors is an error of the corpus that names it, at its `extends.<prefix>` or
   `references.<prefix>` field.
-- `extends` in a corpus that does not state level 2 is an error, and the corpus has no parents.
+- `extends` or `uses` in a corpus that does not state level 2 is an error, and the corpus has no parents and uses no types.
 
 #### Namespace
 
@@ -537,7 +537,7 @@ v0 defines two verbs.
   each warning as a warning. A corpus passes `--strict` when it has no errors and no warnings.
 - `validate --fix <folder>` first rewrites every wikilink it can resolve as a relative Markdown
   link, in the files a validator checks, except in a field in the `id` or `wikilink` form (see
-  References). It changes nothing else in those files.
+  Typed references). It changes nothing else in those files.
 - `validate` never writes `_references/`.
 - `sync <folder>` writes `_references/` for every corpus at or below the folder. For each corpus in
   `references` it writes `_references/<prefix>/`, and it removes every other file there. It copies
