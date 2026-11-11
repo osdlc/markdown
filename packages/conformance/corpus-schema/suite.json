@@ -302,6 +302,122 @@
             ],
             "warnings": []
           }
+        },
+        {
+          "name": "a closed child type admits the fields of every type it extends",
+          "input": {
+            "corpus": "corpora/extends-flatten"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a child type cannot loosen its parent, and a closed parent admits no new field",
+          "input": {
+            "corpus": "corpora/extends-flatten-loosen"
+          },
+          "expect": {
+            "errors": [
+              "howtos/Extra.md: extra",
+              "howtos/Gone.md: status",
+              "rules/Team Rule.md: team",
+              "rules/rules.schema.yaml: properties.team"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a corpus that uses a parent's types and links to none of its files needs no copy",
+          "input": {
+            "corpus": "corpora/extends-copy-unneeded"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "x-ref-form id and wikilink resolve a reference by id, here and in a parent",
+          "input": {
+            "corpus": "corpora/xref-id"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a reference by id must name one record of the type, in the form the field declares",
+          "input": {
+            "corpus": "corpora/xref-id-broken"
+          },
+          "expect": {
+            "errors": [
+              "_inherited/org: (copy)",
+              "tasks/Ambiguous.md: depends_on",
+              "tasks/Not A String.md: depends_on",
+              "tasks/Path.md: about",
+              "tasks/Unknown.md: depends_on",
+              "tasks/tasks.schema.yaml: properties.note",
+              "tasks/tasks.schema.yaml: see"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "an x-ref list accepts a record of any listed type, or of a type that extends one",
+          "input": {
+            "corpus": "corpora/xref-types"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "an x-ref list must name one or more types, and a record of another type fails",
+          "input": {
+            "corpus": "corpora/xref-types-broken"
+          },
+          "expect": {
+            "errors": [
+              "tasks/Build.md: after",
+              "tasks/tasks.schema.yaml: empty",
+              "tasks/tasks.schema.yaml: mixed"
+            ],
+            "warnings": []
+          }
+        }
+      ]
+    },
+    "strict": {
+      "description": "Validate one corpus with --strict. `input.corpus` and the prefixes in `expect` are as in the validate section. `expect.passes` is whether `validate --strict` passes the corpus: it does when the corpus has no errors and no warnings.",
+      "cases": [
+        {
+          "name": "a corpus with no warnings passes",
+          "input": {
+            "corpus": "corpora/strict-clean"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": [],
+            "passes": true
+          }
+        },
+        {
+          "name": "a corpus whose only problem is a warning fails",
+          "input": {
+            "corpus": "corpora/strict-warning"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": [
+              "notes/A.md: body"
+            ],
+            "passes": false
+          }
         }
       ]
     }

@@ -48,14 +48,19 @@ const RESERVED_KEYS = new Set(['dialect', 'profiles'])
  */
 export type Data = Record<string, unknown>
 
+/** How an `x-ref` value names its record: a relative link, a bare id, or `[[id]]`. */
+type RefForm = 'link' | 'id' | 'wikilink'
+const REF_FORMS: readonly string[] = ['link', 'id', 'wikilink']
+
 interface Ref {
   field: string
-  /** The type as the schema names it: `<type>` or `<prefix>/<type>`. */
-  type: string
-  /** The type it names, or undefined when it names none. */
-  target: Type | undefined
-  /** The `x-ref` sits on the property's `items`, so each item is a link. */
+  /** The types as the schema names them: `<type>` or `<prefix>/<type>`. */
+  types: string[]
+  /** The types they name. Undefined until resolved, or when a name names no type. */
+  targets: Type[] | undefined
+  /** The `x-ref` sits on the property's `items`, so each item is a reference. */
   items: boolean
+  form: RefForm
 }
 
 interface Type {
@@ -64,6 +69,8 @@ interface Type {
   corpus: Corpus
   dir: string
   schemaFile: string
+  /** The schema as written, or undefined when it does not parse. */
+  schema: Data | undefined
   validate: ValidateFunction | undefined
   idPattern: RegExp | undefined
   /** The schema's `x-extends`, as written, and the type it names. */
@@ -72,6 +79,8 @@ interface Type {
   refs: Ref[]
   /** Valid records by id. */
   records: Map<string, { file: string; data: Data }>
+  /** Every record file with a usable id, by folded id, for references by id. */
+  ids: Map<string, string>
 }
 
 export interface Corpus {
@@ -494,8 +503,10 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
     strictRequired: false,
   })
   addFormats(ajv)
-  for (const keyword of ['x-ref', 'x-id-pattern', 'x-extends'])
+  for (const keyword of ['x-id-pattern', 'x-extends'])
     ajv.addKeyword({ keyword, schemaType: 'string' })
+  // readTypes checks these values itself, for clearer messages.
+  for (const keyword of ['x-ref', 'x-ref-form']) ajv.addKeyword({ keyword })
   const schemaFiles = new Set<string>()
   const typeDirs = new Map<string, string>()
   for (const dir of dirs) {
@@ -530,23 +541,21 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
       corpus: c,
       dir,
       schemaFile,
+      schema: undefined,
       validate: undefined,
       idPattern: undefined,
       extendsName: undefined,
       base: undefined,
       refs: [],
       records: new Map(),
+      ids: new Map(),
     }
     c.types.set(name, type)
     const schema = readChecked(c, schemaFile)
     if (schema === undefined) continue
+    type.schema = schema
     if (c.level === 2 && Object.keys(schema).length === 0)
       c.errors.push(`${schemaFile}: (schema): empty, but a level 2 corpus gives each type a schema`)
-    try {
-      type.validate = ajv.compile(schema)
-    } catch (e) {
-      c.errors.push(`${schemaFile}: (schema): ${oneLine((e as Error).message)}`)
-    }
     const pattern = schema['x-id-pattern']
     if (typeof pattern === 'string')
       try {
@@ -569,10 +578,37 @@ function readTypes(c: Corpus, dirs: string[]): Set<string> {
       }
       const prop = (schema['properties'] as Record<string, Data>)[field] as Data
       const holder = (items ? prop['items'] : prop) as Data
-      type.refs.push({ field, type: String(holder['x-ref']), target: undefined, items })
+      const named = holder['x-ref']
+      const types = typeof named === 'string' ? [named] : named
+      if (!Array.isArray(types) || types.length === 0 || types.some((t) => typeof t !== 'string')) {
+        c.errors.push(`${schemaFile}: ${field}: x-ref must name a type or list one or more types`)
+        continue
+      }
+      const form = holder['x-ref-form'] ?? 'link'
+      if (typeof form !== 'string' || !REF_FORMS.includes(form)) {
+        c.errors.push(`${schemaFile}: ${field}: x-ref-form must be link, id or wikilink`)
+        continue
+      }
+      type.refs.push({ field, types, targets: undefined, items, form: form as RefForm })
+    }
+    for (const place of places('x-ref-form', schema)) {
+      const holder = place.reduce<unknown>((n, k) => (n as Data)[k], schema) as Data
+      if (!('x-ref' in holder))
+        c.errors.push(
+          `${schemaFile}: ${place.join('.') || '(schema)'}: x-ref-form sits only beside x-ref`,
+        )
     }
   }
   linkTypes(c)
+  for (const type of c.types.values()) {
+    if (type.schema === undefined) continue
+    closedAbove(type)
+    try {
+      type.validate = ajv.compile(flattened(type))
+    } catch (e) {
+      c.errors.push(`${type.schemaFile}: (schema): ${oneLine((e as Error).message)}`)
+    }
+  }
   for (const n of c.nested) {
     const inType = [...c.types.values()].find((t) => n.startsWith(`${t.dir}/`))
     if (inType !== undefined)
@@ -591,10 +627,15 @@ function linkTypes(c: Corpus): void {
       else type.base = base
     }
     for (const ref of type.refs) {
-      const target = lookupType(c, ref.type)
-      if (target !== undefined && 'problem' in target)
-        c.errors.push(`${type.schemaFile}: ${ref.field}: x-ref ${target.problem}`)
-      else ref.target = target
+      const targets: Type[] = []
+      for (const name of ref.types) {
+        const target = lookupType(c, name)
+        if (target !== undefined && 'problem' in target)
+          c.errors.push(`${type.schemaFile}: ${ref.field}: x-ref ${target.problem}`)
+        else if (target !== undefined) targets.push(target)
+      }
+      // A name that names no type is an error above, so the field's values are not checked.
+      if (targets.length === ref.types.length) ref.targets = targets
     }
   }
   // Only local types can form a cycle: a parent never extends its child.
@@ -606,6 +647,80 @@ function linkTypes(c: Corpus): void {
     c.errors.push(`${type.schemaFile}: x-extends: cycle: ${names.join(' → ')}`)
   }
   for (const type of cyclic) type.base = undefined
+}
+
+const asMap = (v: unknown): Data =>
+  v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Data) : {}
+
+/** The top-level field names and field patterns `type` and every type up its chain declare. */
+function mergedFields(type: Type): { names: Set<string>; patterns: Set<string> } {
+  const names = new Set<string>()
+  const patterns = new Set<string>()
+  for (const t of chain(type)) {
+    for (const k of Object.keys(asMap(t.schema?.['properties']))) names.add(k)
+    for (const k of Object.keys(asMap(t.schema?.['patternProperties']))) patterns.add(k)
+  }
+  return { names, patterns }
+}
+
+/**
+ * `type`'s schema, flattened: its top-level `properties` and `patternProperties` also hold each
+ * one a type up its chain declares, as `true`, unless it declares that one itself. So a closing
+ * `additionalProperties` or `unevaluatedProperties` at its root admits the inherited fields. Their
+ * rules come from the schemas of the types that declare them, which a record also passes.
+ */
+function flattened(type: Type): Data {
+  const schema = type.schema ?? {}
+  if (type.base === undefined) return schema
+  const flat: Data = { ...schema }
+  for (const key of ['properties', 'patternProperties']) {
+    const own = schema[key]
+    // A value that is not a mapping is left for Ajv to reject.
+    if (own !== undefined && own !== asMap(own)) continue
+    const merged: Data = {}
+    for (const t of chain(type).slice(1).reverse())
+      for (const k of Object.keys(asMap(t.schema?.[key]))) merged[k] = true
+    if (Object.keys(merged).length > 0) flat[key] = { ...merged, ...asMap(own) }
+  }
+  return flat
+}
+
+/** Whether a schema closes its root to fields it does not declare. */
+const closes = (schema: Data | undefined): boolean =>
+  schema?.['additionalProperties'] === false || schema?.['unevaluatedProperties'] === false
+
+/** How corpus `from` names `type`: its name, or `<prefix>/<name>` for a parent's type. */
+function typeLabel(type: Type, from: Corpus): string {
+  if (type.corpus === from) return type.name
+  const prefix = [...from.parents].find(([, p]) => p === type.corpus)?.[0]
+  return prefix === undefined ? `${type.corpus.name}/${type.name}` : `${prefix}/${type.name}`
+}
+
+/**
+ * Report each field `type` declares that a closed type up its chain does not admit: no record
+ * could hold it, since the record must also pass that type's schema.
+ */
+function closedAbove(type: Type): void {
+  // The furthest closed type admits the fewest fields.
+  const closed = chain(type)
+    .slice(1)
+    .reverse()
+    .find((t) => closes(t.schema))
+  if (closed === undefined) return
+  const { names, patterns } = mergedFields(closed)
+  const matches = (field: string): boolean =>
+    [...patterns].some((p) => {
+      try {
+        return new RegExp(p, 'u').test(field)
+      } catch {
+        return false
+      }
+    })
+  for (const field of Object.keys(asMap(type.schema?.['properties'])))
+    if (!names.has(field) && !matches(field))
+      type.corpus.errors.push(
+        `${type.schemaFile}: properties.${field}: ${typeLabel(closed, type.corpus)} closes its fields, so no record can hold this one`,
+      )
 }
 
 /**
@@ -651,7 +766,7 @@ function readRecords(
   schemaFiles: Set<string>,
 ): void {
   for (const type of c.types.values()) {
-    const ids = new Map<string, string>()
+    const ids = type.ids
     const folders = recordFolders(c, type, dirs)
     const types = chain(type)
     for (const file of files) {
@@ -811,6 +926,14 @@ function eachString(
       eachString(v, field === '' ? k : `${field}.${k}`, visit)
 }
 
+/** The top-level fields of `file`'s type chain that hold references by id, not links. */
+function idFields(c: Corpus, file: string): Set<string> {
+  const type = c.recordType.get(file)
+  if (type === undefined) return new Set()
+  const refs = chain(type).flatMap((t) => t.refs)
+  return new Set(refs.filter((r) => r.form !== 'link').map((r) => r.field))
+}
+
 /** Check every link in the checked files, and every `x-ref` field. */
 function checkLinks(c: Corpus): void {
   const report = (file: string, field: string, r: Resolution, link: Link): void => {
@@ -825,42 +948,101 @@ function checkLinks(c: Corpus): void {
     if (extname(file) === '.md')
       for (const link of extractLinks(split(text).body))
         report(file, 'body', resolve(c, file, link), link)
-    eachString(data, '', (field, s) => {
-      for (const link of extractLinks(s)) report(file, field, resolve(c, file, link), link)
-    })
+    // A field that refers by id holds no link: checkRef checks its values.
+    const byId = idFields(c, file)
+    for (const [key, value] of Object.entries(data ?? {}))
+      if (!byId.has(key))
+        eachString(value, key, (field, s) => {
+          for (const link of extractLinks(s)) report(file, field, resolve(c, file, link), link)
+        })
   }
 
   for (const type of c.types.values())
-    for (const { file, data } of type.records.values()) {
+    for (const { file, data } of type.records.values())
       for (const ref of chain(type).flatMap((t) => t.refs)) {
         const value = data[ref.field]
-        if (value === undefined) continue
+        if (value === undefined || ref.targets === undefined) continue
         const values = ref.items && Array.isArray(value) ? value : [value]
         for (const v of values) {
-          const links = typeof v === 'string' ? extractLinks(v.trim()) : []
-          const link = links[0]
-          if (
-            links.length !== 1 ||
-            link === undefined ||
-            link.end - link.start !== String(v).trim().length
-          ) {
-            c.errors.push(`${file}: ${ref.field}: must be one link, such as "[Name](Name.md)"`)
-            continue
-          }
-          const r = resolve(c, file, link)
-          if (r !== undefined && 'unloaded' in r) continue
-          // A URL or a link to a heading in this file.
-          if (r === undefined)
-            c.errors.push(`${file}: ${ref.field}: must link to a ${ref.type} record file`)
-          else if ('problem' in r && r.warn)
-            c.errors.push(
-              `${file}: ${ref.field}: must link to a ${ref.type} record in this corpus or a parent`,
-            )
-          else if ('file' in r && !isA((r.owner ?? c).recordType.get(r.at ?? r.file), ref.target))
-            c.errors.push(`${file}: ${ref.field}: ${r.file} is not a ${ref.type} record`)
+          const problem = checkRef(c, file, ref, ref.targets, v)
+          if (problem !== undefined) c.errors.push(`${file}: ${ref.field}: ${problem}`)
         }
       }
+}
+
+/** `names` as a phrase: `a`, `a or b`, `a, b or c`. */
+const anyOf = (names: string[]): string =>
+  names.length === 1 ? (names[0] as string) : `${names.slice(0, -1).join(', ')} or ${names.at(-1)}`
+
+/** `[[<id>]]` or `[[<id>|<text>]]`, with no path, heading or block. */
+const WIKI_ID = /^\[\[([^[\]|#^/\\]+)(?:\|[^[\]]*)?\]\]$/
+
+/** Why one value of an `x-ref` field is wrong, or undefined when it names a record it may. */
+function checkRef(
+  c: Corpus,
+  file: string,
+  ref: Ref,
+  targets: Type[],
+  v: unknown,
+): string | undefined {
+  // Named as this corpus names them: a parent type's own x-ref names a type in its own corpus.
+  const of = `of type ${anyOf(targets.map((t) => typeLabel(t, c)))}`
+  if (ref.form !== 'link') {
+    const id =
+      typeof v !== 'string' ? undefined : ref.form === 'id' ? v : WIKI_ID.exec(v.trim())?.[1]
+    if (id === undefined)
+      return ref.form === 'id'
+        ? 'must be the id of a record, such as "T-0012"'
+        : 'must be a wikilink to a record id, such as "[[T-0012]]", quoted in YAML'
+    const found = recordsById(c, targets, id)
+    if (found.length === 0) return `"${id}" is not the id of a record ${of}`
+    if (found.length > 1)
+      return `"${id}" matches more than one record: ${found.map((f) => f.label).join(', ')}`
+    // Obsidian resolves a wikilink to a parent's record in the copy, so it needs the copy.
+    const via = found[0]?.via
+    if (ref.form === 'wikilink' && via !== undefined) c.linked.add(via)
+    return undefined
+  }
+  const links = typeof v === 'string' ? extractLinks(v.trim()) : []
+  const link = links[0]
+  if (links.length !== 1 || link === undefined || link.end - link.start !== String(v).trim().length)
+    return 'must be one link, such as "[Name](Name.md)"'
+  const r = resolve(c, file, link)
+  if (r !== undefined && 'unloaded' in r) return undefined
+  // A URL or a link to a heading in this file.
+  if (r === undefined) return `must link to the file of a record ${of}`
+  if ('problem' in r)
+    return r.warn ? `must link to a record ${of} in this corpus or a parent` : undefined
+  const at = (r.owner ?? c).recordType.get(r.at ?? r.file)
+  return targets.some((t) => isA(at, t)) ? undefined : `${r.file} is not a record ${of}`
+}
+
+/**
+ * The record files whose id folds to `id`'s, among the records of `targets` and of the types that
+ * extend them, in `c` and every corpus it extends. `via` is the prefix of the parent a record is
+ * reached through, or undefined for a record of `c`. A parent's record is labelled with the
+ * prefixes it is reached through, such as `org/principles/Be Kind.md`.
+ */
+function recordsById(
+  c: Corpus,
+  targets: Type[],
+  id: string,
+): { label: string; via: string | undefined }[] {
+  const key = fold(id)
+  const found: { label: string; via: string | undefined }[] = []
+  const seen = new Set<Corpus>()
+  const visit = (k: Corpus, path: string[]): void => {
+    if (seen.has(k)) return
+    seen.add(k)
+    for (const type of k.types.values()) {
+      const file = type.ids.get(key)
+      if (file !== undefined && targets.some((t) => isA(type, t)))
+        found.push({ label: [...path, file].join('/'), via: path[0] })
     }
+    for (const [prefix, parent] of k.parents) visit(parent, [...path, prefix])
+  }
+  visit(c, [])
+  return found
 }
 
 /** Whether a record of `type` counts as a record of `target`: it is that type or extends it. */
@@ -956,6 +1138,18 @@ function fixWikilinks(c: Corpus): { fixed: string[]; warnings: string[]; errors:
       regions.push([bodyStart, extractLinks(body)])
     } else regions.push([0, extractLinks(text)])
 
+    // A wikilink in a field that refers by id is the field's form, so it stays.
+    const byId = idFields(c, file)
+    const keepsIdFields = (start: number, end: number, replacement: string): boolean => {
+      if (byId.size === 0) return true
+      try {
+        const after = readData(`${text.slice(0, start)}${replacement}${text.slice(end)}`, ext)
+        return [...byId].every((k) => isDeepStrictEqual(after[k], data[k]))
+      } catch {
+        // The check on the whole file below reports it.
+        return true
+      }
+    }
     const edits: { start: number; end: number; with: string }[] = []
     for (const [offset, links] of regions)
       for (const link of links) {
@@ -965,7 +1159,8 @@ function fixWikilinks(c: Corpus): { fixed: string[]; warnings: string[]; errors:
         const path = posix.relative(posix.dirname(file), r.file)
         const label = link.text === '' ? stem(r.file) : link.text
         const replacement = markdownLink(label, path, link.fragment, link.embed)
-        edits.push({ start: offset + link.start, end: offset + link.end, with: replacement })
+        const [start, end] = [offset + link.start, offset + link.end]
+        if (keepsIdFields(start, end, replacement)) edits.push({ start, end, with: replacement })
       }
     if (edits.length === 0) continue
     let out = text

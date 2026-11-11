@@ -224,7 +224,8 @@ them stops working anywhere else.
 - A link that leaves the corpus, above its root, into a nested corpus or into a path the corpus
   excludes (a `.` component or `node_modules`), is a link between corpora. v0 does not define
   those. A validator SHOULD warn and MUST NOT report an error, except for `x-ref` (see References).
-- A wikilink does not reach `_inherited/`. Use a relative Markdown link.
+- A wikilink does not reach `_inherited/`. Use a relative Markdown link. A reference in the
+  `wikilink` form is not a link of this kind: it names a record by id (see References).
 
 Wikilinks are accepted but not canonical: `[[target]]`, `[[target|text]]`, `[[target#heading]]`
 and `![[target]]`.
@@ -241,26 +242,61 @@ and `![[target]]`.
 
 ### References
 
-`x-ref` is a schema keyword that makes a field a typed link, like a foreign key. Its value names a
-type: a type in the same corpus, or `<prefix>/<type>` for a parent's type (see Extends):
+`x-ref` is a schema keyword that makes a field a typed reference to records, like a foreign key.
+Its value names a type, or lists one or more types. Each name is a type in the same corpus, or
+`<prefix>/<type>` for a parent's type (see Extends):
 
 ```yaml
 successor: { type: string, x-ref: harnesses }
 cites: { type: string, x-ref: org/principles }
+after:
+  {
+    type: array,
+    items: { type: string, x-ref: [tasks, decisions, milestones] },
+  }
+depends_on:
+  { type: array, items: { type: string, x-ref: tasks, x-ref-form: id } }
+about: { type: string, x-ref: notes, x-ref-form: wikilink }
 ```
 
-- On a top-level property, the property's value MUST be a link, and it MUST resolve to a record of
-  the named type, or of a type that extends it through `x-extends`, at any depth. A record of a
-  local type that extends `org/principles` is an `org/principles` record. So is a record of a
-  local type that extends a local type named in `x-ref`.
-- On the `items` of a top-level array property, each item MUST be such a link.
-- The named type MUST exist, in the corpus or in the parent its prefix names.
-- An `x-ref` link that leaves the corpus is an error. A link to a parent's record goes through
-  `_inherited/<prefix>/`.
-- v0 defines `x-ref` only in those two places. A validator MUST report it anywhere else.
+- `x-ref` sits on a top-level property, or on the `items` of a top-level array property. On
+  `items`, each item is a reference. v0 defines `x-ref` only in those two places. A validator MUST
+  report it anywhere else.
+- A list MUST hold one or more names, each a string. Every name MUST name a type that exists, in
+  the corpus or in the parent its prefix names. A validator does not check the values of a field
+  whose `x-ref` names no type: that is already an error in the schema.
+- A reference matches a record of a named type, or of a type that extends one through
+  `x-extends`, at any depth. A record of a local type that extends `org/principles` is an
+  `org/principles` record. So is a record of a local type that extends a local type named in
+  `x-ref`.
 
-`x-ref`, `x-id-pattern` and `x-extends` are corpus-schema's vocabulary. JSON Schema validators
-reject unknown keywords in strict mode, so a validator MUST register all three.
+`x-ref-form`, beside `x-ref`, says how a value names its record. It is one of three forms. With no
+`x-ref-form`, the form is `link`.
+
+| Form       | The value                                                                  | Example                           |
+| ---------- | -------------------------------------------------------------------------- | --------------------------------- |
+| `link`     | One link, as in Links. It MUST resolve to a matching record.               | `"[Antigravity](Antigravity.md)"` |
+| `id`       | A string: the id of a matching record.                                     | `T-0012`                          |
+| `wikilink` | A string `[[<id>]]` or `[[<id>\|<text>]]`, naming a matching record by id. | `"[[N-0001]]"`                    |
+
+- For `link`, an `x-ref` link that leaves the corpus is an error. A link to a parent's record goes
+  through `_inherited/<prefix>/`.
+- For `id` and `wikilink`, the id resolves among the matching records of the corpus and of every
+  corpus it extends, at any depth. Ids compare as in Ids, after NFC normalization and case
+  folding, so `t-0012` names `T-0012.md`. A record's folder and extension do not matter. An id
+  that names no matching record is an error. An id that names more than one, such as two records
+  of two listed types, is an error.
+- A `wikilink` value holds an id, not a path: `[[tasks/T-0012]]`, a heading (`#`) or a block (`^`)
+  is an error. In YAML it MUST be quoted, since `[[N-0001]]` unquoted is a list in a list.
+- A field in the `id` or `wikilink` form holds no link. The Links rules do not apply to its values,
+  a validator does not warn on its wikilinks, and `validate --fix` does not rewrite them.
+- A `wikilink` value that names a parent's record is a link into that parent's copy, since a tool
+  such as Obsidian resolves it there. It needs `_inherited/<prefix>/` (see The copy), where
+  `<prefix>` is the parent the record is reached through. An `id` value needs no copy.
+- `x-ref-form` anywhere but beside an `x-ref`, or with another value, is an error.
+
+`x-ref`, `x-ref-form`, `x-id-pattern` and `x-extends` are corpus-schema's vocabulary. JSON Schema
+validators reject unknown keywords in strict mode, so a validator MUST register all four.
 
 ### Extends
 
@@ -305,11 +341,40 @@ extends:
   name a grandparent's type, extend the grandparent too.
 - An inherited type is read-only. A corpus uses one through a local type folder.
 - `x-extends` at the root of a schema names the one type it builds on: a local type name, or
-  `<prefix>/<type>`. A record of the type MUST validate against its own schema and the schema of
-  every type up the chain, as if they were joined by `allOf`. This includes each type's
+  `<prefix>/<type>`. The types it reaches that way, one after another, are the type's chain.
+- Each type has a flattened schema. It is the type's own schema, with its top-level `properties`
+  extended: every top-level property that a type up its chain declares, and the type does not
+  declare itself, is added with the schema `true`. Its top-level `patternProperties` is extended
+  the same way. So the fields add up first, the parents' fields and then the type's own, and a
+  closing keyword at the root, `additionalProperties` or `unevaluatedProperties`, applies to the
+  merged set.
+- A record of the type MUST validate against the flattened schema of the type and of every type up
+  the chain, as if they were joined by `allOf`. This includes each type's `required`,
   `x-id-pattern` and `x-ref` fields.
-- So a child can add rules or tighten them, never loosen them. A parent with
-  `additionalProperties: false` admits no new fields.
+- So a child can add fields and tighten rules, never loosen them:
+  - A field the child declares again keeps the parent's rules for it. A value MUST pass the
+    parent's schema for the field and the child's.
+  - A closed parent, one with `additionalProperties: false` or `unevaluatedProperties: false` at
+    its root, admits no field beyond its own merged set. A type up whose chain such a parent sits
+    MUST NOT declare a top-level property outside that set, since no record could hold it. That is
+    an error at the property.
+
+  ```yaml
+  # org/principles/principles.schema.yaml: open
+  properties:
+    statement: { type: string }
+    status: { enum: [draft, kept] }
+  # rules/rules.schema.yaml: closed, and it sees statement and status
+  x-extends: org/principles
+  additionalProperties: false
+  properties:
+    team: { type: string }
+    status: { enum: [kept] } # tighter: a value must pass both enums
+  ```
+
+  A `rules` record may hold `statement`, `status` and `team`, and nothing else. Its `status` must
+  be `kept`.
+
 - A schema that holds only `x-extends`, such as `x-extends: claims/statements`, uses the parent's
   type as it is.
 - `x-extends` anywhere but the schema's root is an error. So are a name that matches no type, a
@@ -339,14 +404,19 @@ extends:
   missing or is extra, with the field `(copy)`, and says to run `sync`. It MAY cap how many files
   it lists.
 - A folder or file directly in `_inherited/` that names no parent is an error.
-- A corpus that uses a parent's types and never links to its records needs no copy.
+- A copy is needed only by a link into it: a link from a checked file into `_inherited/<prefix>/`,
+  or a `wikilink` reference to the parent's record (see References). A corpus that uses a
+  parent's types and has no such link needs no copy, even when the parent has records, and a
+  validator MUST NOT report the copy missing.
 
 ### Verbs
 
 v0 defines two verbs.
 
 - `validate <folder>` checks every corpus at or below the folder against this spec, and exits
-  non-zero when it finds any error. It reports each problem on one line:
+  non-zero when it finds any error.
+- `validate --strict <folder>` also exits non-zero when it reports any warning. It still reports
+  each warning as a warning. A corpus passes `--strict` when it has no errors and no warnings. It reports each problem on one line:
   `<file>: <field>: <message>`, with the file relative to the corpus root. A problem that is not
   in one field puts a word in parentheses in the field's place, such as `(data)` for data that
   does not parse or `(folder)` for a folder that cannot be read. A file or folder that cannot be
@@ -377,7 +447,7 @@ comments and the body. In v0 a write replaces the whole file, and the last write
 `sync` command writes the copies of a corpus's parents:
 
 ```sh
-corpus-schema validate <folder>
+corpus-schema validate [--fix] [--strict] <folder>
 corpus-schema sync <folder>
 ```
 

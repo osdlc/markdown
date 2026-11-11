@@ -58,6 +58,30 @@ are not checked. The record links to them with relative links, such as
 one is an error. A folder with no record named after it, such as `harnesses/google/`, is a plain
 folder of records.
 
+## References
+
+`x-ref` in a schema makes a field a typed reference to records. It names a type, or lists several,
+and a record of any of them, or of a type that extends one, matches:
+
+```yaml
+properties:
+  successor: { type: string, x-ref: harnesses }
+  depends_on: { type: array, items: { type: string, x-ref: [tasks, decisions] } }
+  about: { type: string, x-ref: notes, x-ref-form: wikilink }
+```
+
+`x-ref-form` says how the value names its record:
+
+| `x-ref-form`     | Value                             | Resolved                                    |
+| ---------------- | --------------------------------- | ------------------------------------------- |
+| `link` (default) | `"[Antigravity](Antigravity.md)"` | as a relative link, to a record of the type |
+| `id`             | `T-0012`                          | by id, among the records of the type        |
+| `wikilink`       | `"[[N-0001]]"`                    | by id, as `id` does; quote it in YAML       |
+
+An id matches as ids compare: after NFC normalization and case folding. It may name a parent's
+record, as a link may. A field that refers by id is not checked as a link, gets no wikilink
+warning, and `validate --fix` leaves it as it is.
+
 ## Extending a corpus
 
 A corpus can build on other corpora: a shared profile of types, or an organisation's records. Each
@@ -86,13 +110,17 @@ field. Install packages as usual. `package.json` holds the range and the lockfil
 
 The second form is a git dependency. It suits a private corpus with no registry.
 
-A local type builds on a parent's type with `x-extends` at the root of its schema. A record then
-passes every schema up the chain, so a child can add or tighten rules but not loosen them. A schema
-that holds only `x-extends` uses the parent's type as it is:
+A local type builds on a parent's type with `x-extends` at the root of its schema. The fields add up
+first: a type's `additionalProperties: false` or `unevaluatedProperties: false` admits its own
+fields and those of every type it extends. A record then passes every schema up the chain, so a
+child can add fields and tighten rules but not loosen them. A field the child declares again must
+still pass the parent's rules for it, and a parent that closes its fields admits no new ones. A
+schema that holds only `x-extends` uses the parent's type as it is:
 
 ```yaml
 # rules/rules.schema.yaml
 x-extends: org/principles
+additionalProperties: false # admits the parent's fields and team
 properties:
   team: { type: string }
 ```
@@ -110,21 +138,24 @@ corpus-schema sync
 Commit the copy. Links such as `[Be Kind](../_inherited/org/principles/Be%20Kind.md)` then work in
 Obsidian and on GitHub, and `validate` resolves them in the installed parent. `validate` never
 writes the copy. When the copy is missing or differs from the installed parent, it says to run
-`corpus-schema sync`. A corpus that uses a parent's types and never links to its records needs no
-copy.
+`corpus-schema sync`. A corpus needs a copy of a parent only when one of its files links into
+`_inherited/<prefix>/`, or a `wikilink` reference names one of the parent's records. A corpus that
+uses a parent's types and never links to its records needs no copy.
 
 ## Command line
 
 ```sh
-corpus-schema validate [--fix] <folder>...
+corpus-schema validate [--fix] [--strict] <folder>...
 corpus-schema sync [<folder>...]
 ```
 
 `validate` checks every corpus at or below each folder. It prints one line per problem, as
 `<file>: <field>: <message>` with the file relative to the corpus root, and `ok: <name>: <counts>`
 for each corpus that passes. A problem that is not in one field puts a word in parentheses in the
-field's place, such as `(data)` for frontmatter that does not parse. `--fix` first rewrites every
-wikilink it can resolve as a relative Markdown link.
+field's place, such as `(data)` for frontmatter that does not parse. Warnings start with
+`warning: `. `--fix` first rewrites every wikilink it can resolve as a relative Markdown link,
+except in a field that refers by id. `--strict` fails a corpus that has warnings, as if they were
+errors, so CI can hold a corpus to no warnings.
 
 `sync` writes the `_inherited/` copies of every corpus at or below each folder, by default `.`. A
 corpus syncs after the corpora it extends, so a chain of corpora in one repository syncs in one
@@ -133,14 +164,14 @@ Run it again and it changes nothing.
 
 `sync` owns `_inherited/` outright. It removes every file there that no parent holds, so in a
 corpus with no `extends` it empties the folder. It does not write through a symbolic link there;
-it reports one instead. With any error in the root file or its `extends`, it writes nothing in that
-corpus.
+it reports one instead. With any error in the root file or its `extends`, or a parent with errors of its own, a
+cycle in `extends` included, it writes nothing in that corpus.
 
-| Exit code | Meaning                                                                                  |
-| --------- | ---------------------------------------------------------------------------------------- |
-| `0`       | Every corpus is valid, or synced. Warnings may have been printed.                        |
-| `1`       | A corpus has an error, a folder holds no corpus, or a folder cannot be read or written. |
-| `2`       | Bad usage: an unknown verb or option, or `validate` with no folder.                      |
+| Exit code | Meaning                                                                                                          |
+| --------- | ---------------------------------------------------------------------------------------------------------------- |
+| `0`       | Every corpus is valid, or synced. Without `--strict`, warnings may have been printed.                            |
+| `1`       | A corpus has an error, or a warning under `--strict`. Or a folder holds no corpus, or cannot be read or written. |
+| `2`       | Bad usage: an unknown verb or option, or `validate` with no folder.                                              |
 
 ## Library
 
@@ -166,7 +197,7 @@ holds `root`, `name`, `id` and `level` (the level the root file states), `record
 
 `syncCorpus(root)` writes one corpus's `_inherited/` copies and returns a `SyncReport`: `root`,
 `name`, `written` and `removed` (corpus-relative paths) and `errors`. It writes nothing when the
-root file or its `extends` has an error.
+root file or its `extends` has an error, or a parent has errors of its own.
 
 Writers of records can use the same rules the validator reads with:
 
