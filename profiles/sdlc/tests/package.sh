@@ -97,11 +97,7 @@ check "$work/starter" 1 "principles/$(basename "$p2"): tags: must contain at lea
 cp -R "$here/downstream" "$work/downstream"
 check "$work/downstream" 1 "_references/osdlc: (copy): missing" \
   "a corpus that cites a starter principle needs the starter's copy"
-if [ -n "${CORPUS_SCHEMA:-}" ]; then
-  $CORPUS_SCHEMA sync "$work/downstream" >/dev/null
-else
-  node "$repo/packages/ts/corpus-schema/bin/corpus-schema.js" sync "$work/downstream" >/dev/null
-fi
+corpus_schema sync "$work/downstream" >/dev/null
 check "$work/downstream" 0 "" "a corpus that cites a starter principle validates"
 
 p101="$work/downstream/principles/P-0101-check-before-review.md"

@@ -65,7 +65,9 @@ way.
    `principle/project` or `principle/llm-ai`.
 4. Write the body: `## Statement`, `## Why` and `## How it applies`. The profile does not check
    body sections yet.
-5. Check it: `sh profiles/sdlc/tests/package.sh` from the repository root.
+5. Check it, from the repository root: `sh tools/build-corpus-schema.sh`,
+   `pnpm install --frozen-lockfile --filter @osdlc/corpus-sdlc-starter`, then
+   `sh profiles/sdlc/tests/package.sh`.
 6. Add a changeset for `@osdlc/corpus-sdlc-starter`.
 
 The starter names each record by its id alone, `P-0003.md`. A name with a slug, such as
