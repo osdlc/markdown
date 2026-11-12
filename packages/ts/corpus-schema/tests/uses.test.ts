@@ -57,7 +57,7 @@ describe('uses', () => {
     put('c/tasks/T-1.md', '---\n---\n')
     const r = report()
     assert.deepEqual(r.errors, [
-      `corpus-schema.yaml: uses: "tasks" is both sdlc/* and other/tasks; build the folder's type with x-extends`,
+      `c.corpus-schema.yaml: uses: "tasks" is both sdlc/* and other/tasks; build the folder's type with x-extends`,
     ])
     assert.ok(!r.records.has('tasks'))
   })
@@ -68,15 +68,15 @@ describe('uses', () => {
       uses: ['tasks', 'sdlc/missing', 'nope/*'],
     })
     assert.deepEqual(errors(), [
-      'corpus-schema.yaml: uses: "tasks" names no parent; write <prefix>/<type> or <prefix>/*',
-      'corpus-schema.yaml: uses: "sdlc/missing" names "sdlc/missing", but sdlc has no such type',
-      'corpus-schema.yaml: uses: "nope/*" names unknown prefix "nope"; neither extends nor references declares it',
+      'c.corpus-schema.yaml: uses: "tasks" names no parent; write <prefix>/<type> or <prefix>/*',
+      'c.corpus-schema.yaml: uses: "sdlc/missing" names "sdlc/missing", but sdlc has no such type',
+      'c.corpus-schema.yaml: uses: "nope/*" names unknown prefix "nope"; neither extends nor references declares it',
     ])
     root('c', { level: 1, uses: 'sdlc/*' })
-    assert.deepEqual(errors(), ['corpus-schema.yaml: uses: needs level: 2 in the root file'])
+    assert.deepEqual(errors(), ['c.corpus-schema.yaml: uses: needs level: 2 in the root file'])
     root('c', { extends: { sdlc: '../sdlc' }, extra: 'uses: 3\n' })
     assert.deepEqual(errors(), [
-      'corpus-schema.yaml: uses: must be <prefix>/<type>, <prefix>/*, or a list of them',
+      'c.corpus-schema.yaml: uses: must be <prefix>/<type>, <prefix>/*, or a list of them',
     ])
   })
 
@@ -86,9 +86,12 @@ describe('uses', () => {
     put('c/guides/decisions/decisions.schema.yaml', 'x-extends: sdlc/decisions\n')
     put('c/guides/decisions/D-1.md', '---\nstatus: kept\n---\n')
     const r = report()
-    assert.deepEqual(r.errors, [])
+    // A schema file does not make a deeper folder a type either.
+    assert.deepEqual(r.errors, [
+      'guides/decisions: (folder): a type folder sits at the corpus root only',
+    ])
     assert.deepEqual(r.warnings, [])
-    assert.deepEqual([...r.records.keys()], ['decisions'])
+    assert.deepEqual([...r.records.keys()], [])
   })
 
   test('a folder inside a type folder stays a plain folder of that type', () => {

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest'
 
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 
 import { syncCorpus } from '../src/sync.ts'
 import { validateCorpus } from '../src/validate.ts'
@@ -15,7 +15,10 @@ const put = (rel: string, text: string): void => {
 }
 const read = (rel: string): string => readFileSync(join(dir, rel), 'utf8')
 const root = (rel: string, extra = ''): void =>
-  put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nlevel: 2\nformats: [md, yaml]\n${extra}`)
+  put(
+    `${rel}/${basename(rel)}.corpus-schema.yaml`,
+    `corpus-schema: 0\nlevel: 2\nformats: [md, yaml]\n${extra}`,
+  )
 const report = (rel = 'c', fix = false): ReturnType<typeof validateCorpus> =>
   validateCorpus(join(dir, rel), { fix })
 const errors = (rel = 'c'): string[] => report(rel).errors

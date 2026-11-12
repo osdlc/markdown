@@ -75,9 +75,9 @@ Every note in a corpus at once.
 
 The spec, and the validator that checks a corpus against it.
 
-- It owns: the root file `corpus-schema.md` (or `.yaml` or `.json`) that marks a corpus, type folders,
-  record ids, record folders, JSON Schemas for types, links between types (`x-ref`), and the
-  `validate` and `validate --fix` commands.
+- It owns: the root file `<name>.corpus-schema.md` (or `.yaml` or `.json`) that marks and names a
+  corpus, type folders, record ids, record folders, JSON Schemas for types, links between types
+  (`x-ref`), and the `validate` and `validate --fix` commands.
 - It does not walk folders or resolve links itself. It reads the corpus model. (Today the validator
   still does its own walk. That changes in the plan.)
 - A record folder is a folder inside a type folder that holds a file with the folder's own name:
@@ -168,7 +168,7 @@ the shared note parts.
 A corpus says three separate things about itself in its root file:
 
 ```yaml
-# corpus-schema.yaml
+# project.corpus-schema.yaml
 corpus-schema: 0
 level: 2
 dialect: obsidian
@@ -177,7 +177,7 @@ extends:
   claims: "npm:@osdlc/corpus-profile-claims@0.1"
 ```
 
-As `corpus-schema.md`, the same keys go in YAML frontmatter between `---` lines. Today only
+As `project.corpus-schema.md`, the same keys go in YAML frontmatter between `---` lines. Today only
 `corpus-schema: 0` is required. Version 0 already has `level`. It treats `dialect` and `profiles` as reserved keys
 and only warns about them. The `extends` key would replace `profiles`.
 

@@ -52,7 +52,9 @@ for (const dir of dirs) {
     continue
   }
   if (found.length === 0) {
-    process.stderr.write(`${dir}: no corpus-schema root file at or below it\n`)
+    process.stderr.write(
+      `${dir}: no root file (<name>.corpus-schema.md, .yaml or .json) at or below it\n`,
+    )
     failed = true
   }
   for (const root of found) roots.add(resolve(root))

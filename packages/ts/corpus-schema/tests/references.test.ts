@@ -17,12 +17,15 @@ describe('references', () => {
     for (const level of [null, 1, 2] as const) {
       root('c', { level, references: { org: '../org' } })
       put('c/notes/notes.schema.yaml', 'type: object\n')
-      put('c/notes/N.md', `See [it](../_references/org/${KIND}) and [[Be Kind]].\n`)
+      put(
+        'c/notes/N.md',
+        `See [it](../_references/org/${KIND}), [[../_references/org/principles/Be Kind]] and [[Be Kind]].\n`,
+      )
       assert.deepEqual(sync().errors, [])
       const r = report()
       assert.deepEqual(r.errors, [], String(level))
       assert.deepEqual(r.warnings, [
-        'notes/N.md: body: [[Be Kind]] is a wikilink; validate --fix rewrites it',
+        'notes/N.md: body: [[Be Kind]] is a bare name, not a path from this file; validate --fix rewrites it',
       ])
     }
   })
@@ -38,7 +41,7 @@ describe('references', () => {
     const why =
       'names "org", which is in references; references give no types to build on or use, so name the corpus in extends'
     assert.deepEqual(errors().sort(), [
-      `corpus-schema.yaml: uses: "org/principles" ${why}`,
+      `c.corpus-schema.yaml: uses: "org/principles" ${why}`,
       `rules/rules.schema.yaml: x-extends: ${why}`,
     ])
   })
@@ -57,6 +60,16 @@ describe('references', () => {
     assert.deepEqual(errors().sort(), [
       `notes/N.md: about: "Be Kind" ${far}`,
       `notes/N.md: body: [[Be Kind]]: ${far}`,
+    ])
+    // A wikilink path into a copy's own copy is out of reach too; a Markdown link is not.
+    assert.deepEqual(sync('p').errors, [])
+    assert.deepEqual(sync().errors, [])
+    put(
+      'c/notes/N.md',
+      '---\nsee: Be Kind\n---\n\n[[../_references/p/_references/g/principles/Be Kind]] [it](../_references/p/_references/g/principles/Be%20Kind.md)\n',
+    )
+    assert.deepEqual(errors(), [
+      "notes/N.md: body: [[../_references/p/_references/g/principles/Be Kind]]: reaches into p's own references; a wikilink reaches only this corpus and the corpora it references directly, and the id form reaches any depth",
     ])
   })
 
@@ -210,7 +223,7 @@ describe('identity', () => {
     put('c/node_modules/b/package.json', '{"name":"b","version":"1.0.0"}')
     root('c', { references: { b: 'b', t: 'tasks' } })
     assert.deepEqual(errors(), [
-      "corpus-schema.yaml: (corpora): pkg:npm/tasks is at 2.0.0 as t and at 1.0.0 as b/t; a corpus's graph holds one version of each corpus",
+      "c.corpus-schema.yaml: (corpora): pkg:npm/tasks is at 2.0.0 as t and at 1.0.0 as b/t; a corpus's graph holds one version of each corpus",
     ])
   })
 
@@ -260,7 +273,7 @@ describe('the copy check', () => {
 
   test('reports at most ten files per corpus, then a count', () => {
     for (let i = 0; i < 12; i++) put(`org/notes-${i}.md`, `${i}\n`)
-    put('c/_references/org/corpus-schema.yaml', read('org/corpus-schema.yaml'))
+    put('c/_references/org/org.corpus-schema.yaml', read('org/org.corpus-schema.yaml'))
     const e = errors()
     assert.equal(e.length, 11)
     assert.equal(e[10], '_references/org: (copy): 4 more files differ; run corpus-schema sync')
@@ -289,7 +302,7 @@ describe('the copy check', () => {
       'type: object\nproperties:\n  see: { type: string, x-ref: gone/things }\n',
     )
     put('c/notes/N.md', '---\nsee: "[X](../_references/gone/things/X.md)"\n---\n')
-    assert.deepEqual(errors(), ['corpus-schema.yaml: references.gone: ../gone: no such folder'])
+    assert.deepEqual(errors(), ['c.corpus-schema.yaml: references.gone: ../gone: no such folder'])
   })
 })
 
@@ -301,7 +314,7 @@ describe('syncCorpus', () => {
     put('b/README.md', 'Narrative is copied too.\n')
     put('b/.hidden', 'left out')
     assert.deepEqual(sync('b').written, [
-      '_references/a/corpus-schema.yaml',
+      '_references/a/a.corpus-schema.yaml',
       '_references/a/statements/statements.schema.yaml',
     ])
     root('c', { level: 1, references: { b: '../b' } })
@@ -309,9 +322,9 @@ describe('syncCorpus', () => {
     assert.deepEqual(first.errors, [])
     assert.deepEqual(first.written, [
       '_references/b/README.md',
-      '_references/b/_references/a/corpus-schema.yaml',
+      '_references/b/_references/a/a.corpus-schema.yaml',
       '_references/b/_references/a/statements/statements.schema.yaml',
-      '_references/b/corpus-schema.yaml',
+      '_references/b/b.corpus-schema.yaml',
     ])
     assert.equal(read('c/_references/b/README.md'), 'Narrative is copied too.\n')
     const second = sync()
@@ -323,7 +336,7 @@ describe('syncCorpus', () => {
     org()
     root('p', { level: 1 })
     root('c', { extends: { org: '../org' }, references: { p: '../p' } })
-    assert.deepEqual(sync().written, ['_references/p/corpus-schema.yaml'])
+    assert.deepEqual(sync().written, ['_references/p/p.corpus-schema.yaml'])
   })
 
   test('removes stale files and empty folders, and _references/ once no reference is left', () => {
@@ -361,8 +374,8 @@ describe('syncCorpus', () => {
     const r = sync()
     assert.deepEqual(r.written, [])
     assert.deepEqual(r.errors, [
-      'corpus-schema.yaml: extends.org: ../org has 1 error(s); the first: principles/Bad.md: statement: must be string',
-      'corpus-schema.yaml: references.gone: ../gone: no such folder',
+      'c.corpus-schema.yaml: extends.org: ../org has 1 error(s); the first: principles/Bad.md: statement: must be string',
+      'c.corpus-schema.yaml: references.gone: ../gone: no such folder',
     ])
     assert.equal(existsSync(at('c/_references')), false)
   })
@@ -409,7 +422,7 @@ describe('syncCorpus', () => {
     mkdirSync(at('c/node_modules/odd/package.json'), { recursive: true })
     root('c', { references: { bare: 'bare', odd: 'odd' } })
     assert.deepEqual(errors(), [
-      'corpus-schema.yaml: references.odd: package odd: cannot read its package.json (EISDIR)',
+      'c.corpus-schema.yaml: references.odd: package odd: cannot read its package.json (EISDIR)',
     ])
   })
 
@@ -418,8 +431,8 @@ describe('syncCorpus', () => {
     root('c', { references: { org: '../org' }, extra: 'formats: [txt]\nid: 5\n' })
     const r = sync()
     assert.deepEqual(r.errors.sort(), [
-      'corpus-schema.yaml: formats: must list one or more of md, yaml, json, once each',
-      'corpus-schema.yaml: id: must be a non-empty string',
+      'c.corpus-schema.yaml: formats: must list one or more of md, yaml, json, once each',
+      'c.corpus-schema.yaml: id: must be a non-empty string',
     ])
     assert.equal(existsSync(at('c/_references')), false)
   })
@@ -437,7 +450,7 @@ describe('syncCorpus', () => {
       '_references/org: (symlink): sync does not write through a symbolic link; remove it',
     ])
     assert.deepEqual(r.written, [])
-    assert.equal(existsSync(at('outside/corpus-schema.yaml')), false)
+    assert.equal(existsSync(at('outside/outside.corpus-schema.yaml')), false)
     assert.equal(existsSync(at('outside/empty/deeper')), true)
 
     rmSync(at('c/_references'), { recursive: true })
