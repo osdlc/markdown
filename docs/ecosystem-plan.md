@@ -40,8 +40,8 @@ queries and CSV results, as records with their files. Most of this exists alread
 before the rest of the plan. It is tasks 1 to 5, 22 and 26, in the first columns of the graph.
 
 - **1. Rename to corpus-schema.** Done. The package and spec are now `@osdlc/corpus-schema` on osdlc
-  main, with the command `corpus-schema` and the root file `corpus-schema.md` (or `.yaml`,
-  `.json`). The spec text has the levels.
+  main, with the command `corpus-schema`. The root file is now `<name>.corpus-schema.md` (or
+  `.yaml`, `.json`), where `<name>` is the corpus's name. The spec text has the levels.
   [osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725) merged on 2026-11-09.
 - **2. Record folders.** A record folder keeps a record together with its files. This is how a test
   run keeps its script, its query and its CSV results together. It is in the first published version:
@@ -182,8 +182,8 @@ dialect for things that vary from tool to tool, with no promise that every tool 
 tool that knows the dialect checks it. A tool that doesn't checks only the baseline, and says that
 it did.
 
-The spec already accepts wikilinks. Today a wikilink resolves by a unique path suffix inside the
-corpus, the validator warns about it, and `--fix` rewrites it as a relative link. A corpus that says
+The spec already accepts wikilinks. Today a wikilink must hold a path relative to its note. A bare
+name such as `[[oats]]` gets a warning, and `--fix` rewrites it as a relative link. A corpus that says
 `dialect: obsidian` would make wikilinks first-class, with no warning. They could also reach beyond
 the corpus to the rest of the vault, and the corpus could use embeds.
 
@@ -248,8 +248,8 @@ read the project's own corpus and see what holds and what was set aside.
 - **D1. The word for a folder of notes is corpus.** It follows from D2, which keeps "corpus" as the
   level-0 word. The vault names in our packages move to corpus over time.
 - **D2. The spec's name is corpus-schema** (decided 2026-11-08). The package is
-  `@osdlc/corpus-schema`, the command is `corpus-schema`, and the root file is `corpus-schema.md`
-  (or `.yaml`, `.json`). It says what the spec adds: a schema on top of a corpus. A level-0 corpus
+  `@osdlc/corpus-schema`, the command is `corpus-schema`, and the root file is
+  `<name>.corpus-schema.md` (or `.yaml`, `.json`). It says what the spec adds: a schema on top of a corpus. A level-0 corpus
   simply has no schema file.
 - **D3. The TypeScript corpus model is called markdown-corpus**, the same as its Rust twin. The
   markdown-corpus crate keeps its name.
@@ -329,7 +329,7 @@ The numbers match the task graph at the top. "After" says what must come first.
 - **7. The Obsidian dialect**: wikilinks without a warning, able to reach beyond the corpus, and
   embeds. After 3.
 - **8. skillwright uses the npm package.** harness-reference switches from its `workspace:*` copy of
-  markdown-db to `@osdlc/corpus-schema` and renames its root file to `corpus-schema.md`. After 3.
+  markdown-db to `@osdlc/corpus-schema` and renames its root file to `harness-reference.corpus-schema.md`. After 3.
 - **9. Profiles.** Decide D4, then let a corpus take its level-2 types from profiles. model-schema
   moves to osdlc. After 3 and [sksizer/dev#4069](https://github.com/sksizer/dev/pull/4069).
   A corpus names its profiles in the root file. Its `extends` key maps a short prefix to a

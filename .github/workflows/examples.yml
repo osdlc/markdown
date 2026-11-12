@@ -3,19 +3,22 @@
 # under profiles/claims/tests/ must fail with its one expected error.
 #
 # Every action is pinned to a commit SHA; the comment names its release. The
-# validator is taken from npm by the range ^0.2.0 on purpose, so the example
-# is checked against the latest 0.2.x release of corpus-schema.
+# validator is built from packages/ts/corpus-schema in this checkout, so the
+# example is checked against the spec in the same commit. A change to the
+# spec, such as a new root file name, needs no release first.
 name: examples
 
 on:
   pull_request:
     paths:
       - "profiles/**"
+      - "packages/ts/corpus-schema/**"
       - ".github/workflows/examples.yml"
   push:
     branches: [main]
     paths:
       - "profiles/**"
+      - "packages/ts/corpus-schema/**"
       - ".github/workflows/examples.yml"
 
 permissions:
@@ -34,12 +37,19 @@ jobs:
         with:
           node-version: "24"
 
+      # corepack reads the pnpm version from the root package.json.
+      - name: Build the validator
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm --filter @osdlc/corpus-schema build
+
       # The validator prints warnings on stderr and still exits 0, so the
       # step keeps stderr and fails on any warning line.
       - name: Validate the claims example
         run: |
           set +e
-          npx --yes @osdlc/corpus-schema@^0.2.0 validate profiles/claims/example 2> "$RUNNER_TEMP/stderr.txt"
+          node packages/ts/corpus-schema/bin/corpus-schema.js validate profiles/claims/example 2> "$RUNNER_TEMP/stderr.txt"
           status=$?
           set -e
           cat "$RUNNER_TEMP/stderr.txt" >&2

@@ -73,7 +73,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: level"
+              "level-bad.corpus-schema.yaml: level"
             ],
             "warnings": []
           }
@@ -86,9 +86,9 @@
           "expect": {
             "errors": [],
             "warnings": [
-              "corpus-schema.yaml: dialect",
-              "corpus-schema.yaml: flavour",
-              "corpus-schema.yaml: profiles"
+              "reserved-keys.corpus-schema.yaml: dialect",
+              "reserved-keys.corpus-schema.yaml: flavour",
+              "reserved-keys.corpus-schema.yaml: profiles"
             ]
           }
         },
@@ -327,7 +327,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.md: extends.p"
+              "extends-cycle.corpus-schema.md: extends.p"
             ],
             "warnings": []
           }
@@ -339,7 +339,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.md: extends.claims"
+              "extends-missing-package.corpus-schema.md: extends.claims"
             ],
             "warnings": []
           }
@@ -351,8 +351,8 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.md: extends.pkg",
-              "corpus-schema.md: extends.plain"
+              "extends-not-a-corpus.corpus-schema.md: extends.pkg",
+              "extends-not-a-corpus.corpus-schema.md: extends.plain"
             ],
             "warnings": []
           }
@@ -364,7 +364,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.md: extends"
+              "extends-level-1.corpus-schema.md: extends"
             ],
             "warnings": []
           }
@@ -495,7 +495,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: references.org"
+              "references-both-keys.corpus-schema.yaml: references.org"
             ],
             "warnings": []
           }
@@ -507,7 +507,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: uses",
+              "references-build.corpus-schema.yaml: uses",
               "rules/rules.schema.yaml: x-extends"
             ],
             "warnings": []
@@ -520,7 +520,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: references.other"
+              "references-cycle.corpus-schema.yaml: references.other"
             ],
             "warnings": []
           }
@@ -564,7 +564,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: (corpora)"
+              "references-two-versions.corpus-schema.yaml: (corpora)"
             ],
             "warnings": []
           }
@@ -630,7 +630,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: uses"
+              "uses-clash.corpus-schema.yaml: uses"
             ],
             "warnings": []
           }
@@ -674,7 +674,7 @@
           },
           "expect": {
             "errors": [
-              "corpus-schema.yaml: (corpora)"
+              "identity-two-routes.corpus-schema.yaml: (corpora)"
             ],
             "warnings": []
           }
@@ -730,6 +730,89 @@
             ],
             "warnings": []
           }
+        },
+        {
+          "name": "a type folder sits at the corpus root; a deeper one is an error",
+          "input": {
+            "corpus": "corpora/types-root-only"
+          },
+          "expect": {
+            "errors": [
+              "research/studies: (folder)"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a corpus name holds only lowercase letters, digits and -",
+          "input": {
+            "corpus": "corpora/root-name-bad"
+          },
+          "expect": {
+            "errors": [
+              "My_Notes.corpus-schema.yaml: (file)"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a bare corpus-schema.yaml is not a root file",
+          "input": {
+            "corpus": "corpora/root-file-bare"
+          },
+          "expect": {
+            "errors": [
+              ".: (folder)"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a folder holds one root file",
+          "input": {
+            "corpus": "corpora/root-file-two"
+          },
+          "expect": {
+            "errors": [
+              "b.corpus-schema.md: (file)"
+            ],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a wikilink holding a path from its file resolves, with no warning",
+          "input": {
+            "corpus": "corpora/wikilink-path"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": []
+          }
+        },
+        {
+          "name": "a bare-name wikilink warns, found by path suffix, in any case, or by id",
+          "input": {
+            "corpus": "corpora/wikilink-bare"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": [
+              "notes/A.md: body",
+              "notes/A.md: see"
+            ]
+          }
+        },
+        {
+          "name": "a wikilink path into a copy of a copy is out of reach",
+          "input": {
+            "corpus": "corpora/wikilink-reach-path"
+          },
+          "expect": {
+            "errors": [
+              "notes/N.md: body"
+            ],
+            "warnings": []
+          }
         }
       ]
     },
@@ -771,6 +854,24 @@
               "task: (folder)"
             ],
             "passes": false
+          }
+        }
+      ]
+    },
+    "fix": {
+      "description": "Validate a copy of one corpus with --fix, so the case's own files never change. `input.corpus` and the prefixes in `expect` are as in the validate section, and describe the corpus after the rewrite. `expect.fixed` lists the files `validate --fix` rewrote, relative to the corpus root and sorted by UTF-16 code unit. The text a rewrite writes is not compared.",
+      "cases": [
+        {
+          "name": "validate --fix rewrites each bare name and keeps wikilinks that hold a path or sit in a wikilink-form field",
+          "input": {
+            "corpus": "corpora/fix-wikilink-bare"
+          },
+          "expect": {
+            "errors": [],
+            "warnings": [],
+            "fixed": [
+              "notes/A.md"
+            ]
           }
         }
       ]

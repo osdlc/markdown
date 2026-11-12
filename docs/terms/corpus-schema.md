@@ -2,7 +2,7 @@
 
 Status: current.
 
-What a [corpus](https://github.com/osdlc/osdlc/blob/main/docs/terms/corpus.md) can declare about itself on top of its notes: a root file (`corpus-schema.md`, `corpus-schema.yaml` or `corpus-schema.json`) that marks the folder, types of records kept as files, and a JSON Schema for each type. The [corpus-schema spec](../../packages/conformance/corpus-schema/SPEC.md) defines it in levels. Level 0 is any corpus: it declares nothing. Level 1 adds the root file, type folders and records. Level 2 gives every type a schema.
+What a [corpus](https://github.com/osdlc/osdlc/blob/main/docs/terms/corpus.md) can declare about itself on top of its notes: a root file (`<name>.corpus-schema.md`, `.yaml` or `.json`) that marks the folder and names the corpus, types of records kept as files, and a JSON Schema for each type. The [corpus-schema spec](../../packages/conformance/corpus-schema/SPEC.md) defines it in levels. Level 0 is any corpus: it declares nothing. Level 1 adds the root file, type folders and records. Level 2 gives every type a schema.
 
 In that spec and in `@osdlc/corpus-schema`, "corpus" alone means a corpus that holds a root file, at level 1 or 2. Everywhere else it keeps the general meaning.
 
