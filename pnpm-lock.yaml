@@ -51,8 +51,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       '@osdlc/markdown-link':
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.9.0
+        version: 0.9.0
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -242,8 +242,8 @@ packages:
     resolution: {integrity: sha512-ckZPpz+i5aRTmncUvrPOvuXm7rQDqaaluhkUn/wxCmWXFwdGyxJgLkGBpqnyd1AyYUoDiMZ3vmV4dsW2tv7J6Q==}
     engines: {node: '>=22'}
 
-  '@osdlc/markdown-link@0.8.1':
-    resolution: {integrity: sha512-IGyY8BK9fqPeD1skLp6CsDC2NSP0686QXhhDJ+WDoih8Kqp2o2PB5OA4TG/16OjbF+kNmKCpXT0IrI65ubJ2iA==}
+  '@osdlc/markdown-link@0.9.0':
+    resolution: {integrity: sha512-6Bj35IW+t4Z8pAR3Z2Fdnnc4odpM5p9eNvB63pL+pVCMjiDOURsvyRXCYUMWpZYZvL+KGmRZELtOcfp7VXlXog==}
     engines: {node: '>=22'}
 
   '@osdlc/package-checks@0.1.1':
@@ -1287,7 +1287,7 @@ snapshots:
 
   '@osdlc/frontmatter-lossless@1.1.2': {}
 
-  '@osdlc/markdown-link@0.8.1': {}
+  '@osdlc/markdown-link@0.9.0': {}
 
   '@osdlc/package-checks@0.1.1(@types/node@26.6.6)':
     dependencies:
