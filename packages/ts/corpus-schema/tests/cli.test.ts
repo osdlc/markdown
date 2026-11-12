@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 
 // The built program, as npm installs it. Build first (`pnpm run build`).
 const CLI = join(import.meta.dirname, '../bin/corpus-schema.js')
@@ -30,7 +30,10 @@ const cli = (...args: string[]): { status: number | null; stdout: string; stderr
 const USAGE =
   'usage: corpus-schema validate [--fix] [--strict] <folder>...\n       corpus-schema sync [<folder>...]\n'
 const corpus = (rel: string, id: string): void => {
-  put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nid: ${id}\nformats: [md, yaml, json]\n`)
+  put(
+    `${rel}/${basename(rel)}.corpus-schema.yaml`,
+    `corpus-schema: 0\nid: ${id}\nformats: [md, yaml, json]\n`,
+  )
   put(`${rel}/notes/notes.schema.json`, '{}')
   put(`${rel}/notes/A.md`, '---\n---\nA.\n')
 }
@@ -67,7 +70,10 @@ describe('corpus-schema validate', () => {
     put('notes/A.md', 'A.\n')
     const r = cli('validate', '.')
     assert.equal(r.status, 1)
-    assert.equal(r.stderr, '.: no corpus-schema root file at or below it\n')
+    assert.equal(
+      r.stderr,
+      '.: no root file (<name>.corpus-schema.md, .yaml or .json) at or below it\n',
+    )
     assert.equal(cli('validate', 'missing').status, 1)
   })
 
@@ -81,7 +87,10 @@ describe('corpus-schema validate', () => {
     const bad = cli('validate', 'one', 'empty')
     assert.equal(bad.status, 1)
     assert.equal(bad.stdout, 'ok: one: 1 notes\n')
-    assert.equal(bad.stderr, 'empty: no corpus-schema root file at or below it\n')
+    assert.equal(
+      bad.stderr,
+      'empty: no root file (<name>.corpus-schema.md, .yaml or .json) at or below it\n',
+    )
   })
 
   test('validates a parent and a child folder once per corpus', () => {
@@ -138,13 +147,13 @@ describe('corpus-schema validate', () => {
   test('--strict fails a corpus with warnings, and passes one with none', () => {
     corpus('clean', 'a')
     corpus('warns', 'b')
-    put('warns/notes/B.md', 'See [[A]].\n')
+    put('warns/notes/B.md', 'See [[notes/A]].\n')
     const plain = cli('validate', '.')
     assert.equal(plain.status, 0, plain.stderr)
     const r = cli('validate', '--strict', '.')
     assert.equal(r.status, 1)
     assert.equal(r.stdout, 'ok: clean: 1 notes\n')
-    assert.match(r.stderr, /^warning: notes\/B\.md: body: \[\[A\]\] is a wikilink/m)
+    assert.match(r.stderr, /^warning: notes\/B\.md: body: \[\[notes\/A\]\] is a bare name/m)
     assert.match(r.stderr, /^warns: 1 warning\(s\), and --strict fails on them$/m)
     assert.equal(cli('validate', '--strict', 'clean').status, 0)
   })
@@ -157,9 +166,9 @@ describe('corpus-schema validate', () => {
     assert.match(r.stderr, /^two: 1 warning\(s\), and --strict fails on them$/m)
   })
 
-  test('--fix rewrites wikilinks in .json and .yaml records', () => {
+  test('--fix rewrites bare-name wikilinks in .json and .yaml records', () => {
     corpus('c', 'c')
-    put('c/notes/B.json', '{"see": "[[A]]"}\n')
+    put('c/notes/B.json', '{"see": "[[a]]"}\n')
     put('c/notes/C.yaml', 'see: "[[notes/A|the A note]]"\n')
     const r = cli('validate', '--fix', 'c')
     assert.equal(r.status, 0, r.stderr)
@@ -172,7 +181,7 @@ describe('corpus-schema validate', () => {
 
 describe('corpus-schema sync', () => {
   const corpusAt = (rel: string, refs = ''): void => {
-    put(`${rel}/corpus-schema.yaml`, `corpus-schema: 0\nlevel: 2\n${refs}`)
+    put(`${rel}/${basename(rel)}.corpus-schema.yaml`, `corpus-schema: 0\nlevel: 2\n${refs}`)
     put(`${rel}/notes/notes.schema.yaml`, 'type: object\n')
     put(`${rel}/notes/A.md`, `${rel}\n`)
   }
@@ -208,7 +217,7 @@ describe('corpus-schema sync', () => {
     corpusAt('base')
     corpusAt('org', 'references:\n  base: ../base\n')
     put('org/notes/B.md', 'See [A](../_references/base/notes/A.md).\n')
-    put('aa/corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends:\n  org: ../org\n')
+    put('aa/aa.corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends:\n  org: ../org\n')
     assert.equal(cli('sync', 'org').status, 0)
     put('base/notes/A.md', 'base, changed\n')
 
@@ -234,7 +243,7 @@ describe('corpus-schema sync', () => {
     assert.equal(bad.status, 1)
     assert.equal(
       bad.stderr,
-      'corpus-schema.yaml: references.gone: package @acme/gone is not installed\nb: 1 error(s)\n',
+      'b.corpus-schema.yaml: references.gone: package @acme/gone is not installed\nb: 1 error(s)\n',
     )
   })
 })

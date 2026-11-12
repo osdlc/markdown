@@ -1,9 +1,9 @@
 # corpus-schema
 
 A format for what a [corpus](https://github.com/osdlc/osdlc/blob/main/docs/terms/corpus.md), a folder of Markdown notes and the
-files they link to, can declare about itself. A root file (`corpus-schema.md`, `.yaml` or `.json`)
-marks the folder. Each type is a folder holding a JSON Schema named after it, and each record is a
-Markdown, YAML or JSON file in that folder. Links between records are relative Markdown links.
+files they link to, can declare about itself. A root file (`<name>.corpus-schema.md`, `.yaml` or
+`.json`) marks the folder and names the corpus. Each type is a folder at the corpus root holding
+a JSON Schema named after it, and each record is a Markdown, YAML or JSON file in that folder. Links between records are relative Markdown links.
 
 The spec has levels. Level 0 is any folder of linked notes. Level 1 adds the root file, types and
 records. Level 2 gives every type a schema. [SPEC.md](SPEC.md) states the format, version 0.
@@ -48,7 +48,18 @@ those `node_modules/` folders. The `_references/` copies were written with `corp
 
 `corpora/extends-flatten*` cover how `x-extends` merges a chain's fields before a closing keyword.
 `corpora/xref-*` cover `x-ref` lists of types and the `id` and `wikilink` forms of `x-ref-form`.
+`corpora/root-*` cover the root file's name, `corpora/types-root-only` type folders below the
+root, and `corpora/wikilink-*` wikilinks that hold a path, bare names and how far a wikilink
+reaches.
+
+Each root file is named after its corpus: the case's folder name, the nested folder's name, or the
+package name without its scope for a corpus that is a package.
 
 The `strict` section runs `validate --strict`. Its `expect` adds `passes`, whether the corpus
 passes: it has no errors and no warnings. `corpora/strict-*` are its corpora, and so is
-`corpora/uses-like-type`, whose only problem is a warning.
+`corpora/uses-like-type`, whose only problem is a warning. `corpora/strict-warning` holds one
+bare-name wikilink.
+
+The `fix` section runs `validate --fix` on a copy of the case's corpus, so the case's own files do
+not change. Its `expect` describes the corpus after the rewrite and adds `fixed`, the files the
+rewrite changed. `corpora/fix-*` are its corpora.

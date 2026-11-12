@@ -22,6 +22,7 @@ import {
   type WikilinkIndex,
 } from './links.ts'
 import {
+  CORPUS_NAME,
   entries,
   hasRootFile,
   REFERENCES,
@@ -30,7 +31,8 @@ import {
   type PackageId,
   PREFIX,
   resolveSource,
-  ROOT_FILES,
+  rootName,
+  ROOT_SUFFIXES,
   rootPackage,
   sameBytes,
   skipped,
@@ -124,7 +126,7 @@ export interface Corpus {
   nested: string[]
   /**
    * The corpus's files and those of the corpora it references, as paths under `_references/`,
-   * and the files of the corpora nested in it, for wikilinks.
+   * and the files of the corpora nested in it, for looking up bare-name wikilinks.
    */
   wikilinks: WikilinkIndex
   nestedWikilinks: WikilinkIndex
@@ -163,7 +165,7 @@ export interface Loader {
 export interface CorpusReport {
   /** The corpus folder, as passed to `validateCorpus`. */
   root: string
-  /** The corpus's name: its folder name. */
+  /** The corpus's name: the `<name>` of its root file, or its folder name when it has none. */
   name: string
   /**
    * The corpus's identity: the unversioned package URL of the package whose package.json names
@@ -489,14 +491,20 @@ function readChecked(c: Corpus, file: string): Data | undefined {
  * stop.
  */
 function readRoot(c: Corpus): { file: string; data: Data; extensions: string[] } | undefined {
-  const rootFiles = ROOT_FILES.filter((f) => c.files.has(f))
+  // `files` is sorted, so the first root file is the same on every run.
+  const rootFiles = [...c.files].filter((f) => !f.includes('/') && rootName(f) !== undefined)
   const rootFile = rootFiles[0]
   if (rootFile === undefined) {
-    c.errors.push(`.: (folder): no ${ROOT_FILES.join(', ')}`)
+    c.errors.push(`.: (folder): no root file, <name>${ROOT_SUFFIXES.join(', ')}`)
     return undefined
   }
   for (const f of rootFiles.slice(1))
     c.errors.push(`${f}: (file): a folder holds one root file, and ${rootFile} is one`)
+  c.name = rootName(rootFile) as string
+  if (!CORPUS_NAME.test(c.name))
+    c.errors.push(
+      `${rootFile}: (file): the corpus name "${c.name}" holds only lowercase letters, digits and -`,
+    )
   const data = readChecked(c, rootFile)
   if (data === undefined) return undefined
   if (data['corpus-schema'] !== 0) {
@@ -706,8 +714,9 @@ function lookupType(
 }
 
 /**
- * Find the types: folders holding `<their name>.schema.{md,yaml,json}`, and folders at the corpus
- * root with no schema file named after a type `uses` names. Returns every schema file.
+ * Find the types: folders at the corpus root holding `<their name>.schema.{md,yaml,json}`, and
+ * folders at the corpus root with no schema file named after a type `uses` names. Returns every
+ * schema file, those below the root included.
  */
 function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<string> {
   // strictSchema only: a misspelled keyword is an error. The other strict options reject valid
@@ -737,13 +746,10 @@ function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<stri
       c.files.has(f),
     )
     const schemaFile = found[0]
-    const inType = [...c.types.values()].some((t) => dir.startsWith(`${t.dir}/`))
-    // `uses` gives types to folders at the corpus root only.
+    // Type folders, and the folders `uses` gives a type, sit at the corpus root only.
     const atRoot = !dir.includes('/')
     const use = atRoot ? used.get(name) : undefined
     if (schemaFile === undefined) {
-      // A folder inside a type folder is a plain folder of that type's records.
-      if (inType) continue
       if (use !== undefined) useType(c, dir, use, typeDirs)
       else if (atRoot && holdsRecords.has(dir)) warnLikeParentType(c, dir)
       continue
@@ -756,9 +762,8 @@ function readTypes(c: Corpus, dirs: string[], used: Map<string, Used>): Set<stri
     for (const f of found.slice(1))
       c.errors.push(`${f}: (file): a type holds one schema file, and ${schemaFile} is one`)
     // A rejected type's schema is still read, so its links are checked.
-    const outer = [...c.types.values()].find((t) => dir.startsWith(`${t.dir}/`))
-    if (outer !== undefined) {
-      c.errors.push(`${dir}: (folder): a type folder must not sit inside type ${outer.name}`)
+    if (!atRoot) {
+      c.errors.push(`${dir}: (folder): a type folder sits at the corpus root only`)
       readChecked(c, schemaFile)
       continue
     }
@@ -1199,11 +1204,12 @@ function readRecords(
 /**
  * A file in the corpus, a problem, or undefined for a link not checked (a URL, or within the file).
  * A file under `_references/<prefix>/` sits in the referenced corpus `owner`, at `at` in it.
- * `unloaded` names a referenced corpus that did not load: its `references` entry is already an
- * error, so the link is not checked.
+ * `bare` marks a wikilink that holds no path to its file, found by name: a warning, which
+ * `validate --fix` rewrites. `unloaded` names a referenced corpus that did not load: its
+ * `references` entry is already an error, so the link is not checked.
  */
 type Resolution =
-  | { file: string; owner?: Corpus; at?: string }
+  | { file: string; owner?: Corpus; at?: string; bare?: true }
   | { problem: string; warn?: true }
   | { unloaded: string }
   | undefined
@@ -1217,26 +1223,10 @@ function resolve(c: Corpus, from: string, link: Link): Resolution {
     const wiki = `[[${link.target}]]`
     if (link.target.startsWith('/'))
       return { problem: `${wiki}: links in a corpus must be relative` }
-    const found = matchWikilink(link.target, c.wikilinks)
-    const one = found[0]
-    if (found.length === 1 && one !== undefined)
-      return one.startsWith(`${REFERENCES}/`) ? intoCopy(c, one, wiki) : { file: one }
-    if (found.length > 1) return { problem: `${wiki}: ambiguous, matches ${found.join(', ')}` }
-    if (matchWikilink(link.target, c.nestedWikilinks).length > 0)
-      return { problem: `${wiki}: ${BETWEEN_CORPORA}`, warn: true }
-    // A target with no path names a record by id, in this corpus or one it references directly.
-    const target = link.target.split('#')[0]?.trim() ?? ''
-    if (target === '' || target.includes('/')) return { problem: `${wiki}: no file matches` }
-    const byId = recordsById(c, undefined, target, true)
-    const record = byId[0]
-    if (byId.length > 1)
-      return { problem: `${wiki}: ambiguous, the id of ${byId.map((r) => r.label).join(', ')}` }
-    if (record !== undefined)
-      return record.via === undefined
-        ? { file: record.file }
-        : intoCopy(c, `${REFERENCES}/${record.via}/${record.file}`, wiki)
-    const far = tooFar(c, undefined, target)
-    return { problem: `${wiki}: ${far ?? 'no file matches'}` }
+    const byPath = wikiPath(c, from, link.target, wiki)
+    if (byPath !== undefined) return byPath
+    const r = bareName(c, link.target, wiki)
+    return r !== undefined && 'file' in r ? { ...r, bare: true } : r
   }
   const dest = link.target
   if (dest === '' || /^[a-z][a-z0-9+.-]*:/i.test(dest)) return undefined
@@ -1262,6 +1252,73 @@ function resolve(c: Corpus, from: string, link: Link): Resolution {
       warn: true,
     }
   return { problem: `${dest}: no such file` }
+}
+
+/**
+ * Where a wikilink whose target is a path relative to `from` points, as a Markdown link resolves,
+ * with the same case. A record's extension may be left out. Undefined when the target is no such
+ * path, so it is a bare name.
+ */
+function wikiPath(c: Corpus, from: string, target: string, wiki: string): Resolution {
+  if (target.trim() === '') return undefined
+  const joined = posix.normalize(posix.join(posix.dirname(from), target)).replace(/\/$/, '')
+  const outside = joined === '..' || joined.startsWith('../')
+  if (outside || c.nested.some((n) => joined === n || joined.startsWith(`${n}/`)))
+    return { problem: `${wiki}: ${BETWEEN_CORPORA}`, warn: true }
+  const tries = [joined, ...RECORD_EXTENSIONS.map((ext) => `${joined}${ext}`)]
+  if (joined === REFERENCES || joined.startsWith(`${REFERENCES}/`)) {
+    const [, prefix, ...rest] = joined.split('/')
+    const ref = prefix === undefined ? undefined : c.references.get(prefix)
+    // A parent's prefix, or one no key declares, is the Markdown link's problem.
+    if (ref === undefined) return intoCopy(c, joined, wiki)
+    if (rest[0] === REFERENCES)
+      return {
+        problem: `${wiki}: reaches into ${prefix}'s own references; a wikilink reaches only this corpus and the corpora it references directly, and the id form reaches any depth`,
+      }
+    const inner = tries.find((t) =>
+      ref.filesByNfc.has(t.split('/').slice(2).join('/').normalize('NFC')),
+    )
+    return inner === undefined
+      ? { problem: `${wiki}: no such file in ${prefix}` }
+      : intoCopy(c, inner, wiki)
+  }
+  for (const t of tries) {
+    const file = c.filesByNfc.get(t.normalize('NFC'))
+    if (file !== undefined) return { file }
+  }
+  if (joined.split('/').some(skipped))
+    return {
+      problem: `${wiki}: leaves the corpus, which excludes dot paths and node_modules`,
+      warn: true,
+    }
+  return undefined
+}
+
+/**
+ * The file a bare-name wikilink names: by path suffix among the files a wikilink reaches, then, for
+ * a target with no `/`, by the id or file name of a record it reaches. Names match ignoring case
+ * and Unicode composition.
+ */
+function bareName(c: Corpus, target: string, wiki: string): Resolution {
+  const found = matchWikilink(target, c.wikilinks)
+  const one = found[0]
+  if (found.length === 1 && one !== undefined)
+    return one.startsWith(`${REFERENCES}/`) ? intoCopy(c, one, wiki) : { file: one }
+  if (found.length > 1) return { problem: `${wiki}: ambiguous, matches ${found.join(', ')}` }
+  if (matchWikilink(target, c.nestedWikilinks).length > 0)
+    return { problem: `${wiki}: ${BETWEEN_CORPORA}`, warn: true }
+  const name = target.trim()
+  if (name === '' || name.includes('/')) return { problem: `${wiki}: no file matches` }
+  const byId = recordsById(c, undefined, name, true)
+  const record = byId[0]
+  if (byId.length > 1)
+    return { problem: `${wiki}: ambiguous, the id of ${byId.map((r) => r.label).join(', ')}` }
+  if (record !== undefined)
+    return record.via === undefined
+      ? { file: record.file }
+      : intoCopy(c, `${REFERENCES}/${record.via}/${record.file}`, wiki)
+  const far = tooFar(c, undefined, name)
+  return { problem: `${wiki}: ${far ?? 'no file matches'}` }
 }
 
 /** A link to `path`, under `_references/` in `c`: it needs the copy it points into. */
@@ -1347,9 +1404,9 @@ function checkLinks(c: Corpus): void {
   const report = (file: string, field: string, r: Resolution, link: Link): void => {
     if (r !== undefined && 'problem' in r)
       (r.warn ? c.warnings : c.errors).push(`${file}: ${field}: ${r.problem}`)
-    else if (r !== undefined && link.kind === 'wiki')
+    else if (r !== undefined && 'bare' in r)
       c.warnings.push(
-        `${file}: ${field}: [[${link.target}]] is a wikilink; validate --fix rewrites it`,
+        `${file}: ${field}: [[${link.target}]] is a bare name, not a path from this file; validate --fix rewrites it`,
       )
   }
   for (const [file, { text, data }] of c.checked) {
@@ -1598,7 +1655,7 @@ function withoutLinks(value: unknown): unknown {
   return value
 }
 
-/** Rewrite each wikilink that resolves to one file as a relative Markdown link. */
+/** Rewrite each bare-name wikilink that names one file as a relative Markdown link. */
 function fixWikilinks(c: Corpus): { fixed: string[]; warnings: string[]; errors: string[] } {
   const fixed: string[] = []
   const warnings: string[] = []
@@ -1631,7 +1688,8 @@ function fixWikilinks(c: Corpus): { fixed: string[]; warnings: string[]; errors:
       for (const link of links) {
         if (link.kind !== 'wiki') continue
         const r = resolve(c, file, link)
-        if (r === undefined || !('file' in r)) continue
+        // A wikilink that holds a path conforms, so it stays.
+        if (r === undefined || !('bare' in r)) continue
         const path = posix.relative(posix.dirname(file), r.file)
         const label = link.text === '' ? stem(r.file) : link.text
         const replacement = markdownLink(label, path, link.fragment, link.embed)
@@ -1669,7 +1727,7 @@ function fixWikilinks(c: Corpus): { fixed: string[]; warnings: string[]; errors:
  * in the report, including a file or folder that cannot be read or, with `fix`, written. Nothing
  * is thrown for them.
  *
- * With `fix`, first rewrite each wikilink that resolves to one file as a relative Markdown link,
+ * With `fix`, first rewrite each bare-name wikilink that names one file as a relative Markdown link,
  * in place, in the root file, schema files and records. A file whose data would change is left
  * as it is, with a warning. The report then describes the corpus after the rewrite.
  */
