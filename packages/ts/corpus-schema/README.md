@@ -9,7 +9,8 @@ It is for people and tools that keep typed records as Markdown, YAML and JSON fi
 edit them as plain notes (in Obsidian, on GitHub, in an editor) and want CI to catch mistakes. The
 format is the [corpus-schema spec](https://github.com/osdlc/markdown/blob/main/packages/conformance/corpus-schema/SPEC.md),
 version 0. A corpus, a folder of notes and the files they link to, declares what it holds in a
-root file, `corpus-schema.md`, and each type folder holds the type's JSON Schema. Every rule this
+root file, `<name>.corpus-schema.md` (or `.yaml`, `.json`), whose `<name>` is the corpus's name.
+Each type folder sits at the corpus root and holds the type's JSON Schema. Every rule this
 package checks comes from that spec or from the corpus's own files.
 
 The spec has levels. Level 0 is any folder of linked notes, and this package does not check it.
@@ -35,12 +36,12 @@ ESM only. Node.js 22 or later.
 
 ```text
 evidence/
-├── corpus-schema.md                the root file: `corpus-schema: 0`
+├── evidence.corpus-schema.md       the root file: `corpus-schema: 0`
 ├── harnesses/
 │   ├── harnesses.schema.md         the type "harnesses" and its JSON Schema
 │   ├── Claude Code.md              a record, id "Claude Code"
 │   └── google/
-│       └── Gemini CLI.md           records may sit at any depth
+│       └── Gemini CLI.md           records may sit at any depth in a type folder
 └── methods/
     ├── methods.schema.yaml
     └── Survey/                     a record folder
@@ -88,12 +89,16 @@ properties:
 | `id`             | `T-0012`                          | by id, among the records of the type        |
 | `wikilink`       | `"[[N-0001]]"`                    | by id, as `id` does; quote it in YAML       |
 
-An id matches as ids compare: after NFC normalization and case folding. A value may also give the
-whole file name without its extension. A `null` value refers to nothing; the schema says whether
-it is allowed. An `id` value reaches records of referenced corpora at any depth. A wikilink, in a
-`wikilink` field or a body, reaches only this corpus and the corpora it references directly. A
-body wikilink such as `[[P-0002]]` that matches no file names a record by id. A field that refers
-by id is not checked as a link, gets no wikilink warning, and `validate --fix` leaves it as it is.
+An id matches ignoring case and Unicode composition. A value may also give the whole file name
+without its extension. A `null` value refers to nothing; the schema says whether it is allowed. An
+`id` value reaches records of referenced corpora at any depth. A `wikilink` value reaches only this
+corpus and the corpora it references directly. A field that refers by id is not checked as a link,
+gets no wikilink warning, and `validate --fix` leaves it as it is.
+
+A wikilink in a body or in any other field must hold a path from its file, as a Markdown link
+does: `[[../harnesses/Claude Code]]`. A bare name, such as `[[Claude Code]]` from another folder or
+`[[P-0002]]`, is a warning. The validator looks it up by path suffix, then by record id, and
+`--fix` rewrites it as a relative Markdown link.
 
 ## Other corpora: extends, references and uses
 
@@ -198,8 +203,8 @@ corpus-schema sync [<folder>...]
 `<file>: <field>: <message>` with the file relative to the corpus root, and `ok: <name>: <counts>`
 for each corpus that passes. A problem that is not in one field puts a word in parentheses in the
 field's place, such as `(data)` for frontmatter that does not parse. Warnings start with
-`warning: `. `--fix` first rewrites every wikilink it can resolve as a relative Markdown link,
-except in a field that refers by id. `--strict` fails a corpus that has warnings, as if they were
+`warning: `. `--fix` first rewrites every bare-name wikilink it can resolve as a relative Markdown
+link, except in a field that refers by id. A wikilink that holds a path stays. `--strict` fails a corpus that has warnings, as if they were
 errors, so CI can hold a corpus to no warnings.
 
 `sync` writes the `_references/` copies of every corpus at or below each folder, by default `.`. A
@@ -237,7 +242,7 @@ export function check(folder: string): string[] {
 `findCorpora(dir)` finds every corpus at or below a folder by its root file. It throws when a
 folder outside every corpus cannot be read. `validateCorpus(root, { fix })` checks one corpus and
 returns a `CorpusReport`. Every problem it finds is a line in the report, never a throw. A report
-holds `root`, `name`, `identity` and `version` (the package's, when the corpus is one), `id` and
+holds `root`, `name` (the `<name>` of the root file), `identity` and `version` (the package's, when the corpus is one), `id` and
 `level` (the level the root file states), `records` (valid records by type, then id, each record's
 `Data`), `files` (the corpus-relative path of each of those records), `errors`, `warnings` and
 `fixed`.
@@ -273,7 +278,7 @@ A parent's schemas run on the corpus's records too. Treat a corpus package you e
 as you treat the corpus.
 
 `--fix` and `validateCorpus(root, { fix: true })` rewrite files in place. They change only
-wikilinks, and they leave a file alone if the rewrite would change its data, but they do not keep a
+bare-name wikilinks, and they leave a file alone if the rewrite would change its data, but they do not keep a
 backup. Run them on files under version control.
 
 ## How it compares

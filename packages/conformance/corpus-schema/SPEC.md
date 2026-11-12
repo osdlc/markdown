@@ -47,9 +47,10 @@ holds a root file.
 ### Terms
 
 - **Corpus**: a folder holding a root file, and everything under it.
-- **Root file**: `corpus-schema.md`, `corpus-schema.yaml` or `corpus-schema.json`. The name matches
-  exactly, case included, so a corpus is the same on every file system.
-- **Type**: a folder holding a schema file named after the folder.
+- **Root file**: `<name>.corpus-schema.md`, `<name>.corpus-schema.yaml` or
+  `<name>.corpus-schema.json`, where `<name>` is the corpus's name. The suffix matches exactly,
+  case included, so a corpus is the same on every file system.
+- **Type**: a folder at the corpus root holding a schema file named after the folder.
 - **Record**: one file of a type. Its id is its file name.
 - **Narrative**: every other file in a corpus.
 
@@ -59,9 +60,13 @@ to the rest of osdlc.
 ### Corpus
 
 - A corpus is a folder holding a root file. A folder MUST NOT hold more than one root file.
-- The corpus's name is its folder name. Renaming the folder renames the corpus, as renaming a
-  package does. A name taken from the folder needs no lookup: a path to the corpus already names
-  it, and Obsidian resolves such paths by suffix.
+- The corpus's name is the `<name>` part of its root file's name: `houses.corpus-schema.md` names
+  the corpus `houses`. The folder's name does not matter. So the name stays the same when the
+  folder is renamed, copied under a prefix (see The copy) or kept in a package's subfolder.
+- A name holds only lowercase letters, digits and `-`, and MUST NOT be empty. Any other name is an
+  error.
+- A file named `corpus-schema.md`, `corpus-schema.yaml` or `corpus-schema.json`, with no name in
+  front, is not a root file.
 - A corpus holds every file under its folder, except:
   - any path with a component that starts with `.` (`.git/`, `.obsidian/`, `.DS_Store`);
   - any path with a component named `node_modules`;
@@ -74,14 +79,16 @@ to the rest of osdlc.
     (see The copy).
 - A corpus MUST NOT sit inside a type folder.
 
-The root file has a fixed name so that a tool finds every corpus in a vault by name alone, without
-reading files. It works like `.git` for a repository or `package.json` for a package.
+The root file has a fixed suffix so that a tool finds every corpus in a vault by its file name
+alone, without reading files. It works like `.git` for a repository or `package.json` for a
+package. The name in front gives each corpus's root file its own name, so search and Obsidian's
+quick switcher tell corpora apart.
 
 ### Root file
 
-In `corpus-schema.md` the data is the YAML frontmatter, and the body is the corpus's front page.
-The body MAY be empty. In `corpus-schema.yaml` and `corpus-schema.json` the whole file is the data.
-The data MUST be a mapping.
+In a `.md` root file the data is the YAML frontmatter, and the body is the corpus's front page.
+The body MAY be empty. In a `.yaml` or `.json` root file the whole file is the data. The data MUST
+be a mapping.
 
 | Key             | Required | Holds                                                                |
 | --------------- | -------- | -------------------------------------------------------------------- |
@@ -126,13 +133,16 @@ notes, even in one type.
 
 ### Types
 
-- A type is a folder holding a schema file named after the folder: `harnesses/harnesses.schema.md`,
-  `.yaml` or `.json`, matched exactly, case included. A type folder MUST NOT hold more than one.
-- The type's name is its folder name. Type names MUST be unique within a corpus. A type folder MAY
-  sit at any depth in the corpus, but MUST NOT sit inside another type folder.
-- A type folder that breaks either rule is an error, and its folder is not a type. Its schema file
-  is still checked for links. Its records are not checked as its own: under another type folder
-  they are that type's records, and elsewhere they are narrative.
+- A type is a folder at the corpus root holding a schema file named after the folder:
+  `harnesses/harnesses.schema.md`, `.yaml` or `.json`, matched exactly, case included. A type
+  folder MUST NOT hold more than one.
+- The type's name is its folder name. Type names MUST be unique within a corpus: no two match
+  (see Ids).
+- Type folders sit at the corpus root only. A folder below the root that holds a schema file named
+  after it, such as `research/claims/claims.schema.md`, is an error.
+- A folder that breaks either rule is not a type. Its schema file is still checked for links. Its
+  files are not checked as its records: under a type folder they are that type's records, and
+  elsewhere they are narrative.
 - The schema is a JSON Schema, draft 2020-12, for a record's data. In `.md` the schema is the
   frontmatter and the body documents the type. In `.yaml` and `.json` it is the whole file.
 - Each type's schema stands alone. Two types MAY give their schemas the same `$id`, and a `$ref`
@@ -193,8 +203,8 @@ a method that the record describes.
 - A record folder MUST NOT hold another record folder, at any depth. That is an error, and the
   inner folder's files belong to the outer record. A folder in a record folder whose only record file is
   the `x-record-file`, such as a `README.md`, is not a record folder: its files belong to the outer
-  record, with no error. A record folder MUST NOT hold a type folder,
-  since no type folder sits inside another (see Types).
+  record, with no error. A record folder holds no type folder, since type folders sit at the
+  corpus root only (see Types).
 - The id rules apply across both shapes: `methods/Survey/Survey.md` and `methods/survey.md`
   collide.
 - A folder inside a type folder with no record file is not a record folder. Unless its name starts
@@ -218,14 +228,18 @@ display name.
   `P-0002-favor-deterministic.md` has the id `P-0002`, and the rest of the name is a slug for
   people. A name the patterns match whole keeps the whole name as its id. A name with no matching
   part is an error.
-- A record's data MAY hold `id`. When it does, it MUST be a string naming the record's id, as ids
-  compare. Anything else is an error at `id`.
-
+- A record's data MAY hold `id`. When it does, it MUST be a string that matches the record's id.
+  Anything else is an error at `id`.
 - An id MUST NOT contain `/ \ : * ? " < > |`, which some file systems refuse, or `[ ] # ^`, which
   break links. It MUST NOT contain control characters.
 - An id MUST NOT start or end with a space or a dot.
-- Ids MUST be unique within a type after NFC normalization and Unicode case folding, across every
-  folder and every extension. `Kiro.md`, `kiro.json` and `aws/Kiro.md` collide.
+- Two names **match** when they are equal ignoring case and Unicode composition: after Unicode NFC
+  normalization and Unicode case folding. So `Kiro` matches `kiro`, and `é` written as one
+  character matches `e` followed by a combining accent. Ids, type names and the names a wikilink
+  is looked up by compare this way. Elsewhere in this spec, "matches, ignoring case and Unicode
+  composition" means this.
+- Ids MUST be unique within a type: no two ids of one type match, across every folder and every
+  extension. `Kiro.md`, `kiro.json` and `aws/Kiro.md` collide.
 - Type names follow the same rules.
 
 ### Narrative
@@ -238,8 +252,20 @@ ignores it.
 
 The canonical link is a relative Markdown link: `[Claude Code](../harnesses/Claude%20Code.md)`.
 Relative links keep a corpus byte-identical when it moves, and GitHub, docs generators and Obsidian
-follow them. Obsidian rewrites wikilinks to vault paths when a corpus moves, so a corpus that uses
-them stops working anywhere else.
+follow them.
+
+Obsidian writes links as its settings say, under Settings → Files and links:
+
+- `Use [[Wikilinks]]`, on by default, makes Obsidian write wikilinks. Turned off, it writes
+  Markdown links.
+- `New link format` sets the path a new link holds. The default, `Shortest path when possible`,
+  writes the shortest path that is unique in the vault, which depends on the vault. `Relative path
+  to file` writes a path relative to the note, as this spec asks.
+- `Automatically update internal links`, when on, makes Obsidian update the links to a file when
+  the file is renamed.
+
+With `Use [[Wikilinks]]` off and `New link format` set to `Relative path to file`, Obsidian writes
+the canonical form.
 
 - The path is relative to the file that holds the link. A space is written `%20`, or the body form
   wraps the path in `<…>`.
@@ -249,8 +275,8 @@ them stops working anywhere else.
 - A validator checks the links in records, root files and schema files: their bodies, every string
   in the data of records and root files, and in a schema the strings of its prose keywords,
   `title`, `description` and `$comment`, at any depth. Other strings in a schema, such as a
-  `pattern`, a `const` or an `enum` value, are not text and hold no links. It skips links with a URL scheme (`https:`, `mailto:`) and links to a
-  fragment only (`#usage`).
+  `pattern`, a `const` or an `enum` value, are not text and hold no links. It skips links with a
+  URL scheme (`https:`, `mailto:`) and links to a fragment only (`#usage`).
 - A relative path MUST resolve, after percent-decoding, to a file or folder that exists, with the
   same case. A validator MUST NOT fall back to matching by name, as Obsidian does: a broken path is
   always an error. A fragment (`#heading`) is not checked.
@@ -259,35 +285,59 @@ them stops working anywhere else.
   The copy). It stays in the corpus.
 - A link that leaves the corpus, above its root, into a nested corpus or into a path the corpus
   excludes (a `.` component or `node_modules`), is a link between corpora. v0 does not define
-  those. A validator SHOULD warn and MUST NOT report an error, except for `x-ref` (see Typed references).
+  those. A validator SHOULD warn and MUST NOT report an error, except for `x-ref` (see Typed
+  references).
 - A reference in the `wikilink` form is not a link of this kind: it names a record by id (see
   Typed references).
 
 Wikilinks are accepted but not canonical: `[[target]]`, `[[target|text]]`, `[[target#heading]]`
 and `![[target]]`.
 
+- A wikilink MUST hold a path relative to the file that holds it, as a Markdown link does:
+  `[[../harnesses/Claude Code]]`. The path is not percent-encoded. The extension of a record MAY be
+  left out. It resolves as a Markdown link does, to a file, with the same case.
+- A target that starts with `/` is an error, as in a Markdown link. A wikilink path that leaves the
+  corpus warns, as a Markdown link does.
+- A wikilink whose target does not resolve as a path is a bare name, such as `[[oats]]` or
+  `[[P-0002]]`. A bare name is a warning, so `validate --strict` fails on it. A validator looks it
+  up, to report it and so that `validate --fix` can rewrite it as a relative Markdown link: first
+  by path suffix among the files a wikilink reaches, then, when it holds no `/`, as the id or whole
+  file name of a record it reaches. Names match, ignoring case and Unicode composition (see Ids).
+  `[[P-0002]]` finds `principles/P-0002-favor-deterministic.md`. A bare name that finds no file, or
+  more than one, is an error. One that finds a file only in a nested corpus leaves the corpus, and
+  warns as a Markdown link does.
+- The spec states this rule. It cannot make other apps follow it: an editor may still write a bare
+  name. A validator reports it, and `validate --fix` repairs it.
 - A wikilink reaches the corpus's own files and those of the corpora it references directly,
   through their copies in `_references/<prefix>/`. It does not reach a corpus further away, such as
-  a corpus that a referenced corpus references. This holds for a wikilink in a body or a string,
-  and for a value in the `wikilink` form (see Typed references). A record further away is named in
-  the `id` form, which reaches any depth.
-- A wikilink resolves by path suffix among the files it reaches, as `_references/<prefix>/<path>`
-  for a copy, compared after NFC normalization and case folding. A match in a copy is a link into
-  it (see The copy). `[[Claude Code]]`, `[[harnesses/Claude Code]]` and
-  `[[harnesses/Claude Code.md]]` all match `harnesses/Claude Code.md`. The extension of a record
-  MAY be left out.
-- A wikilink whose target matches no file, and holds no `/`, names a record by id: the record of
-  any type, among the records it reaches, whose id or whole file name folds to the target, as the
-  `id` form of Typed references resolves. `[[P-0002]]` names
-  `principles/P-0002-favor-deterministic.md`. A record of a referenced corpus is a link into its
-  copy. Obsidian does not resolve such a wikilink by itself; `validate --fix` rewrites it as a
-  relative link.
-- No match is an error. More than one match is an error.
-- A wikilink that matches no file in the corpus but matches one in a nested corpus leaves the
-  corpus, and warns as a Markdown link does.
-- A target that starts with `/` is an error, as in a Markdown link.
-- A validator SHOULD warn on every wikilink, and SHOULD offer a fix that rewrites it as a relative
-  Markdown link.
+  a corpus that a referenced corpus references. This holds for a wikilink path into
+  `_references/`, for the lookup of a bare name, and for a value in the `wikilink` form (see Typed
+  references). A record further away is named in the `id` form, which reaches any depth.
+
+For example, `health` references `nutrition`, and `nutrition` references `usda`. After `sync`,
+health holds both copies:
+
+```text
+health/
+├── health.corpus-schema.md     references: { nutrition: … }
+├── meals/
+│   └── 2026-11-10-breakfast.md
+└── _references/
+    └── nutrition/              a direct reference: in reach
+        ├── foods/
+        │   └── oats.md
+        └── _references/
+            └── usda/           nutrition's own reference: out of reach for health
+                └── foods/
+                    └── usda-0123.md
+```
+
+In `meals/2026-11-10-breakfast.md`, `[[../_references/nutrition/foods/oats]]` resolves.
+`[[../_references/nutrition/_references/usda/foods/usda-0123]]` is an error, though the file is on
+disk. A field with `x-ref: nutrition/usda/foods` and `x-ref-form: id` names `usda-0123`, since the
+`id` form reaches any depth. To reach it with a wikilink, health names `usda` in its own
+`references`. The reach is kept small so that what a corpus's references reference cannot change
+what its wikilinks find.
 
 ### Typed references
 
@@ -332,9 +382,9 @@ about: { type: string, x-ref: notes, x-ref-form: wikilink }
   record goes through `_references/<prefix>/`.
 - For `id`, the id resolves among the matching records of the corpus and of every corpus it
   references, at any depth. For `wikilink`, it resolves among the matching records a wikilink
-  reaches (see Links). A parent gives no records. Ids compare as in Ids, after NFC normalization
-  and case folding, so `t-0012` names `T-0012.md`. A record's folder and extension do not matter.
-  A value may also name the record by its whole file name without the extension, or its record
+  reaches (see Links). A parent gives no records. An id matches, ignoring case and Unicode
+  composition (see Ids), so `t-0012` names `T-0012.md`. A record's folder and extension do not
+  matter. A value may also name the record by its whole file name without the extension, or its record
   folder's name, where that is longer than its id. An id that names no matching record is an
   error. An id that names more than one, such as two records
   of two listed types, is an error. Records with one identity are one record, however many chains
@@ -477,8 +527,8 @@ its own. A corpus sees a grandparent's types only by extending the grandparent t
 entry or a list of entries. Each entry is `<prefix>/<type>`, naming one type of a parent, or
 `<prefix>/*`, naming every type of the parent.
 
-- `uses` applies to folders at the corpus root only. A folder below the root gets no type from
-  `uses`, whatever its name: it is a type folder only by a schema file of its own (see Types).
+- `uses` applies to folders at the corpus root only, where every type folder sits (see Types). A
+  folder below the root gets no type from `uses`, whatever its name.
 - A folder at the corpus root named after a used type, by its type name, with no schema file, is a
   type folder of a local type of that name that uses the parent's type as it is. Its files are
   records of it, as in Records. The local type's chain is the parent's type and the parent type's
@@ -494,7 +544,7 @@ entry or a list of entries. Each entry is `<prefix>/<type>`, naming one type of 
   folder it holds that type's records; elsewhere its files are narrative. When such a folder sits
   at the corpus root, holds record files (`.md`, `.yaml`, `.json`), and has a name that a parent's
   type has, or close to it (an edit distance of one for a name of four letters or more, or of two
-  for eight or more, after case folding), a validator SHOULD warn, since a typo or a missing
+  for eight or more, ignoring case), a validator SHOULD warn, since a typo or a missing
   `uses` entry leaves records unchecked. `validate --strict` fails on that warning, as on any.
 
 #### References
@@ -588,17 +638,18 @@ v0 defines two verbs.
   read is an error of the corpus that holds it.
 - `validate --strict <folder>` also exits non-zero when it reports any warning. It still reports
   each warning as a warning. A corpus passes `--strict` when it has no errors and no warnings.
-- `validate --fix <folder>` first rewrites every wikilink it can resolve as a relative Markdown
-  link, in the files a validator checks, except in a field in the `id` or `wikilink` form (see
-  Typed references). It changes nothing else in those files.
+- `validate --fix <folder>` first rewrites every bare-name wikilink that finds one file as a
+  relative Markdown link, in the files a validator checks, except in a field in the `id` or
+  `wikilink` form (see Typed references). A wikilink that holds a path stays as it is. It changes
+  nothing else in those files.
 - `validate` never writes `_references/`.
 - `sync <folder>` writes `_references/` for every corpus at or below the folder. For each corpus in
   `references` it writes `_references/<prefix>/`, and it removes every other file there. It copies
   nothing for `extends`. It changes nothing outside `_references/`, and a second run changes
   nothing. A corpus syncs after the corpora it extends or references that sit below the same
   folder. When a corpus's root file has an error, or a corpus it names does not resolve or has
-  errors of its own, `sync` writes nothing in that corpus and exits non-zero. A cycle is such an error, so `sync`
-  never copies a corpus into itself.
+  errors of its own, `sync` writes nothing in that corpus and exits non-zero. A cycle is such an
+  error, so `sync` never copies a corpus into itself.
 - When a referenced corpus has turned a folder into a file, or a file into a folder, `sync`
   replaces the stale path in the copy.
 - `sync` owns `_references/`: in a corpus with no `references` it empties it. It does not follow a
@@ -633,7 +684,7 @@ None.
 
 ```text
 harness-reference/
-├── corpus-schema.md                the root file and front page
+├── harness-reference.corpus-schema.md   the root file and front page
 ├── README.md                       narrative
 └── harnesses/
     ├── harnesses.schema.md         type "harnesses"
@@ -661,13 +712,13 @@ the referenced corpus, written by `sync`:
 
 ```text
 team-rules/
-├── corpus-schema.md                level: 2
+├── team-rules.corpus-schema.md     level: 2
 │                                   extends: { sdlc: "@osdlc/corpus-profile-sdlc" }
 │                                   references: { org: ../org-principles }
 │                                   uses: [sdlc/tasks]
 ├── _references/
 │   └── org/                        a copy of ../org-principles
-│       ├── corpus-schema.md
+│       ├── org-principles.corpus-schema.md
 │       └── principles/
 │           └── Be Kind.md
 ├── tasks/                          no schema file: sdlc/tasks as it is
@@ -677,7 +728,7 @@ team-rules/
     └── Review Kindly.md            links to ../_references/org/principles/Be%20Kind.md
 ```
 
-`corpus-schema.md`:
+`harness-reference.corpus-schema.md`:
 
 ```markdown
 ---
@@ -742,8 +793,9 @@ corpus-schema is its own spec. It borrows these rules from
 - a writer keeps what it does not own.
 
 It differs from mdbase in that a type is a folder holding its own schema, not a type note under
-`_types/`; wikilinks resolve by unique path suffix, with no tiebreakers; whole-file YAML and JSON
-records are allowed; and a bare path is not a link.
+`_types/`; a wikilink holds a path, and a bare name is looked up by unique path suffix only to
+report and fix it, with no tiebreakers; whole-file YAML and JSON records are allowed; and a bare
+path is not a link.
 
 ## Prior art and terms: other corpora
 
@@ -775,7 +827,7 @@ Other documentation systems split the same jobs. Their terms place this spec's t
   records, without making them local.
 - **AsciiDoc** [`include`](https://docs.asciidoctor.org/asciidoc/latest/directives/include/) and
   [XInclude](https://www.w3.org/TR/xinclude-11/) insert another file's content into a document.
-  That is transclusion, and it is out of scope.
+  That is transclusion, which v0 does not define (see Future work).
 - **purl**, the [package URL](https://github.com/package-url/purl-spec), names a package by its
   ecosystem, namespace, name and version, with a subpath for a path inside it. corpus-schema uses it
   for identity (see Identity). A plain URL names where a corpus is fetched from, which changes with
@@ -790,22 +842,48 @@ from DITA's `scope="peer"`, but it names a relation, not an action, and reads as
 reference goes one way. We considered `mounts`, from Hugo, but a mount suggests the files become
 local, and they do not. `uses` is the plain verb for taking a type as it is, with no new schema.
 
-## Deferred
+## Future work
 
-v0 does not define these:
+Version 0 does not define the items below. A later version may add any of them. Until one does, a
+tool treats each one as an error or, for a key in the root file, as an unknown key. So adding an
+item later keeps every valid corpus valid.
 
-- **Links between corpora** other than into a referenced corpus's copy in `_references/`.
-- Inclusion and transclusion of another corpus's content.
-- Two corpora that reference each other. A cycle is an error in v0.
-- A local record that refines or waives a referenced record on purpose, such as a `refines` key.
-- A type that extends more than one type, and renaming an inherited type or prefix.
-- Schema versions and migrations.
-- Concurrent edits beyond last-writer-wins.
-- Obsidian's vault-wide property types, which clash when two corpora give one key different types.
-- `x-ref` inside nested objects.
-- Wikilinks into a copy's own `_references/`.
-- Reserved names, such as Windows device names.
-- Stable error codes.
-- `move` and `rename` verbs that rewrite every link to a record.
-- Build targets, such as JSON, Astro, Nuxt and Obsidian Bases views.
-- Dialects. The root key `dialect` is reserved for them. `profiles` stays reserved, unused.
+### Being considered
+
+- **Type folders below the corpus root.** Would let a corpus group its types under topic folders,
+  such as `research/studies/` and `research/claims/`.
+- **A vault install tool.** `corpus-schema install` would fetch the corpora a root file names into
+  a cache outside the vault, and pin their versions in a `corpus-schema.lock.yaml` beside the root
+  file. Would let a vault use packaged corpora with no `package.json` or `node_modules/`.
+- **Links between corpora** other than into a referenced corpus's copy in `_references/`. Would let
+  a note link to a corpus it does not reference.
+- **Inclusion and transclusion** of another corpus's content. Would let a note show part of
+  another corpus's note in place.
+- **Two corpora that reference each other.** Would let two corpora link to each other's records. A
+  cycle is an error in v0.
+- **A local record that refines or waives a referenced record** on purpose, such as a `refines`
+  key. Would let a corpus adjust a record it does not own.
+- **A type that extends more than one type, and renaming an inherited type or prefix.** Would let a
+  type combine the fields of two parents, and a corpus pick its own names for them.
+- **Schema versions and migrations.** Would let a type change its schema and move its records to
+  the new shape.
+- **Concurrent edits beyond last-writer-wins.** Would let two tools write one record at once
+  without losing an edit.
+- **Obsidian's vault-wide property types.** Would let two corpora in one vault give one key
+  different types without a clash.
+- **`x-ref` inside nested objects.** Would let a field deep in a record refer to records.
+- **Wikilinks into a copy's own `_references/`.** Would let a wikilink reach a corpus that a
+  referenced corpus references.
+- **Reserved names, such as Windows device names.** Would keep ids that some file systems refuse
+  out of a corpus.
+- **Stable error codes.** Would let tools match a problem without reading its message.
+- **`move` and `rename` verbs** that rewrite every link to a record. Would let a record move
+  without breaking links.
+- **Build targets,** such as JSON, Astro, Nuxt and Obsidian Bases views. Would turn a corpus into
+  a site or a data file.
+- **Dialects.** Would name the Markdown a corpus's notes are written in. The root key `dialect` is
+  reserved for them. `profiles` stays reserved, unused.
+
+### Out of scope
+
+No item is out of scope yet.

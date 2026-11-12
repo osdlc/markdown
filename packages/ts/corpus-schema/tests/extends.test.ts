@@ -67,21 +67,21 @@ describe('extends', () => {
   })
 
   test('extends must be a mapping of strings, and needs level 2', () => {
-    put('c/corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends: [a]\n')
-    assert.ok(has(errors(), 'corpus-schema.yaml: extends: must map each prefix'))
-    put('c/corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends:\n  a: 3\n')
+    put('c/c.corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends: [a]\n')
+    assert.ok(has(errors(), 'c.corpus-schema.yaml: extends: must map each prefix'))
+    put('c/c.corpus-schema.yaml', 'corpus-schema: 0\nlevel: 2\nextends:\n  a: 3\n')
     assert.ok(has(errors(), 'extends.a: must be a package name or a ./ or ../ path'))
     org()
     root('c', { level: null, extends: { org: '../org' } })
     put('c/rules/rules.schema.yaml', 'type: object\nx-extends: org/principles\n')
-    assert.deepEqual(errors(), ['corpus-schema.yaml: extends: needs level: 2 in the root file'])
+    assert.deepEqual(errors(), ['c.corpus-schema.yaml: extends: needs level: 2 in the root file'])
   })
 
   test('a prefix sits in one key', () => {
     org()
     root('c', { extends: { org: '../org' }, references: { org: '../org' } })
     assert.deepEqual(errors(), [
-      'corpus-schema.yaml: references.org: org is in extends too; a prefix sits in one key',
+      'c.corpus-schema.yaml: references.org: org is in extends too; a prefix sits in one key',
     ])
   })
 
@@ -90,10 +90,10 @@ describe('extends', () => {
     root('b', { extends: { a: '../a' } })
     const e = errors('a')
     assert.equal(e.length, 1)
-    assert.match(e[0] as string, /^corpus-schema\.yaml: extends\.b: \.\.\/b has 1 error\(s\)/)
+    assert.match(e[0] as string, /^a\.corpus-schema\.yaml: extends\.b: \.\.\/b has 1 error\(s\)/)
     assert.match(e[0] as string, /closes a cycle: a → b → a$/)
     root('c', { extends: { me: './' } })
-    assert.deepEqual(errors(), ['corpus-schema.yaml: extends.me: ./ closes a cycle: c → c'])
+    assert.deepEqual(errors(), ['c.corpus-schema.yaml: extends.me: ./ closes a cycle: c → c'])
   })
 
   test('a parent with errors of its own is an error, naming the first', () => {
@@ -101,7 +101,7 @@ describe('extends', () => {
     put('org/principles/Bad.md', '---\nstatement: 3\n---\n')
     root('c', { extends: { org: '../org' } })
     assert.deepEqual(errors(), [
-      'corpus-schema.yaml: extends.org: ../org has 1 error(s); the first: principles/Bad.md: statement: must be string',
+      'c.corpus-schema.yaml: extends.org: ../org has 1 error(s); the first: principles/Bad.md: statement: must be string',
     ])
   })
 
@@ -220,7 +220,7 @@ describe('x-extends', () => {
   })
 
   test('a local type may extend a local type, without extends', () => {
-    put('d/corpus-schema.yaml', 'corpus-schema: 0\n')
+    put('d/d.corpus-schema.yaml', 'corpus-schema: 0\n')
     put('d/base/base.schema.yaml', 'type: object\nrequired: [n]\n')
     put('d/sub/sub.schema.yaml', 'x-extends: base\n')
     put('d/sub/S.md', '---\n---\n')

@@ -11,7 +11,16 @@ import { dirname, join, resolve } from 'node:path'
 export const REFERENCES = '_references'
 /** A prefix in `extends` or `references`: lowercase letters, digits and `-`. */
 export const PREFIX = /^[a-z0-9-]+$/
-export const ROOT_FILES = ['corpus-schema.md', 'corpus-schema.yaml', 'corpus-schema.json']
+/** What ends a root file's name: `<name>.corpus-schema.md`, `.yaml` or `.json`. */
+export const ROOT_SUFFIXES = ['.corpus-schema.md', '.corpus-schema.yaml', '.corpus-schema.json']
+/** A corpus's name, the `<name>` of its root file: lowercase letters, digits and `-`. */
+export const CORPUS_NAME = /^[a-z0-9-]+$/
+
+/** The `<name>` part of a root file's name, or undefined when `file` is not a root file's name. */
+export function rootName(file: string): string | undefined {
+  const suffix = ROOT_SUFFIXES.find((s) => file.endsWith(s) && file.length > s.length)
+  return suffix === undefined ? undefined : file.slice(0, -suffix.length)
+}
 
 const PACKAGE_NAME = /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
 
@@ -25,7 +34,7 @@ export const skipped = (name: string): boolean => name.startsWith('.') || name =
 export const entries = (abs: string): Dirent[] => readdirSync(abs, { withFileTypes: true })
 // Exact names: existsSync ignores case on macOS and Windows.
 export const hasRootFile = (names: Dirent[]): boolean =>
-  names.some((d) => d.isFile() && ROOT_FILES.includes(d.name))
+  names.some((d) => d.isFile() && rootName(d.name) !== undefined)
 
 const isDir = (abs: string): boolean => {
   try {

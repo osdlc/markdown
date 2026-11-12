@@ -1,7 +1,7 @@
 /** Corpora written to a scratch folder for each test, for the tests of extends, references and uses. */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { afterEach, beforeEach } from 'vitest'
 
 import { validateCorpus } from '../src/validate.ts'
@@ -45,7 +45,7 @@ export function scratch(name: string) {
         ? ''
         : `uses: ${typeof keys.uses === 'string' ? keys.uses : `[${keys.uses.join(', ')}]`}\n`
     put(
-      `${rel}/corpus-schema.yaml`,
+      `${rel}/${basename(rel)}.corpus-schema.yaml`,
       `corpus-schema: 0\n${level === null ? '' : `level: ${level}\n`}${keys.extra ?? ''}${mapping('extends', keys.extends)}${mapping('references', keys.references)}${uses}`,
     )
   }

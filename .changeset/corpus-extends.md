@@ -2,6 +2,23 @@
 "@osdlc/corpus-schema": minor
 ---
 
+The root file is now `<name>.corpus-schema.md`, `.yaml` or `.json`, one per folder, and `<name>` is
+the corpus's name: lowercase letters, digits and `-`. The folder's name no longer matters, so the
+name survives a folder rename, a copy under `_references/<prefix>/` and a package subfolder. A bare
+`corpus-schema.md` is no longer a root file: rename it to `<name>.corpus-schema.md`. A report's
+`name` is the root file's `<name>`.
+
+Type folders sit at the corpus root only. A folder below the root that holds a schema file named
+after it is an error, and its files are not its records.
+
+A wikilink must hold a path relative to the file that holds it, as a Markdown link does, such as
+`[[../harnesses/Claude Code]]`. The extension of a record may be left out, and the case must match.
+Such a wikilink gets no warning, and `validate --fix` leaves it as it is. A bare name, such as
+`[[oats]]` or `[[P-0002]]`, is a warning, so `validate --strict` fails on it. It is looked up by
+path suffix, or by record id, and `validate --fix` rewrites it as a relative Markdown link. A
+wikilink path into a copy's own `_references/` is an error: a wikilink reaches only the corpus and
+the corpora it references directly. Fields with `x-ref-form: id` or `wikilink` keep bare ids.
+
 A corpus can name other corpora in its root file, under three new keys, each for one purpose.
 
 - `extends` maps a prefix to a parent whose types the corpus builds on: an npm package name, found
@@ -55,7 +72,7 @@ them, or of a type that extends one, matches. The single name still works.
 The new `x-ref-form` keyword, beside `x-ref`, says how a value names its record: `link` (the
 default, a relative link), `id` (a bare id such as `T-0012`) or `wikilink` (`"[[N-0001]]"`). An id
 resolves among the matching records of the corpus and of every corpus it references, at any depth,
-compared after NFC normalization and case folding. A `wikilink` value, like any wikilink, reaches
+matching ignoring case and Unicode composition. A `wikilink` value, like any wikilink, reaches
 only the corpus and the corpora it references directly. No match, or more than one, is an error.
 An `id` or `wikilink` field is not checked as a link, gets no wikilink warning, and
 `validate --fix` leaves it as it is.
@@ -65,7 +82,7 @@ pattern matches: `P-0002-be-kind.md` has the id `P-0002`. A name the pattern mat
 as its id. A record's data may hold `id`, which must then be the record's id. A reference by id may
 also give the whole file name. The new `x-record-file` schema keyword, such as `README.md`, makes a
 folder holding that file a record folder, named by its folder. A folder in a type folder whose name
-starts with `_` holds narrative. A wikilink that matches no file names a record by id. A `null`
+starts with `_` holds narrative. A `null`
 `x-ref` value refers to nothing. Links in a schema are checked only in `title`, `description` and
 `$comment`, so a `pattern` or `enum` value holding `[[` is not read as a wikilink.
 
@@ -74,6 +91,3 @@ The new `validate --strict` flag fails a corpus that has warnings, as if they we
 `x-ref` messages name the type as "a record of type org/principles", in place of "a org/principles
 record". A field whose `x-ref` names no type is an error in the schema only: its values are not
 checked as well.
-
-A report's `name` is now the base name of the resolved folder, so `validateCorpus('.')` reports the
-folder's name instead of `.`.

@@ -19,7 +19,7 @@ import {
   REFERENCES,
   listFiles,
   resolveSource,
-  ROOT_FILES,
+  rootName,
   sameBytes,
   whyFailed,
 } from './inherit.ts'
@@ -29,7 +29,7 @@ import { copyFiles, type Data, load, readData } from './validate.ts'
 export interface SyncReport {
   /** The corpus folder, as passed to `syncCorpus`. */
   root: string
-  /** The corpus's name: its folder name. */
+  /** The corpus's name: the `<name>` of its root file, or its folder name when it has none. */
   name: string
   /** The corpus-relative paths of the files written under `_references/`. */
   written: string[]
@@ -153,8 +153,9 @@ export function syncCorpus(root: string): SyncReport {
 export function namedRoots(root: string): string[] {
   let data: Data
   try {
-    const names = readdirSync(root)
-    const file = ROOT_FILES.find((f) => names.includes(f))
+    const file = readdirSync(root)
+      .sort()
+      .find((f) => rootName(f) !== undefined)
     if (file === undefined) return []
     data = readData(readFileSync(join(root, file), 'utf8'), extname(file))
   } catch {
