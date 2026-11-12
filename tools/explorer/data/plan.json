@@ -75,6 +75,7 @@
         71,
         73,
         59,
+        88,
         36,
         74,
         23,
@@ -831,10 +832,11 @@
         59,
         70,
         71,
-        73
+        73,
+        88
       ],
       "prs": [],
-      "text": "Release corpus-schema 0.3.0. (supporting) The first version with `extends`, `x-extends`, cross-corpus `x-ref` and `sync`, published from this repo with its release setup. It also carries `--strict`, flattened `x-extends`, refs by id and `x-ref` to several types, which the sdlc profile needs. It also carries `references` and `uses` (tasks 70 and 71, decision D15), and identity, the id cut, `x-record-file` and narrative folders (task 73, decision D16). After 9, 21, 27, 29, 43 to 46, 59, 70, 71 and 73. The changeset is in [#12](https://github.com/osdlc/markdown/pull/12). Owner work: merging #12 and then the Version Packages pull request publishes it.",
+      "text": "Release corpus-schema 0.3.0. (supporting) The first version with `extends`, `x-extends`, cross-corpus `x-ref` and `sync`, published from this repo with its release setup. It also carries `--strict`, flattened `x-extends`, refs by id and `x-ref` to several types, which the sdlc profile needs. It also carries `references` and `uses` (tasks 70 and 71, decision D15), and identity, the id cut, `x-record-file` and narrative folders (task 73, decision D16). After 9, 21, 27, 29, 43 to 46, 59, 70, 71, 73 and 88. The changeset is in [#12](https://github.com/osdlc/markdown/pull/12). Owner work: merging #12 and then the Version Packages pull request publishes it.",
       "source": "docs/planning/tasks/36 Release 0.3.0.md"
     },
     {
@@ -1612,6 +1614,18 @@
       "prs": [],
       "text": "Move the Rust Markdown crates from osdlc/osdlc into this repo ([D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)): markdown-link, markdown-tags, markdown-contract, markdown-corpus, markdown-relink, markdown-vault-fs, vfs-walk, vfs-seam and slug-collate. They move in one step, because they depend on each other through the workspace. Each keeps its crate name and its history.\n\n- frontmatter-lossless, yaml-splice, etag-write and path-guard stay in osdlc/osdlc. The moved crates take them from crates.io.\n- After this, each twin pair is in one repo again, beside its conformance family.\n- Land [osdlc/osdlc#650](https://github.com/osdlc/osdlc/pull/650) first.\n- The rename of markdown-relink to markdown-reshape (task 39) can happen before or after the move. If it comes after, the new name is first published from here.\n- Owner work: point each crate's crates.io trusted publisher at this repo.\n\nAfter 85 and 86.",
       "source": "docs/planning/tasks/87 Move Rust crates.md"
+    },
+    {
+      "id": 88,
+      "title": "Drop the osdlc copy",
+      "detail": "corpus-schema in osdlc/osdlc",
+      "status": "todo",
+      "milestone": "m-npm",
+      "type": "supporting",
+      "after": [],
+      "prs": [],
+      "text": "Remove corpus-schema from osdlc/osdlc, so this repo holds the only copy. Task 21 moved the package and its spec family here, but osdlc/osdlc still has `packages/ts/corpus-schema` and `packages/conformance/corpus-schema`, and it still releases from them.\n\nThe copies have drifted. osdlc/osdlc published 0.2.1 ([osdlc/osdlc#773](https://github.com/osdlc/osdlc/pull/773)), a patch that takes `@osdlc/markdown-link` 0.9.0. This repo is at 0.2.0. While the copy stays, each markdown-link release in osdlc/osdlc bumps and publishes it again.\n\n- Bring 0.2.1 here first: the changelog entry, the version and the markdown-link range.\n- Delete both folders from osdlc/osdlc, and the family's entry in its `packages/conformance/families.json`.\n- Between this and the publisher move (task 59), no corpus-schema release can go out. That is fine: the next one is 0.3.0 (task 36), from here.\n\nIt waits on nothing. Release 0.3.0 (task 36) comes after it.",
+      "source": "docs/planning/tasks/88 Drop the osdlc copy.md"
     }
   ]
 }

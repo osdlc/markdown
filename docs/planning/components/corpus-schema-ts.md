@@ -41,6 +41,7 @@ tasks:
   - "[81 Versions and lockfile](../tasks/81%20Versions%20and%20lockfile.md)"
   - "[82 Install and update](../tasks/82%20Install%20and%20update.md)"
   - "[83 Resolve from the cache](../tasks/83%20Resolve%20from%20the%20cache.md)"
+  - "[88 Drop the osdlc copy](../tasks/88%20Drop%20the%20osdlc%20copy.md)"
 links:
   - "[osdlc/markdown#9](https://github.com/osdlc/markdown/pull/9)"
   - "[osdlc/markdown#10](https://github.com/osdlc/markdown/pull/10)"

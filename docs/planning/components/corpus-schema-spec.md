@@ -25,6 +25,7 @@ tasks:
   - "[45 Refs by id](../tasks/45%20Refs%20by%20id.md)"
   - "[46 Multi-type x-ref](../tasks/46%20Multi-type%20x-ref.md)"
   - "[57 x-body](../tasks/57%20x-body.md)"
+  - "[88 Drop the osdlc copy](../tasks/88%20Drop%20the%20osdlc%20copy.md)"
 links:
   - "[osdlc/markdown#9](https://github.com/osdlc/markdown/pull/9)"
   - "[osdlc/osdlc#725](https://github.com/osdlc/osdlc/pull/725)"

@@ -18,6 +18,7 @@ after:
   - "[70 References](70%20References.md)"
   - "[71 Uses](71%20Uses.md)"
   - "[73 Identity and record files](73%20Identity%20and%20record%20files.md)"
+  - "[88 Drop the osdlc copy](88%20Drop%20the%20osdlc%20copy.md)"
 ---
 
 Release corpus-schema 0.3.0. (supporting) The first version with `extends`, `x-extends`,
@@ -25,6 +26,6 @@ cross-corpus `x-ref` and `sync`, published from this repo with its release setup
 `--strict`, flattened `x-extends`, refs by id and `x-ref` to several types, which the sdlc profile
 needs. It also carries `references` and `uses` (tasks 70
 and 71, decision D15), and identity, the id cut, `x-record-file` and narrative folders (task 73,
-decision D16). After 9, 21, 27, 29, 43 to 46, 59, 70, 71 and 73. The changeset is in
+decision D16). After 9, 21, 27, 29, 43 to 46, 59, 70, 71, 73 and 88. The changeset is in
 [#12](https://github.com/osdlc/markdown/pull/12). Owner work: merging #12 and then the Version
 Packages pull request publishes it.
