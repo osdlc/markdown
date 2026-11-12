@@ -112,26 +112,6 @@ npx @osdlc/corpus-schema validate --strict docs/planning
 For shared records, reference the [sdlc starter](../../corpora/sdlc-starter/) corpus and cite its
 records.
 
-## For corpus-schema 0.2
-
-`@osdlc/corpus-schema` 0.2.x reads no `extends`, no `uses`, no `x-ref-form`, no list in `x-ref`
-and no `x-record-file`, and it matches `x-id-pattern` against the whole file name. A corpus that
-must validate with 0.2 copies a variant of the profile instead. Make it from a checkout of the
-packs, as in Regenerate:
-
-```sh
-cd packages/ts/pack-sdlc
-bunx model-schema corpus . --inline --links id --target 0.2 --out <your corpus>
-```
-
-The variant writes each reference by id, such as `depends_on: [T-0002]`, and has no `x-ref`. Its
-pattern still checks the id's shape and the target's prefix, but not that the record exists. Its
-`x-id-pattern` admits the id or the id and a slug, and it has no `x-record-file`, so a decision is
-one file. Closed types and the pack rules work under 0.2 as they are.
-
-Copy the variant's root file and type folders into your corpus, and copy them again to take a new
-version. Validate with `npx @osdlc/corpus-schema@0.2 validate <your corpus>`.
-
 ## Regenerate
 
 From a checkout of the repo that holds model-schema and the packs (sksizer/dev, private for now):
