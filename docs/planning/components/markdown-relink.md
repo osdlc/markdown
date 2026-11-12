@@ -11,6 +11,7 @@ repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/markdown-relink
 tasks:
   - "[39 Rename relink](../tasks/39%20Rename%20relink.md)"
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 links:
   - "[osdlc/osdlc#651](https://github.com/osdlc/osdlc/pull/651)"
 depends_going:

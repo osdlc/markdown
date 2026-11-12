@@ -7,11 +7,12 @@ states: [present, target]
 status: in-progress
 repo_present: "[sksizer/dev](../repos/sksizer-dev.md)"
 path_present: packages/ts/markdown-astro
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-astro
 tasks:
   - "[13 Switch users](../tasks/13%20Switch%20users.md)"
   - "[17 Render and sites](../tasks/17%20Render%20and%20sites.md)"
+  - "[85 Move TS libraries](../tasks/85%20Move%20TS%20libraries.md)"
 links:
   - "[osdlc/osdlc#719](https://github.com/osdlc/osdlc/pull/719)"
   - "[osdlc/osdlc#720](https://github.com/osdlc/osdlc/pull/720)"
@@ -40,5 +41,7 @@ wikilinks at build time.
 - Version 0.1.0 in dev; not on npm.
 - osdlc/osdlc#719 moved it, but it merged into the branch of draft #720, not into main. The
   architecture still calls #719 open.
+- osdlc/osdlc#720 has merged. It is on npm as @osdlc/markdown-vault-astro 0.8.0, from osdlc/osdlc.
+  The fields above still describe it in dev. Task 85 moves it to osdlc/markdown.
 - Problem F1: it resolves links its own way (resolveRef takes the first match and finds embeds by
   file name). Task 13 switches it to the shared model and resolver.

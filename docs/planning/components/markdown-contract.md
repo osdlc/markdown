@@ -9,12 +9,13 @@ version: "0.7.7"
 registry: "https://www.npmjs.com/package/@osdlc/markdown-contract"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/ts/markdown-contract
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-contract
 twin: "[markdown-contract-rs](markdown-contract-rs.md)"
 tasks:
   - "[56 Contract spec](../tasks/56%20Contract%20spec.md)"
   - "[57 x-body](../tasks/57%20x-body.md)"
+  - "[85 Move TS libraries](../tasks/85%20Move%20TS%20libraries.md)"
 depends:
   - "[gfm-table](gfm-table.md)"
 ---

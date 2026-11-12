@@ -9,9 +9,11 @@ version: "0.4.0"
 registry: "https://www.npmjs.com/package/@osdlc/markdown-tags"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/ts/markdown-tags
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-tags
 twin: "[markdown-tags-rs](markdown-tags-rs.md)"
+tasks:
+  - "[85 Move TS libraries](../tasks/85%20Move%20TS%20libraries.md)"
 links:
   - "[osdlc/osdlc#714](https://github.com/osdlc/osdlc/pull/714)"
 depends:

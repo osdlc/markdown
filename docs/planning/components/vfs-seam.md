@@ -9,8 +9,10 @@ version: "0.2.1"
 registry: "https://crates.io/crates/vfs-seam"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/vfs-seam
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/vfs-seam
+tasks:
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 ---
 
 A file-access trait, so the same Rust code runs on a real disk, in memory or in a browser

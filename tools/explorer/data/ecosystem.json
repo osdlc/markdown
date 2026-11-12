@@ -455,7 +455,7 @@
       ],
       "repo": {
         "present": "sksizer/dev",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-astro",
@@ -469,11 +469,13 @@
       "notes": [
         "Version 0.1.0 in dev; not on npm.",
         "osdlc/osdlc#719 moved it, but it merged into the branch of draft #720, not into main. The architecture still calls #719 open.",
+        "osdlc/osdlc#720 has merged. It is on npm as @osdlc/markdown-vault-astro 0.8.0, from osdlc/osdlc. The fields above still describe it in dev. Task 85 moves it to osdlc/markdown.",
         "Problem F1: it resolves links its own way (resolveRef takes the first match and finds embeds by file name). Task 13 switches it to the shared model and resolver."
       ],
       "tasks": [
         13,
-        17
+        17,
+        85
       ],
       "links": [
         {
@@ -499,7 +501,7 @@
       ],
       "repo": {
         "present": "sksizer/dev",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-editor",
@@ -511,7 +513,7 @@
       "twin": null,
       "purpose": "An Obsidian-style live-preview Markdown editor on CodeMirror 6, with a Vue 3 wrapper.",
       "notes": [
-        "Private in dev at 0.5.1. Task 17 moves it to osdlc after osdlc/osdlc#719 and #720. There is no PR for it yet."
+        "Private in dev at 0.5.1. Task 17 moves it to osdlc/markdown (decision D19). There is no PR for it yet."
       ],
       "tasks": [
         17
@@ -531,7 +533,7 @@
       ],
       "repo": {
         "present": "sksizer/dev",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-render",
@@ -545,10 +547,12 @@
       "notes": [
         "Private in dev at 0.5.0; not on npm.",
         "Near target: draft osdlc/osdlc#720 moves it to osdlc for a first release at 0.8.0, and finds links with @osdlc/markdown-link.",
+        "osdlc/osdlc#720 has merged, and 0.8.0 is on npm from osdlc/osdlc, with @osdlc/markdown-render-vue beside it. The fields above still describe it in dev. Task 85 moves both to osdlc/markdown.",
         "On that branch it reads the markdown-tags conformance cases."
       ],
       "tasks": [
-        17
+        17,
+        85
       ],
       "links": [
         {
@@ -570,7 +574,7 @@
       ],
       "repo": {
         "present": "sksizer/dev",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-ui",
@@ -583,7 +587,7 @@
       "purpose": "Markdown viewing and editing chrome as a Nuxt layer: a surface that switches between reading, live editing and source.",
       "notes": [
         "Private in dev at 0.6.0. It builds on @determined/ui.",
-        "Task 17 moves it to osdlc. There is no PR yet, and the plan does not say whether its @sksizer scope changes."
+        "Task 17 moves it to osdlc/markdown (decision D19). There is no PR yet, and the plan does not say whether its @sksizer scope changes."
       ],
       "tasks": [
         17
@@ -603,7 +607,7 @@
       ],
       "repo": {
         "present": "sksizer/dev",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-vault-query",
@@ -617,9 +621,9 @@
       "notes": [
         "Version 0.2.1 in dev; not on npm.",
         "Problem F9: two query layers (this and a loader corpus-schema planned).",
-        "Task 15 moves it to osdlc on top of the corpus model. Its target name is not decided; the architecture keeps the word db for this layer, and decision D5 (what db means) is open.",
+        "Task 15 moves it to osdlc/markdown (decision D19) on top of the corpus model. Its target name is not decided; the architecture keeps the word db for this layer, and decision D5 (what db means) is open.",
         "Task 16 adds a build that writes every valid record to JSON files and a SQLite file.",
-        "The plan does not give a target path. This keeps its folder name in osdlc/osdlc."
+        "The plan does not give a target path. This keeps its folder name, in osdlc/markdown."
       ],
       "tasks": [
         13,
@@ -1367,7 +1371,7 @@
       ],
       "repo": {
         "present": null,
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": null,
@@ -1380,7 +1384,7 @@
       "purpose": "The planned TypeScript corpus model: markdown-vault and vault-graph-core made into one package, built on markdown-link's resolver, the twin of the Rust crate.",
       "notes": [
         "Decision D3 names it markdown-corpus.",
-        "The plan does not give a path. This follows osdlc/osdlc's `packages/ts/<name>` layout.",
+        "It is built in osdlc/markdown (decision D19), at `packages/ts/<name>`.",
         "Its shared test cases are planned as a conformance family."
       ],
       "tasks": [
@@ -1406,7 +1410,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/markdown-corpus",
@@ -1423,7 +1427,9 @@
         "Open release PR osdlc/osdlc#730 would bump it to 0.3.1.",
         "Open osdlc/osdlc#650 changes it (see markdown-vault-fs)."
       ],
-      "tasks": [],
+      "tasks": [
+        87
+      ],
       "links": [
         {
           "label": "osdlc/osdlc#650",
@@ -1461,7 +1467,8 @@
         "Open osdlc/osdlc#651 also touches it."
       ],
       "tasks": [
-        39
+        39,
+        87
       ],
       "links": [
         {
@@ -1482,7 +1489,7 @@
       ],
       "repo": {
         "present": null,
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": null,
@@ -1522,7 +1529,7 @@
       ],
       "repo": {
         "present": null,
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": null,
@@ -1536,7 +1543,7 @@
       "notes": [
         "The Rust crate depends on markdown-vault-fs and vfs-seam. There is no TypeScript port of either yet, so this package has no edge for them.",
         "Two ways to provide TypeScript: port the crate, or build it to WebAssembly, as yaml-splice-wasm does for yaml-splice. Task 40 holds the open question.",
-        "The path follows osdlc/osdlc's `packages/ts/<name>` layout. The plan does not give one."
+        "The path follows the `packages/ts/<name>` layout, in osdlc/markdown (decision D19)."
       ],
       "tasks": [
         40
@@ -1744,7 +1751,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-contract",
@@ -1760,7 +1767,8 @@
       ],
       "tasks": [
         56,
-        57
+        57,
+        85
       ],
       "links": [],
       "source": "docs/planning/components/markdown-contract.md"
@@ -1777,7 +1785,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/markdown-contract",
@@ -1792,7 +1800,8 @@
         "Open release PR osdlc/osdlc#730 would bump it to 0.4.3."
       ],
       "tasks": [
-        56
+        56,
+        87
       ],
       "links": [],
       "source": "docs/planning/components/markdown-contract-rs.md"
@@ -1840,7 +1849,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-link",
@@ -1859,7 +1868,8 @@
       ],
       "tasks": [
         11,
-        13
+        13,
+        85
       ],
       "links": [
         {
@@ -1925,7 +1935,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/markdown-link",
@@ -1941,7 +1951,8 @@
         "Open release PR osdlc/osdlc#730 would bump it to 0.8.2."
       ],
       "tasks": [
-        11
+        11,
+        87
       ],
       "links": [
         {
@@ -1971,7 +1982,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/ts/markdown-tags",
@@ -1986,7 +1997,9 @@
         "Moved into osdlc in osdlc/osdlc#714. Shares the markdown-tags conformance family with the Rust crate.",
         "The plan says markdown-tags is on neither registry yet. That is out of date: 0.4.0 is on npm and on crates.io."
       ],
-      "tasks": [],
+      "tasks": [
+        85
+      ],
       "links": [
         {
           "label": "osdlc/osdlc#714",
@@ -2041,7 +2054,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/markdown-tags",
@@ -2055,7 +2068,9 @@
       "notes": [
         "Open release PR osdlc/osdlc#730 would bump it to 0.4.1."
       ],
-      "tasks": [],
+      "tasks": [
+        87
+      ],
       "links": [],
       "source": "docs/planning/components/markdown-tags-rs.md"
     },
@@ -2220,7 +2235,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/markdown-vault-fs",
@@ -2236,7 +2251,9 @@
         "Open release PR osdlc/osdlc#730 would bump it to 0.6.1.",
         "Open osdlc/osdlc#650 changes it (edge cases from earlier reviews). It still targets the branch of #648, which merged on 2026-11-08, and assumes 0.6.0 is unreleased, but 0.6.0 is on crates.io."
       ],
-      "tasks": [],
+      "tasks": [
+        87
+      ],
       "links": [
         {
           "label": "osdlc/osdlc#650",
@@ -2317,7 +2334,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/vfs-seam",
@@ -2329,7 +2346,9 @@
       "twin": null,
       "purpose": "A file-access trait, so the same Rust code runs on a real disk, in memory or in a browser (WebAssembly).",
       "notes": [],
-      "tasks": [],
+      "tasks": [
+        87
+      ],
       "links": [],
       "source": "docs/planning/components/vfs-seam.md"
     },
@@ -2345,7 +2364,7 @@
       ],
       "repo": {
         "present": "osdlc/osdlc",
-        "target": "osdlc/osdlc"
+        "target": "osdlc/markdown"
       },
       "path": {
         "present": "packages/rust/vfs-walk",
@@ -2357,7 +2376,9 @@
       "twin": null,
       "purpose": "A sorted walk of a folder tree through vfs-seam, with skip lists and a symlink policy. It knows nothing about Markdown.",
       "notes": [],
-      "tasks": [],
+      "tasks": [
+        87
+      ],
       "links": [],
       "source": "docs/planning/components/vfs-walk.md"
     }

@@ -9,11 +9,12 @@ version: "0.8.1"
 registry: "https://crates.io/crates/markdown-link"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/markdown-link
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/markdown-link
 twin: "[markdown-link](markdown-link.md)"
 tasks:
   - "[11 Link resolver](../tasks/11%20Link%20resolver.md)"
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 links:
   - "[osdlc/osdlc#649](https://github.com/osdlc/osdlc/pull/649)"
   - "[osdlc/osdlc#651](https://github.com/osdlc/osdlc/pull/651)"

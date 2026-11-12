@@ -7,7 +7,7 @@ states: [present, target]
 status: unpublished
 repo_present: "[sksizer/dev](../repos/sksizer-dev.md)"
 path_present: packages/ts/markdown-editor
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-editor
 tasks:
   - "[17 Render and sites](../tasks/17%20Render%20and%20sites.md)"
@@ -28,5 +28,5 @@ An Obsidian-style live-preview Markdown editor on CodeMirror 6, with a Vue 3 wra
 
 ## Notes
 
-- Private in dev at 0.5.1. Task 17 moves it to osdlc after osdlc/osdlc#719 and #720. There is no PR
-  for it yet.
+- Private in dev at 0.5.1. Task 17 moves it to osdlc/markdown (decision D19). There is no PR for it
+  yet.

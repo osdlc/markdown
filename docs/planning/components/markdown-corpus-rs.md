@@ -9,9 +9,11 @@ version: "0.3.0"
 registry: "https://crates.io/crates/markdown-corpus"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/markdown-corpus
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/markdown-corpus
 twin: "[markdown-corpus](markdown-corpus.md)"
+tasks:
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 links:
   - "[osdlc/osdlc#650](https://github.com/osdlc/osdlc/pull/650)"
 depends:

@@ -9,8 +9,10 @@ version: "0.6.0"
 registry: "https://crates.io/crates/markdown-vault-fs"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/markdown-vault-fs
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/markdown-vault-fs
+tasks:
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 links:
   - "[osdlc/osdlc#650](https://github.com/osdlc/osdlc/pull/650)"
 depends:

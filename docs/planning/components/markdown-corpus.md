@@ -5,7 +5,7 @@ language: ts
 layer: "[corpus-model](../layers/corpus-model.md)"
 states: [target]
 status: planned
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-corpus
 twin: "[markdown-corpus-rs](markdown-corpus-rs.md)"
 tasks:
@@ -29,5 +29,5 @@ built on markdown-link's resolver, the twin of the Rust crate.
 ## Notes
 
 - Decision D3 names it markdown-corpus.
-- The plan does not give a path. This follows osdlc/osdlc's `packages/ts/<name>` layout.
+- It is built in osdlc/markdown (decision D19), at `packages/ts/<name>`.
 - Its shared test cases are planned as a conformance family.

@@ -9,11 +9,12 @@ version: "0.4.2"
 registry: "https://crates.io/crates/markdown-contract"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/markdown-contract
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/markdown-contract
 twin: "[markdown-contract](markdown-contract.md)"
 tasks:
   - "[56 Contract spec](../tasks/56%20Contract%20spec.md)"
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 depends:
   - "[markdown-link-rs](markdown-link-rs.md)"
 edge_notes:

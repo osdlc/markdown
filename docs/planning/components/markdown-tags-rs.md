@@ -9,9 +9,11 @@ version: "0.4.0"
 registry: "https://crates.io/crates/markdown-tags"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/markdown-tags
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/markdown-tags
 twin: "[markdown-tags](markdown-tags.md)"
+tasks:
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 depends:
   - "[markdown-link-rs](markdown-link-rs.md)"
 ---

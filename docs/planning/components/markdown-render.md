@@ -7,10 +7,11 @@ states: [present, target]
 status: in-progress
 repo_present: "[sksizer/dev](../repos/sksizer-dev.md)"
 path_present: packages/ts/markdown-render
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-render
 tasks:
   - "[17 Render and sites](../tasks/17%20Render%20and%20sites.md)"
+  - "[85 Move TS libraries](../tasks/85%20Move%20TS%20libraries.md)"
 links:
   - "[osdlc/osdlc#720](https://github.com/osdlc/osdlc/pull/720)"
 depends:
@@ -38,4 +39,6 @@ components.
 - Private in dev at 0.5.0; not on npm.
 - Near target: draft osdlc/osdlc#720 moves it to osdlc for a first release at 0.8.0, and finds links
   with @osdlc/markdown-link.
+- osdlc/osdlc#720 has merged, and 0.8.0 is on npm from osdlc/osdlc, with @osdlc/markdown-render-vue
+  beside it. The fields above still describe it in dev. Task 85 moves both to osdlc/markdown.
 - On that branch it reads the markdown-tags conformance cases.

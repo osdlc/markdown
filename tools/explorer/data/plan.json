@@ -268,6 +268,20 @@
         84
       ],
       "source": "docs/planning/milestones/m-vault-install.md"
+    },
+    {
+      "id": "m-home",
+      "title": "Markdown libraries in one repo",
+      "goal": "The Markdown libraries that osdlc/osdlc holds today live in this repo, beside the plan and the spec ([D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)). The libraries that come from sksizer/dev arrive through their own tasks: 12, 15 and 17.",
+      "status": "todo",
+      "phase": "store",
+      "beeline": false,
+      "tasks": [
+        85,
+        86,
+        87
+      ],
+      "source": "docs/planning/milestones/m-home.md"
     }
   ],
   "tasks": [
@@ -440,7 +454,7 @@
         11
       ],
       "prs": [],
-      "text": "One TypeScript corpus model, markdown-corpus: markdown-vault and vault-graph-core merged into osdlc on top of markdown-link's resolver. After 11.",
+      "text": "One TypeScript corpus model, markdown-corpus: markdown-vault and vault-graph-core merged, on top of markdown-link's resolver. It is built in osdlc/markdown, not in osdlc/osdlc (decision [D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)). After 11.",
       "source": "docs/planning/tasks/12 One TS model.md"
     },
     {
@@ -483,7 +497,7 @@
         12
       ],
       "prs": [],
-      "text": "One query layer. Move markdown-vault-query to osdlc on top of the corpus model. After 12 and D5.",
+      "text": "One query layer. Move markdown-vault-query from sksizer/dev to osdlc/markdown (decision [D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)), on top of the corpus model. After 12 and D5.",
       "source": "docs/planning/tasks/15 Query layer.md"
     },
     {
@@ -509,7 +523,7 @@
       "type": "functional",
       "after": [],
       "prs": [],
-      "text": "Finish moving the render, edit and site packages: [osdlc/osdlc#719](https://github.com/osdlc/osdlc/pull/719) and [#720](https://github.com/osdlc/osdlc/pull/720), then markdown-editor and markdown-ui. Rename the vault words to corpus. In progress.",
+      "text": "Finish moving the render, edit and site packages out of sksizer/dev. [osdlc/osdlc#719](https://github.com/osdlc/osdlc/pull/719) and [#720](https://github.com/osdlc/osdlc/pull/720) have merged: markdown-render, markdown-render-vue and markdown-vault-astro (the new name of markdown-astro) are on npm at 0.8.0, published from osdlc/osdlc. Task 85 moves those three on to osdlc/markdown. What is left here: markdown-editor and markdown-ui move from sksizer/dev straight to osdlc/markdown (decision [D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)). Rename the vault words to corpus. In progress.",
       "source": "docs/planning/tasks/17 Render and sites.md"
     },
     {
@@ -1557,6 +1571,47 @@
       "prs": [],
       "text": "A guide to set up a plain Obsidian vault that extends a profile and references a corpus with no `package.json`: write the root file, run `corpus-schema install`, commit the lockfile, then run `sync` and `validate`. After 83.",
       "source": "docs/planning/tasks/84 Vault guide.md"
+    },
+    {
+      "id": 85,
+      "title": "Move TS libraries",
+      "detail": "from osdlc/osdlc",
+      "status": "todo",
+      "milestone": "m-home",
+      "type": "supporting",
+      "after": [
+        21
+      ],
+      "prs": [],
+      "text": "Move the TypeScript Markdown libraries from osdlc/osdlc into this repo ([D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)): markdown-link, markdown-tags, markdown-contract, markdown-render, markdown-render-vue and markdown-vault-astro. They take the path corpus-schema took in task 21: the package moves with its history and keeps its npm name, and osdlc/osdlc drops its copy in the same step.\n\n- The markdown-link and markdown-tags conformance families move to `packages/conformance/` here. Their Rust twins stay in osdlc/osdlc until task 87, so until then the crates read the cases from this repo or keep a copy that CI compares.\n- frontmatter-lossless, gfm-table, yaml-splice and cli-tool stay in osdlc/osdlc. The moved packages take them from npm, not `workspace:*`.\n- Land [osdlc/osdlc#649](https://github.com/osdlc/osdlc/pull/649) and [#651](https://github.com/osdlc/osdlc/pull/651) first, so no open pull request is left behind on markdown-link.\n- Owner work: point each package's npm trusted publisher at this repo's publish workflow, as task 59 does for corpus-schema.\n\nAfter 21.",
+      "source": "docs/planning/tasks/85 Move TS libraries.md"
+    },
+    {
+      "id": 86,
+      "title": "Rust release here",
+      "detail": "release-plz and Rust CI",
+      "status": "todo",
+      "milestone": "m-home",
+      "type": "supporting",
+      "after": [],
+      "prs": [],
+      "text": "Give this repo a Rust workspace at `packages/rust/` with its own CI and release setup, so crates can publish from here ([D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)). osdlc/osdlc releases crates with release-plz (`release-plz.yml`) and checks them in `rust-ci.yml`. Neither is a reusable workflow today, unlike the TypeScript ones this repo calls. So either make them reusable in osdlc/osdlc and call them from here, as task 21 did for TypeScript, or copy them. Prefer the first. It also needs the crate checks (`check:crates`) and the conformance check for Rust implementations. It waits on nothing.",
+      "source": "docs/planning/tasks/86 Rust release here.md"
+    },
+    {
+      "id": 87,
+      "title": "Move Rust crates",
+      "detail": "from osdlc/osdlc",
+      "status": "todo",
+      "milestone": "m-home",
+      "type": "supporting",
+      "after": [
+        85,
+        86
+      ],
+      "prs": [],
+      "text": "Move the Rust Markdown crates from osdlc/osdlc into this repo ([D19](../decisions/D19%20Markdown%20libraries%20live%20in%20osdlc%20markdown.md)): markdown-link, markdown-tags, markdown-contract, markdown-corpus, markdown-relink, markdown-vault-fs, vfs-walk, vfs-seam and slug-collate. They move in one step, because they depend on each other through the workspace. Each keeps its crate name and its history.\n\n- frontmatter-lossless, yaml-splice, etag-write and path-guard stay in osdlc/osdlc. The moved crates take them from crates.io.\n- After this, each twin pair is in one repo again, beside its conformance family.\n- Land [osdlc/osdlc#650](https://github.com/osdlc/osdlc/pull/650) first.\n- The rename of markdown-relink to markdown-reshape (task 39) can happen before or after the move. If it comes after, the new name is first published from here.\n- Owner work: point each crate's crates.io trusted publisher at this repo.\n\nAfter 85 and 86.",
+      "source": "docs/planning/tasks/87 Move Rust crates.md"
     }
   ]
 }

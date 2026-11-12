@@ -5,7 +5,7 @@ language: rust
 layer: "[corpus-model](../layers/corpus-model.md)"
 states: [target]
 status: planned
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/markdown-reshape
 twin: "[markdown-reshape-ts](markdown-reshape-ts.md)"
 tasks:

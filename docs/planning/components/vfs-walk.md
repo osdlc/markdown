@@ -9,8 +9,10 @@ version: "0.2.1"
 registry: "https://crates.io/crates/vfs-walk"
 repo_present: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
 path_present: packages/rust/vfs-walk
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/rust/vfs-walk
+tasks:
+  - "[87 Move Rust crates](../tasks/87%20Move%20Rust%20crates.md)"
 depends:
   - "[vfs-seam](vfs-seam.md)"
 ---

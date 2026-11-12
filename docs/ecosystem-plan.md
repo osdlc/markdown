@@ -163,8 +163,11 @@ We follow four rules:
    conformance cases, so they behave the same.
 3. One word for each idea.
 4. Anything general lives in the osdlc org. This repo holds the Markdown libraries, the spec and
-   examples. Packs, profiles and starter corpora live in osdlc/models (decision D17). The other
-   packages stay in osdlc/osdlc until they move here. Apps use them from there.
+   examples. Packs, profiles and starter corpora live in osdlc/models (decision D17). The Markdown
+   libraries in osdlc/osdlc and sksizer/dev move here (decision D19, tasks 85 to 87, 12, 15 and
+   17). This repo depends on osdlc/osdlc, never the other way. So the libraries that osdlc/osdlc's
+   other libraries use stay there: frontmatter-lossless, gfm-table, yaml-splice, etag-write and
+   path-guard, with their twins. Apps use the packages from npm and crates.io.
 
 ![The target, by layer](diagrams/target.svg)
 

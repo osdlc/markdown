@@ -208,9 +208,10 @@ Reading a corpus as a database.
 Showing notes to people.
 
 - It owns: turning notes into HTML, the live editor, viewing chrome, and building sites.
-- Packages: markdown-render, markdown-editor, markdown-ui and markdown-astro. They live in dev today
-  and move to osdlc ([osdlc/osdlc#720](https://github.com/osdlc/osdlc/pull/720) and
-  [osdlc/osdlc#719](https://github.com/osdlc/osdlc/pull/719) are open).
+- Packages: markdown-render, markdown-editor, markdown-ui and markdown-astro. markdown-render and
+  markdown-astro (now markdown-vault-astro) are on npm from osdlc/osdlc
+  ([osdlc/osdlc#720](https://github.com/osdlc/osdlc/pull/720)) and move to this repo. markdown-editor
+  and markdown-ui live in dev and move straight here (the plan's D19).
 
 ### 9. Apps
 
@@ -290,21 +291,26 @@ A twin can have extras the other doesn't need. It just has to pass the shared ca
   yaml-splice, and files are saved with etag-write.
 - General code lives in the osdlc org. This repo (osdlc/markdown) holds the Markdown libraries, the
   corpus-schema spec and validator, and examples. Models, packs, profiles and starter corpora live
-  in osdlc/models (the plan's D17). The other packages stay in osdlc/osdlc until they move here.
-  Apps use them from there and keep only their own rules.
+  in osdlc/models (the plan's D17). The Markdown libraries in osdlc/osdlc and dev move here (the plan's D19).
+  Apps use them from npm and crates.io and keep only their own rules.
+- This repo depends on osdlc/osdlc, never the other way. No library in osdlc/osdlc depends on a
+  package from this repo. So the libraries that osdlc/osdlc's other libraries use stay there:
+  frontmatter-lossless, gfm-table, yaml-splice, etag-write and path-guard, with their twins.
 
 ## Where things live
 
 | Job | Today | Target |
 |---|---|---|
-| Note parts | osdlc; dev also has a private copy of markdown-link | osdlc, used from npm and crates.io |
-| Corpus model, TypeScript | markdown-vault and vault-graph-core in dev | markdown-corpus in osdlc |
-| Corpus model, Rust | markdown-corpus in osdlc | the same |
+| Note parts: markdown-link, markdown-tags, markdown-contract | osdlc; dev also has a private copy of markdown-link | this repo (tasks 85 and 87) |
+| Note parts and files that osdlc/osdlc's own libraries use: frontmatter-lossless, gfm-table, yaml-splice, etag-write, path-guard | osdlc | the same, used from npm and crates.io |
+| Files for a corpus: markdown-vault-fs, vfs-walk, vfs-seam | osdlc | this repo (task 87) |
+| Corpus model, TypeScript | markdown-vault and vault-graph-core in dev | markdown-corpus in this repo (task 12) |
+| Corpus model, Rust | markdown-corpus and markdown-relink in osdlc | this repo (task 87) |
 | corpus-schema | this repo; 0.2.0 is on npm | the same |
 | Profiles, packs, starter corpora | model-schema and packs in dev, merged to a branch that is not on main yet; profiles and the starter move to osdlc/models before their first publish (task 78) | osdlc/models (tasks 78 and 62) |
-| Query | markdown-vault-query in dev | osdlc |
-| Render, edit, sites | dev | osdlc |
-| Typed records from Rust | markdown-store in rust-ontogen | on the shared parts; where it lives is an open question |
+| Query | markdown-vault-query in dev | this repo (task 15) |
+| Render, edit, sites | markdown-render and markdown-vault-astro in osdlc; markdown-editor and markdown-ui in dev | this repo (tasks 85 and 17) |
+| Typed records from Rust | markdown-store in rust-ontogen | on the shared parts; it stays in rust-ontogen for now (D19) |
 
 The order of the moves is in the plan's [tasks and milestones](planning/README.md).
 
@@ -313,5 +319,4 @@ The order of the moves is in the plan's [tasks and milestones](planning/README.m
 - Do we adopt the word profile, and the dialect setting?
 - Which words go in the first tested name override set (task 24)?
 - What exactly is in the baseline, and what goes in the obsidian dialect?
-- Does markdown-store stay in rust-ontogen, or move to osdlc?
 - When does the query layer start, and what does it build first?

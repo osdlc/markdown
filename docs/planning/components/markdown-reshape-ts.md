@@ -5,7 +5,7 @@ language: ts
 layer: "[corpus-model](../layers/corpus-model.md)"
 states: [target]
 status: planned
-repo_target: "[osdlc/osdlc](../repos/osdlc-osdlc.md)"
+repo_target: "[osdlc/markdown](../repos/osdlc-markdown.md)"
 path_target: packages/ts/markdown-reshape
 twin: "[markdown-reshape-rs](markdown-reshape-rs.md)"
 tasks:
@@ -30,4 +30,4 @@ corpus of notes.
   yet, so this package has no edge for them.
 - Two ways to provide TypeScript: port the crate, or build it to WebAssembly, as yaml-splice-wasm
   does for yaml-splice. Task 40 holds the open question.
-- The path follows osdlc/osdlc's `packages/ts/<name>` layout. The plan does not give one.
+- The path follows the `packages/ts/<name>` layout, in osdlc/markdown (decision D19).
