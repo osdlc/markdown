@@ -1,14 +1,22 @@
 # markdown
 
-This repo is the home of the long-term strategy and plan for our markdown ecosystem. Other repos
-point here when they need to know where the markdown packages are going.
+This repository is a holding pen. It is where the markdown ecosystem will live once it has
+matured.
 
 By the markdown ecosystem we mean every package that reads, checks, stores or shows Markdown
-notes. Today those packages live in several repos: osdlc/osdlc, sksizer/dev, sksizer/rust-ontogen
-and osdlc/skillwright.
+notes.
 
-For now this repo holds the plan. As we sort things out, packages and their docs will move in here
-one at a time.
+For now the work happens in [osdlc/osdlc](https://github.com/osdlc/osdlc). The libraries, their
+specs and the plan are developed there, beside the sdlc product that uses them, so that a change
+that crosses both is one pull request. A library moves here when it nears 1.0 and releases on its
+own. [osdlc/osdlc#789](https://github.com/osdlc/osdlc/pull/789) records the decision and the plan
+for bringing the current content over.
+
+Please open issues and pull requests in osdlc/osdlc, not here.
+
+## What is still here
+
+The content below is being brought to osdlc/osdlc. It stays here until that is done.
 
 - [The plan](docs/ecosystem-plan.md): where things are today, what is wrong, where we want to end
   up, and how we get there.
