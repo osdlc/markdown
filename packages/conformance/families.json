@@ -1,9 +1,0 @@
-{
-  "corpus-schema": {
-    "reference": "ts",
-    "generator": "pnpm --filter @osdlc/corpus-schema conformance:write",
-    "implementations": [
-      { "language": "ts", "dir": "packages/ts/corpus-schema", "name": "@osdlc/corpus-schema" }
-    ]
-  }
-}

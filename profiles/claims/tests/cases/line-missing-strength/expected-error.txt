@@ -1,1 +1,0 @@
-statements/line-missing-strength.md: hasEvidenceLines.0.strengthOfEvidenceProvided: required
